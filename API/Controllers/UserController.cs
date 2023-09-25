@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Auth.Requests;
+using API.DTOs.Users.Requests;
 using AutoMapper;
 using Domain.Exceptions;
 using Domain.Models;
@@ -14,14 +15,14 @@ namespace API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController : BaseController
+public class UserController : BaseController
 {
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly UserManager<User> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IConfiguration _configuration;
 
-    public AuthController(
-        UserManager<ApplicationUser> userManager,
+    public UserController(
+        UserManager<User> userManager,
         RoleManager<IdentityRole> roleManager,
         IConfiguration configuration)
     {
@@ -69,30 +70,31 @@ public class AuthController : BaseController
     }
 
     [HttpPost]
-    [Route("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest model)
+    [Route("create-user")]
+    public async Task<IActionResult> Register([FromBody] CreateUserRequest model)
     {
-        if (!model.Password.Equals(model.ReEnteredPassword))
-        {
-            throw new BadRequestException("Re-entered password incorrect");
-        }
         var userExists = await _userManager.FindByNameAsync(model.Username);
         if (userExists != null)
         {
             throw new BadRequestException("User already exists");
         }
-        ApplicationUser user = new()
+        User user = new()
         {
             Email = model.Email,
-            SecurityStamp = Guid.NewGuid().ToString(),
             UserName = model.Username,
+            FirstName = model.FirstName,
+            LastName = model.LastName,
+            Gender = model.Gender,
+            DateOfBirth = model.DateOfBirth,
+            isActive = true,
+            SecurityStamp = Guid.NewGuid().ToString(),
             CreatedAt = DateTime.Now,
         };
         var result = await _userManager.CreateAsync(user, model.Password);
 
         if (!result.Succeeded)
         {
-            throw new ServerFailureException("User creation failed! Please check user details and try again.");
+            throw new ServerFailureException("Create user failed! Please check user details and try again.");
         }
         return Ok(user);
     }

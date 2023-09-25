@@ -1,4 +1,5 @@
 ﻿using Domain.Models;
+using Domain.Models.Tickets;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context.DbContext;
 using Persistence.Repositories.Interfaces;

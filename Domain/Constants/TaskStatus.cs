@@ -1,9 +1,9 @@
 ﻿namespace Domain.Constants;
 
-public enum TicketStatus
+public enum TaskStatus
 {
+    Draft,
     Open,
-    Assigned,
     Processing,
     Pending,
     Solved,
