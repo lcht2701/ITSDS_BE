@@ -50,6 +50,33 @@ public class AuthController : BaseController
         return Ok(loginResponse);
     }
 
+    [HttpPost("login-admin")]
+    public async Task<IActionResult> LoginAdmin([FromBody] LoginRequest model)
+    {
+        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username.Equals(model.Username));
+        LoginResponse loginResponse = new();
+        if (user == null)
+        {
+            throw new NotFoundException("Username is not found.");
+        }
+        if (user.Role != Role.Admin)
+        {
+            throw new UnauthorizedException("You are not allowed to enter.");
+        }
+        else
+        {
+            var passwordHasher = new PasswordHasher<User>();
+            var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, model.Password) == PasswordVerificationResult.Success;
+            if (!isMatchPassword)
+            {
+                throw new UnauthorizedException("Password is not correct.");
+            }
+            loginResponse.AccessToken = GenerateToken(user);
+            SetCookie(ConstantItems.ACCESS_TOKEN, loginResponse.AccessToken);
+        }
+        return Ok(loginResponse);
+    }
+
     [HttpPost("logout")]
     public IActionResult Logout()
     {
