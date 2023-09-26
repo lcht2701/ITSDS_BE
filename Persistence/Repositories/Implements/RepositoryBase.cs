@@ -1,7 +1,6 @@
 ﻿using Domain.Models;
-using Domain.Models.Tickets;
 using Microsoft.EntityFrameworkCore;
-using Persistence.Context.DbContext;
+using Persistence.Context;
 using Persistence.Repositories.Interfaces;
 using System.Linq.Expressions;
 
@@ -27,7 +26,7 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : BaseEntity
     public async Task CreateAsync(IEnumerable<T> entities)
     {
         await _context.AddRangeAsync(entities);
-        foreach (var entity in entities)
+        foreach (var  entity in entities)
         {
             entity.CreatedAt = DateTime.Now;
         }

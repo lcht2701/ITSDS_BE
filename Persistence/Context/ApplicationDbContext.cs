@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Domain.Models;
 using Domain.Models.Tickets;
@@ -7,14 +6,15 @@ using System.Reflection.Emit;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Domain.Models.Contracts;
 
-namespace Persistence.Context.DbContext
+namespace Persistence.Context
 {
-    public class ApplicationDbContext : IdentityDbContext<User>
+    public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
 
+        public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Assignment> Assignments { get; set; }
         public virtual DbSet<Feedback> Feedbacks { get; set; }
         public virtual DbSet<Team> Teams { get; set; }
@@ -48,6 +48,7 @@ namespace Persistence.Context.DbContext
                 .HaveConversion<TimeOnlyConverter>();
         }
         #endregion
+
         #region DateOnly & TimeOnly Converter
         public class DateOnlyConverter : ValueConverter<DateOnly, DateTime>
         {

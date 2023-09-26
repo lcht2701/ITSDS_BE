@@ -5,6 +5,6 @@ public enum Role
     Admin,
     Customer,
     Manager,
-    Technical,
-    Sale
+    Technician,
+    Accountant,
 }

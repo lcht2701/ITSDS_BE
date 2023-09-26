@@ -1,117 +1,66 @@
-﻿using API.DTOs.Auth.Requests;
-using API.DTOs.Users.Requests;
+﻿using API.DTOs.Users.Requests;
 using AutoMapper;
+using Domain.Constants;
 using Domain.Exceptions;
 using Domain.Models;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
 
-[Route("api/[controller]")]
-[ApiController]
+[Route("/v1/itsds/user")]
 public class UserController : BaseController
 {
-    private readonly UserManager<User> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
-    private readonly IConfiguration _configuration;
+    private readonly IRepositoryBase<User> _userRepository;
 
-    public UserController(
-        UserManager<User> userManager,
-        RoleManager<IdentityRole> roleManager,
-        IConfiguration configuration)
+    public UserController(IRepositoryBase<User> userRepository)
     {
-        _userManager = userManager;
-        _roleManager = roleManager;
-        _configuration = configuration;
+        _userRepository = userRepository;
     }
 
+    [Authorize(Roles = Roles.ADMIN)]
+    [HttpGet]
+    public async Task<IActionResult> GetUsers()
+    {
+        return Ok(await _userRepository.ToListAsync());
+    }
+
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpPost]
-    [Route("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest model)
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest model)
     {
-        var user = await _userManager.FindByNameAsync(model.Username);
-        if (user == null)
-        {
-            throw new UnauthorizedException();
-        }
-        else
-        {
-            if (await _userManager.CheckPasswordAsync(user, model.Password))
-            {
-                var userRoles = await _userManager.GetRolesAsync(user);
 
-                var authClaims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                };
-
-                foreach (var userRole in userRoles)
-                {
-                    authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-                }
-
-                var token = GetToken(authClaims);
-
-                return Ok(new
-                {
-                    token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
-                });
-            }
-        }
-        return Unauthorized();
-    }
-
-    [HttpPost]
-    [Route("create-user")]
-    public async Task<IActionResult> Register([FromBody] CreateUserRequest model)
-    {
-        var userExists = await _userManager.FindByNameAsync(model.Username);
-        if (userExists != null)
-        {
-            throw new BadRequestException("User already exists");
-        }
-        User user = new()
-        {
-            Email = model.Email,
-            UserName = model.Username,
-            FirstName = model.FirstName,
-            LastName = model.LastName,
-            Gender = model.Gender,
-            DateOfBirth = model.DateOfBirth,
-            isActive = true,
-            SecurityStamp = Guid.NewGuid().ToString(),
-            CreatedAt = DateTime.Now,
-        };
-        var result = await _userManager.CreateAsync(user, model.Password);
-
-        if (!result.Succeeded)
-        {
-            throw new ServerFailureException("Create user failed! Please check user details and try again.");
-        }
-        return Ok(user);
+        User entity = Mapper.Map(model, new User());
+        //Hash password
+        var passwordHasher = new PasswordHasher<User>();
+        entity.Password = passwordHasher.HashPassword(entity, model.Password);
+        entity.isActive = true;
+        await _userRepository.CreateAsync(entity);
+        return StatusCode(StatusCodes.Status201Created);
     }
 
 
-    private JwtSecurityToken GetToken(List<Claim> authClaims)
+    [Authorize(Roles = Roles.ADMIN)]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest req)
     {
-        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
+        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException());
+        User entity = Mapper.Map(req, target);
+        await _userRepository.UpdateAsync(entity);
+        return StatusCode(StatusCodes.Status204NoContent);
+    }
 
-        var token = new JwtSecurityToken(
-            issuer: _configuration["JWT:Issuer"],
-            audience: _configuration["JWT:Audience"],
-            expires: DateTime.Now.AddHours(3),
-            claims: authClaims,
-            signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-            );
+    
 
-        return token;
+    [Authorize(Roles = Roles.ADMIN)]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteUser(Guid id)
+    {
+        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException());
+        //Soft Delete
+        await _userRepository.DeleteAsync(target);
+        return StatusCode(StatusCodes.Status204NoContent);
     }
 }

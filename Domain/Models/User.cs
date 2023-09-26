@@ -7,28 +7,32 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Models;
 
-public class User : IdentityUser
+public class User : BaseEntity
 {
     public User()
     {
         Feedbacks = new HashSet<Feedback>();
+        Tickets = new HashSet<Ticket>();
     }
+    public string? FirstName { get; set; }
 
-    public string FirstName { get; set; }
+    public string? LastName { get; set; }
 
-    public string LastName { get; set; }
+    public string Username { get; set; }
 
-    public Gender Gender { get; set; }
+    public string Password { get; set; }
 
-    public DateOnly DateOfBirth { get; set; }
+    public string? Email { get; set; }
 
-    public bool isActive { get; set; }
+    public virtual Role? Role { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public string? PhoneNumber { get; set; }
 
-    public DateTime? ModifiedAt { get; set; }
+    public bool? isActive { get; set; }
 
-    public DateTime? DeletedAt { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
+
+    public virtual Gender? Gender { get; set; }
 
     public Guid? TeamId { get; set; }
 
@@ -43,5 +47,4 @@ public class User : IdentityUser
 
     [JsonIgnore]
     public virtual ICollection<Ticket> Tickets { get; set; }
-
 }

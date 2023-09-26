@@ -25,9 +25,9 @@ public class BaseController : ControllerBase
 
     public bool IsAdmin => IsInRole(Roles.ADMIN);
     public bool IsManager => IsInRole(Roles.MANAGER);
-    public bool IsTechnicalStaff => IsInRole(Roles.TECHNICAL);
-    public bool IsSaleStaff => IsInRole(Roles.SALE);
     public bool IsCustomer => IsInRole(Roles.CUSTOMER);
+    public bool IsTechnician => IsInRole(Roles.TECHNICIAN);
+    public bool IsAccountant => IsInRole(Roles.ACCOUNTANT);
     private bool IsInRole(string role) {
         return User.IsInRole(role);
     }

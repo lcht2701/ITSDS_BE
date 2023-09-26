@@ -5,8 +5,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs.Users.Requests
 {
-    public class UpdateProfileRequest : IMapTo<User>
+    public class UpdateUserRequest : IMapTo<User>
     {
+        public string? Username { get; set; }
+
+        [EmailAddress]
+        public string? Email { get; set; }
+
         [Phone]
         public string? PhoneNumber { get; set; }
 
@@ -17,5 +22,7 @@ namespace API.DTOs.Users.Requests
         public Gender? Gender { get; set; }
 
         public DateOnly? DateOfBirth { get; set; }
+
+        public bool? IsActive { get; set; }
     }
 }

@@ -1,0 +1,153 @@
+﻿using API.DTOs.Auth.Requests;
+using API.DTOs.Auth.Responses;
+using Domain.Exceptions;
+using Domain.Constants;
+using Domain.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using Persistence.Repositories.Interfaces;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using API.DTOs.Users.Requests;
+
+namespace API.Controllers;
+
+[Route("/v1/itsds/auth")]
+public class AuthController : BaseController
+{
+    private readonly IRepositoryBase<User> _userRepository;
+    private readonly IConfiguration _configuration;
+
+    public AuthController(IRepositoryBase<User> userRepository, IConfiguration configuration)
+    {
+        _userRepository = userRepository;
+        _configuration = configuration;
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest model)
+    {
+        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username.Equals(model.Username));
+        LoginResponse loginResponse = new();
+        if (user == null)
+        {
+            throw new UnauthorizedException();
+        }
+        else
+        {
+            var passwordHasher = new PasswordHasher<User>();
+            var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, model.Password) == PasswordVerificationResult.Success;
+            if (!isMatchPassword)
+            {
+                throw new UnauthorizedException();
+            }
+            loginResponse.AccessToken = GenerateToken(user);
+            SetCookie(ConstantItems.ACCESS_TOKEN, loginResponse.AccessToken);
+        }
+        return Ok(loginResponse);
+    }
+
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        RemoveCookie(ConstantItems.ACCESS_TOKEN);
+        return Ok();
+    }
+
+    [Authorize]
+    [HttpGet("profile")]
+    public async Task<IActionResult> GetProfile()
+    {
+        var usr = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID), new UnauthorizedException());
+        return Ok(usr);
+    }
+
+    [Authorize]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateProfile(Guid id, [FromBody] UpdateProfileRequest req)
+    {
+        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException());
+        User entity = Mapper.Map(req, target);
+        await _userRepository.UpdateAsync(entity);
+        return StatusCode(StatusCodes.Status204NoContent);
+    }
+
+    [Authorize]
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> ChangePassword(Guid id, [FromBody] ChangePasswordRequest req)
+    {
+        var user = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException());
+        if (user == null)
+        {
+            throw new NotFoundException("User Not Found.");
+        }
+        else
+        {
+            var passwordHasher = new PasswordHasher<User>();
+            var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, req.CurrentPassword) == PasswordVerificationResult.Success;
+            if (!isMatchPassword)
+            {
+                throw new BadRequestException("Your current password is incorrect.");
+            }
+            if (req.NewPassword.Equals(req.CurrentPassword))
+            {
+                throw new BadRequestException("New password should not be the same as old password.");
+            }
+            if (!req.NewPassword.Equals(req.ConfirmNewPassword))
+            {
+                throw new BadRequestException("Password and Confirm Password does not match.");
+            }
+            user.Password = passwordHasher.HashPassword(user, req.NewPassword);
+        }
+        await _userRepository.UpdateAsync(user);
+        return StatusCode(StatusCodes.Status204NoContent);
+    }
+
+    #region Generate JWT Token
+    private string GenerateToken(User user)
+    {
+        var claims = new[] {
+                new Claim("id", user.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Username),
+                new Claim(ClaimTypes.Role, user.Role.ToString())
+            };
+        return new JwtSecurityTokenHandler().WriteToken(
+            GenerateTokenByClaims(claims, DateTime.Now.AddMinutes(120))
+            );
+    }
+
+    private SecurityToken GenerateTokenByClaims(Claim[] claims, DateTime expires)
+    {
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+        return new JwtSecurityToken(_configuration["JWT:Issuer"],
+             _configuration["JWT:Audience"],
+             claims,
+             expires: expires,
+             signingCredentials: credentials);
+    }
+    #endregion
+
+    #region Handle Cookie
+    private void RemoveCookie(string key)
+    {
+        HttpContext.Response.Cookies.Delete(key);
+    }
+
+    private void SetCookie(string key, string value)
+    {
+        CookieOptions cookieOptions = new CookieOptions
+        {
+            Expires = DateTime.Now.AddDays(2),
+            IsEssential = true,
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+        };
+        Response.Cookies.Append(key, value, cookieOptions);
+    }
+    #endregion
+}

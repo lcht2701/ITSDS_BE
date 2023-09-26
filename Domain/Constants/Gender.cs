@@ -6,5 +6,4 @@ public enum Gender
     Female,
     Other,
     PreferNotToSay
-
 }
