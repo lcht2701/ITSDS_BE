@@ -141,8 +141,12 @@ public class AuthController : BaseController
                 new Claim(ClaimTypes.NameIdentifier, user.Username),
                 new Claim(ClaimTypes.Role, user.Role.ToString())
             };
+        //Remember to change back to 2 hours
+        //return new JwtSecurityTokenHandler().WriteToken(
+        //    GenerateTokenByClaims(claims, DateTime.Now.AddMinutes(120))
+        //    );
         return new JwtSecurityTokenHandler().WriteToken(
-            GenerateTokenByClaims(claims, DateTime.Now.AddMinutes(120))
+            GenerateTokenByClaims(claims, DateTime.Now.AddDays(1))
             );
     }
 
