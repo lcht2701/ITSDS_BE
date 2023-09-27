@@ -1,29 +1,23 @@
 ﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using Domain.Application.AppConfig;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Persistence.Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Persistence.Services.Implements
 {
     public class PhotoService : IPhotoService
     {
         private readonly Cloudinary _cloudinary;
-        private readonly IConfiguration _configuration;
 
-        public PhotoService()
+        public PhotoService(IOptions<CloudinarySettings> config)
         {
             var account = new Account
                 (
-                    _configuration["CloudinarySettings:CloudName"],
-                    _configuration["CloudinarySettings:ApiKey"],
-                    _configuration["CloudinarySettings:ApiSecret"]
+                    config.Value.CloudName,
+                    config.Value.ApiKey,
+                    config.Value.ApiSecret                    
                 );
             _cloudinary = new Cloudinary(account);
         }

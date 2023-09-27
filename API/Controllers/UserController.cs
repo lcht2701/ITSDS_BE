@@ -20,9 +20,10 @@ public class UserController : BaseController
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IPhotoService _photoService;
 
-    public UserController(IRepositoryBase<User> userRepository)
+    public UserController(IRepositoryBase<User> userRepository, IPhotoService photoService)
     {
         _userRepository = userRepository;
+        _photoService = photoService;
     }
 
     [Authorize(Roles = Roles.ADMIN)]
@@ -90,8 +91,9 @@ public class UserController : BaseController
     public async Task<IActionResult> UploadAvatarProfile(IFormFile file)
     {
         var user = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
-        ImageUploadResult uploadResult = await _photoService.AddPhotoAsync(file);
-        user.AvatarUrl = uploadResult.Url.ToString();
+        var result = await _photoService.AddPhotoAsync(file);
+        user.AvatarUrl = result.Url.ToString();
+        await _userRepository.UpdateAsync(user);
         return Accepted("Updated Successfully");
     }
 }
