@@ -11,7 +11,6 @@ using Persistence.Repositories.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using API.DTOs.Users.Requests;
 
 namespace API.Controllers;
 
@@ -34,19 +33,17 @@ public class AuthController : BaseController
         LoginResponse loginResponse = new();
         if (user == null)
         {
-            throw new UnauthorizedException();
+            throw new NotFoundException("User is not found");
         }
-        else
+        var passwordHasher = new PasswordHasher<User>();
+        var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, model.Password) == PasswordVerificationResult.Success;
+        if (!isMatchPassword)
         {
-            var passwordHasher = new PasswordHasher<User>();
-            var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, model.Password) == PasswordVerificationResult.Success;
-            if (!isMatchPassword)
-            {
-                throw new UnauthorizedException();
-            }
-            loginResponse.AccessToken = GenerateToken(user);
-            SetCookie(ConstantItems.ACCESS_TOKEN, loginResponse.AccessToken);
+            throw new UnauthorizedException("Password is incorrect");
         }
+        loginResponse.User = user;
+        loginResponse.AccessToken = GenerateToken(user);
+        SetCookie(ConstantItems.ACCESS_TOKEN, loginResponse.AccessToken);
         return Ok(loginResponse);
     }
 
@@ -55,83 +52,63 @@ public class AuthController : BaseController
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Username.Equals(model.Username));
         LoginResponse loginResponse = new();
+
         if (user == null)
         {
-            throw new NotFoundException("Username is not found.");
+            throw new NotFoundException("User is not found");
         }
-        if (user.Role != Role.Admin)
+
+        if (IsAdmin)
         {
-            throw new UnauthorizedException("You are not allowed to enter.");
+            throw new UnauthorizedException("You are not allowed to enter");
         }
-        else
+
+        var passwordHasher = new PasswordHasher<User>();
+        var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, model.Password) == PasswordVerificationResult.Success;
+
+        if (!isMatchPassword)
         {
-            var passwordHasher = new PasswordHasher<User>();
-            var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, model.Password) == PasswordVerificationResult.Success;
-            if (!isMatchPassword)
-            {
-                throw new UnauthorizedException("Password is not correct.");
-            }
-            loginResponse.AccessToken = GenerateToken(user);
-            SetCookie(ConstantItems.ACCESS_TOKEN, loginResponse.AccessToken);
+            throw new UnauthorizedException("Password is incorrect");
         }
+
+        loginResponse.User = user;
+        loginResponse.AccessToken = GenerateToken(user);
+        SetCookie(ConstantItems.ACCESS_TOKEN, loginResponse.AccessToken);
         return Ok(loginResponse);
     }
 
-    [HttpPost("logout")]
-    public IActionResult Logout()
-    {
-        RemoveCookie(ConstantItems.ACCESS_TOKEN);
-        return Ok();
-    }
-
     [Authorize]
-    [HttpGet("profile")]
-    public async Task<IActionResult> GetProfile()
-    {
-        var usr = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID), new UnauthorizedException());
-        return Ok(usr);
-    }
-
-    [Authorize]
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateProfile(Guid id, [FromBody] UpdateProfileRequest req)
-    {
-        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException());
-        User entity = Mapper.Map(req, target);
-        await _userRepository.UpdateAsync(entity);
-        return StatusCode(StatusCodes.Status204NoContent);
-    }
-
-    [Authorize]
-    [HttpPatch("{id}")]
+    [HttpPatch("{id}/change-password")]
     public async Task<IActionResult> ChangePassword(Guid id, [FromBody] ChangePasswordRequest req)
     {
-        var user = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException());
-        if (user == null)
+        var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new NotFoundException("User is not found"));
+
+        var passwordHasher = new PasswordHasher<User>();
+        var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, req.CurrentPassword) == PasswordVerificationResult.Success;
+        if (!isMatchPassword)
         {
-            throw new NotFoundException("User Not Found.");
+            throw new BadRequestException("Your current password is incorrect.");
         }
-        else
+        if (req.NewPassword.Equals(req.CurrentPassword))
         {
-            var passwordHasher = new PasswordHasher<User>();
-            var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, req.CurrentPassword) == PasswordVerificationResult.Success;
-            if (!isMatchPassword)
-            {
-                throw new BadRequestException("Your current password is incorrect.");
-            }
-            if (req.NewPassword.Equals(req.CurrentPassword))
-            {
-                throw new BadRequestException("New password should not be the same as old password.");
-            }
-            if (!req.NewPassword.Equals(req.ConfirmNewPassword))
-            {
-                throw new BadRequestException("Password and Confirm Password does not match.");
-            }
-            user.Password = passwordHasher.HashPassword(user, req.NewPassword);
+            throw new BadRequestException("New password should not be the same as old password.");
         }
+        if (!req.NewPassword.Equals(req.ConfirmNewPassword))
+        {
+            throw new BadRequestException("Password and Confirm Password does not match.");
+        }
+        user.Password = passwordHasher.HashPassword(user, req.NewPassword);
+
         await _userRepository.UpdateAsync(user);
-        return StatusCode(StatusCodes.Status204NoContent);
+        return Accepted("Updated Successfully");
     }
+
+    //[HttpPost("logout")]
+    //public IActionResult Logout()
+    //{
+    //    RemoveCookie(ConstantItems.ACCESS_TOKEN);
+    //    return Ok();
+    //}
 
     #region Generate JWT Token
     private string GenerateToken(User user)

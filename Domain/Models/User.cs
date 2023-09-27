@@ -24,6 +24,8 @@ public class User : BaseEntity
 
     public string? Email { get; set; }
 
+    public string? AvatarUrl { get; set; }
+
     public virtual Role? Role { get; set; }
 
     public string? PhoneNumber { get; set; }
