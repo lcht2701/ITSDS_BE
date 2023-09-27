@@ -11,12 +11,13 @@ using Persistence.Repositories;
 using System.Text;
 using API.Configurations;
 using System.Reflection;
+using Persistence.Services.Interfaces;
+using Persistence.Services.Implements;
+using Domain.Application.AppConfig;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 var CorsPolicy = "CorsPolicy";
-
-
 
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -26,6 +27,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 builder.Services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>));
+builder.Services.AddScoped<IPhotoService, PhotoService>();
+builder.Services.Configure<CloudinarySettings>(configuration.GetSection(nameof(CloudinarySettings)));
 
 builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>())
                 .AddJsonOptions(opt => opt.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter()));

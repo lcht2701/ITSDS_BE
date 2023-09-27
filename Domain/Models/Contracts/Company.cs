@@ -14,7 +14,10 @@ namespace Domain.Models.Contracts
             CompanyMembers = new HashSet<User>();
         }
 
+        public string? LogoUrl { get; set; }
+
         public bool isActive { get; set; }
+
 
         [JsonIgnore]
         public virtual ICollection<User> CompanyMembers { get; set; }
