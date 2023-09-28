@@ -1,8 +1,32 @@
 version: '3.4'
 
+networks:
+  itsds-network:
+
 services:
+  db:
+    container_name: db
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports:
+        - 1433:1433
+    environment:
+        - ACCEPT_EULA=Y
+        - SA_PASSWORD=itsds@123  
+    networks:
+        - itsds-network
   api:
     image: ${DOCKER_REGISTRY-}api
     build:
       context: .
       dockerfile: API/Dockerfile
+    ports:
+        - 8000:80
+        - 8001:443
+    depends_on:
+        - db
+    environment:
+        - DB_HOST=db
+        - DB_NAME=db
+        - DB_SA_PASSWORD=itsds@123
+    networks:
+        - itsds-network
