@@ -16,7 +16,7 @@ namespace Persistence.Services.Implements
             _mailSettings = mailSettings.Value;
         }
 
-        public async Task<bool> SendHTMLMailAsync(HTMLMailData htmlMailData)
+        public async Task<bool> SendHTMLMailAsync(HTMLMailData htmlMailData, string filePath)
         {
             try
             {
@@ -30,7 +30,6 @@ namespace Persistence.Services.Implements
 
                     emailMessage.Subject = "Hello";
 
-                    string filePath = Directory.GetCurrentDirectory() + "\\Templates\\Hello.html";
                     string emailTemplateText = File.ReadAllText(filePath);
 
                     emailTemplateText = string.Format(emailTemplateText, htmlMailData.EmailToName, DateTime.Today.Date.ToShortDateString());

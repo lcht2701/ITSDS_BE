@@ -10,7 +10,7 @@ namespace Persistence.Services.Interfaces
     public interface IMailService
     {
         Task<bool> SendMailAsync(MailData mailData);
-        Task<bool> SendHTMLMailAsync(HTMLMailData htmlMailData);
+        Task<bool> SendHTMLMailAsync(HTMLMailData htmlMailData, string filePath);
         Task<bool> SendMailWithAttachmentsAsync(MailDataWithAttachment mailDataWithAttachment);
     }
 }

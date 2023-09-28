@@ -33,7 +33,15 @@ public class UserController : BaseController
         return Ok(await _userRepository.ToListAsync());
     }
 
-    //[Authorize(Roles = Roles.ADMIN)]
+    [Authorize]
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetUserById(Guid id)
+    {
+        var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new NotFoundException("User is not found"));
+        return Ok(user);
+    }
+
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest model)
     {
@@ -69,7 +77,7 @@ public class UserController : BaseController
     }
 
     [Authorize]
-    [HttpGet("{id}/profile")]
+    [HttpGet("profile")]
     public async Task<IActionResult> GetProfile()
     {
         var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
@@ -77,7 +85,7 @@ public class UserController : BaseController
     }
 
     [Authorize]
-    [HttpPatch("{id}/update-profile")]
+    [HttpPatch("update-profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest req)
     {
         var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
@@ -87,7 +95,7 @@ public class UserController : BaseController
     }
 
     [Authorize]
-    [HttpPatch("{id}/uploadAvatar")]
+    [HttpPatch("uploadAvatar")]
     public async Task<IActionResult> UploadAvatarProfile(IFormFile file)
     {
         var user = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
