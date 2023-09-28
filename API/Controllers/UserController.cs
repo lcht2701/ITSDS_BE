@@ -33,7 +33,7 @@ public class UserController : BaseController
         return Ok(await _userRepository.ToListAsync());
     }
 
-    [Authorize(Roles = Roles.ADMIN)]
+    //[Authorize(Roles = Roles.ADMIN)]
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest model)
     {
