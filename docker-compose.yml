@@ -3,6 +3,9 @@ version: '3.4'
 networks:
   itsds-network:
 
+volumes:
+  sqldata:
+
 services:
   db:
     container_name: db
@@ -11,7 +14,8 @@ services:
         - 1433:1433
     environment:
         - ACCEPT_EULA=Y
-        - SA_PASSWORD=itsds@123  
+        - SA_PASSWORD=itsds@123
+    restart: always
     networks:
         - itsds-network
   api:
@@ -30,3 +34,5 @@ services:
         - DB_SA_PASSWORD=itsds@123
     networks:
         - itsds-network
+    volumes:
+      - sqldata:/data/db
