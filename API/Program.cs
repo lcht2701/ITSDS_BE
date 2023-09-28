@@ -1,7 +1,5 @@
 using API.Utils;
-using Domain.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -27,8 +25,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 builder.Services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>));
-builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.Configure<CloudinarySettings>(configuration.GetSection(nameof(CloudinarySettings)));
+builder.Services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
+builder.Services.AddScoped<IPhotoService, PhotoService>();
+builder.Services.AddScoped<IMailService, MailService>();
 
 builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>())
                 .AddJsonOptions(opt => opt.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter()));
