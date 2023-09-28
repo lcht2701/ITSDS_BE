@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230928095953_addContractServiceConfigurationTable")]
+    partial class addContractServiceConfigurationTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,28 +23,6 @@ namespace Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
-
-            modelBuilder.Entity("Domain.Models.Configuration", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.ToTable("Configurations");
-                });
 
             modelBuilder.Entity("Domain.Models.Contracts.Company", b =>
                 {
@@ -127,7 +107,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
-                    b.ToTable("CompanyMembers");
+                    b.ToTable("CompanyMember");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Contract", b =>
@@ -177,7 +157,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("Contracts");
+                    b.ToTable("Contract");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.ContractDetail", b =>
@@ -209,7 +189,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("ServicePackId");
 
-                    b.ToTable("ContractDetails");
+                    b.ToTable("ContractDetail");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Payment", b =>
@@ -258,7 +238,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payment");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.PaymentTerm", b =>
@@ -285,7 +265,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("PaymentId");
 
-                    b.ToTable("PaymentTerms");
+                    b.ToTable("PaymentTerm");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Service", b =>
@@ -329,7 +309,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("ServicePackId");
 
-                    b.ToTable("Services");
+                    b.ToTable("Service");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.ServicePack", b =>
@@ -355,7 +335,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
-                    b.ToTable("ServicePacks");
+                    b.ToTable("ServicePack");
                 });
 
             modelBuilder.Entity("Domain.Models.Team", b =>

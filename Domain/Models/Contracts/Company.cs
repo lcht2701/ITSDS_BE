@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace Domain.Models.Contracts
 {
@@ -11,15 +6,36 @@ namespace Domain.Models.Contracts
     {
         public Company()
         {
-            CompanyMembers = new HashSet<User>();
+            Contracts = new HashSet<Contract>();
         }
+        public string CompanyName { get; set; }
+
+        public string TaxCode { get; set; }
+
+        public string Website { get; set; }
+
+        public string PhoneNumber { get; set; }
+
+        public string Email { get; set; }
+
+        public string? CompanyAddress { get; set; }
 
         public string? LogoUrl { get; set; }
 
-        public bool isActive { get; set; }
+        public string? FieldOfBusiness { get; set; }
 
+        public bool? isActive { get; set; }
+
+        public Guid? CustomerAdminId { get; set; }
+
+        public virtual User CustomerAdmin { get; set; }
+
+        public Guid? CompanyMemberId { get; set; }
+
+        public virtual CompanyMember MemberList { get; set; }
 
         [JsonIgnore]
-        public virtual ICollection<User> CompanyMembers { get; set; }
+        public virtual ICollection<Contract> Contracts { get; set; }
+
     }
 }
