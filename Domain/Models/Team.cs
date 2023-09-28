@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Domain.Models.Contracts;
+using Domain.Models.Tickets;
 
-namespace Domain.Models.Tickets;
+namespace Domain.Models;
 
 public partial class Team : BaseEntity
 {
@@ -13,6 +15,7 @@ public partial class Team : BaseEntity
     {
         Users = new HashSet<User>();
         Assignments = new HashSet<Assignment>();
+        Contracts = new HashSet<Contract>();
     }
 
     public string Name { get; set; }
@@ -26,5 +29,8 @@ public partial class Team : BaseEntity
 
     [JsonIgnore]
     public virtual ICollection<Assignment> Assignments { get; set; }
+
+    [JsonIgnore]
+    public virtual ICollection<Contract> Contracts { get; set; }
 
 }

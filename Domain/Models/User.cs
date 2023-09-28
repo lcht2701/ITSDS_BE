@@ -40,13 +40,10 @@ public class User : BaseEntity
 
     public virtual Team? Team { get; set; }
 
-    public Guid? CompanyId { get; set; }
-
-    public virtual Company? Company { get; set; }
-
     [JsonIgnore]
     public virtual ICollection<Feedback> Feedbacks { get; set; }
 
     [JsonIgnore]
     public virtual ICollection<Ticket> Tickets { get; set; }
+
 }
