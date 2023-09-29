@@ -7,7 +7,7 @@ public abstract class BaseEntity
 {
     
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public Guid Id { get; init; }
+    public int Id { get; init; }
 
     public DateTime? CreatedAt { get; set; }
 

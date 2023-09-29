@@ -36,7 +36,7 @@ public class User : BaseEntity
 
     public virtual Gender? Gender { get; set; }
 
-    public Guid? TeamId { get; set; }
+    public int? TeamId { get; set; }
 
     public virtual Team? Team { get; set; }
 

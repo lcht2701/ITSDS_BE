@@ -79,7 +79,7 @@ public class AuthController : BaseController
 
     [Authorize]
     [HttpPatch("{id}/change-password")]
-    public async Task<IActionResult> ChangePassword(Guid id, [FromBody] ChangePasswordRequest req)
+    public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordRequest req)
     {
         var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new NotFoundException("User is not found"));
 

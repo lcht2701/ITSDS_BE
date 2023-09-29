@@ -26,13 +26,13 @@ public partial class Ticket : BaseEntity
 
     public DateTime EndDate { get; set; }
 
-    public Guid RequesterId { get; set; }
+    public int RequesterId { get; set; }
 
-    public Guid AssignmentId { get; set; }
+    public int AssignmentId { get; set; }
 
     public virtual Assignment Assignment { get; set; }
 
-    public Guid ServiceId { get; set; }
+    public int ServiceId { get; set; }
 
     [JsonIgnore]
     public virtual ICollection<TicketTask> TicketTasks { get; set; }

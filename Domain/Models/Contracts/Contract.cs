@@ -10,11 +10,15 @@ namespace Domain.Models.Contracts
 {
     public partial class Contract : BaseEntity
     {
-        public Contract() { }
+        public Contract()
+        {
+            Payments = new HashSet<Payment>();
+            ContractDetails = new HashSet<ContractDetail>();
+        }
 
-        public Guid? AccountantId { get; set; }
+        public int? AccountantId { get; set; }
 
-        public string? AttachmentURl {  get; set; }
+        public string? AttachmentURl { get; set; }
 
         public DateOnly StartDate { get; set; }
 
@@ -24,11 +28,11 @@ namespace Domain.Models.Contracts
 
         public TicketStatus? Status { get; set; }
 
-        public Guid TeamId { get; set; }
+        public int TeamId { get; set; }
 
         public virtual Team Team { get; set; }
 
-        public Guid CompanyId { get; set; }
+        public int CompanyId { get; set; }
 
         public virtual Company Company { get; set; }
 

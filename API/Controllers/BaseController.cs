@@ -11,16 +11,25 @@ public class BaseController : ControllerBase
 
     protected IMapper Mapper => _mapper ??= HttpContext.RequestServices.GetService<IMapper>();
 
-    protected Guid CurrentUserID => GetUserID();
+    protected int CurrentUserID => GetUserID();
 
-    protected Guid GetUserID()
+    protected int GetUserID()
     {
-        var userID = HttpContext.User.Claims.FirstOrDefault(a => a.Type == "id");
-        if (userID is null)
+        var userIDClaim = HttpContext.User.Claims.FirstOrDefault(a => a.Type == "id");
+        if (userIDClaim is null)
         {
-            return Guid.Empty;
+            return -1; // or any default value you prefer for the case when the claim is not found
         }
-        return new Guid(userID.Value);
+
+        if (int.TryParse(userIDClaim.Value, out int userID))
+        {
+            return userID;
+        }
+
+        // Handle the case where the claim value is not a valid integer.
+        // You might want to throw an exception or return a default value.
+
+        return -1; // Default value if parsing fails
     }
 
     public bool IsAdmin => IsInRole(Roles.ADMIN);
