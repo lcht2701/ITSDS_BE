@@ -24,6 +24,8 @@ public class User : BaseEntity
 
     public string? Email { get; set; }
 
+    public string? Address { get; set; }
+
     public string? AvatarUrl { get; set; }
 
     public virtual Role? Role { get; set; }
@@ -39,6 +41,8 @@ public class User : BaseEntity
     public int? TeamId { get; set; }
 
     public virtual Team? Team { get; set; }
+
+    public virtual CompanyMember? CompanyMember { get; set; }
 
     [JsonIgnore]
     public virtual ICollection<Feedback> Feedbacks { get; set; }

@@ -32,8 +32,8 @@ namespace Domain.Models.Contracts
 
         public int? CompanyMemberId { get; set; }
 
-        public virtual CompanyMember MemberList { get; set; }
-
+        public virtual CompanyMember CompanyMember { get; set; }
+        
         [JsonIgnore]
         public virtual ICollection<Contract> Contracts { get; set; }
 

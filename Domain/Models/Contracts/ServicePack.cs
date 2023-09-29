@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Domain.Models.Contracts
@@ -15,6 +16,7 @@ namespace Domain.Models.Contracts
 
         public string Description { get; set; }
 
-        public virtual ICollection<Service>? Services { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Service> Services { get; set; }
     }
 }
