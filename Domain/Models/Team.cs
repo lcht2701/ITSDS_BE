@@ -22,7 +22,7 @@ public partial class Team : BaseEntity
 
     public bool IsActive { get; set; }
 
-    public Guid ManagerId { get; set; }
+    public int ManagerId { get; set; }
 
     [JsonIgnore]
     public virtual ICollection<User> Users { get; set; }

@@ -30,18 +30,20 @@ public class UserController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetUsers()
     {
-        return Ok(await _userRepository.ToListAsync());
+        var result = await _userRepository.ToListAsync();
+        return Ok(result);
     }
 
     [Authorize]
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetUserById(Guid id)
+    public async Task<IActionResult> GetUserById(int id)
     {
-        var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new NotFoundException("User is not found"));
-        return Ok(user);
+        var result = await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new NotFoundException("User is not found"));
+        return Ok(result);
     }
 
-    [Authorize(Roles = Roles.ADMIN)]
+    //Enable back to test authorization
+    //[Authorize(Roles = Roles.ADMIN)]
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest model)
     {
@@ -58,9 +60,9 @@ public class UserController : BaseController
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest req)
+    public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest req)
     {
-        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException());
+        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("User not found"));
         User entity = Mapper.Map(req, target);
         await _userRepository.UpdateAsync(entity);
         return Accepted("Updated Successfully");
@@ -68,9 +70,9 @@ public class UserController : BaseController
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteUser(Guid id)
+    public async Task<IActionResult> DeleteUser(int id)
     {
-        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException());
+        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("User not found"));
         //Soft Delete
         await _userRepository.DeleteAsync(target);
         return Ok("Deleted Successfully");

@@ -8,7 +8,7 @@ namespace Domain.Models.Contracts
 {
     public partial class CompanyMember :  BaseEntity
     {
-        public Guid MemberId { get; set; }
+        public int MemberId { get; set; }
 
         public string MemberPosition { get; set; }
     }

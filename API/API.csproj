@@ -29,4 +29,10 @@
     <ProjectReference Include="..\Persistence\Persistence.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DTOs\Assignments\Requests\" />
+    <Folder Include="DTOs\Assignments\Responses\" />
+    <Folder Include="DTOs\Tickets\Responses\" />
+  </ItemGroup>
+
 </Project>

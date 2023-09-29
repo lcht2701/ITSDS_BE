@@ -26,11 +26,11 @@ namespace Domain.Models.Contracts
 
         public bool? isActive { get; set; }
 
-        public Guid? CustomerAdminId { get; set; }
+        public int? CustomerAdminId { get; set; }
 
         public virtual User CustomerAdmin { get; set; }
 
-        public Guid? CompanyMemberId { get; set; }
+        public int? CompanyMemberId { get; set; }
 
         public virtual CompanyMember MemberList { get; set; }
 

@@ -12,9 +12,9 @@ public partial class Feedback : BaseEntity
 
     public string? Description { get; set; }
 
-    public Guid TicketId { get; set; }
+    public int TicketId { get; set; }
 
     public virtual Ticket Ticket { get; set; }
 
-    public Guid CustomerId { get; set; }
+    public int CustomerId { get; set; }
 }

@@ -24,7 +24,7 @@ public partial class TicketTask : BaseEntity
 
     public bool isDone { get; set; }
 
-    public Guid TicketId { get; set; }
+    public int TicketId { get; set; }
 
-    public Guid CreatedBy { get; set; }
+    public int CreatedBy { get; set; }
 }

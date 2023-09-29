@@ -8,7 +8,7 @@ namespace Domain.Models.Tickets;
 
 public partial class TicketApproval : BaseEntity
 {
-    public Guid CreatedBy { get; set; }
+    public int CreatedBy { get; set; }
 
     public string Description { get; set; }
 

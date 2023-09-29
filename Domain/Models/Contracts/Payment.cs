@@ -28,7 +28,7 @@ namespace Domain.Models.Contracts
 
         public string? Note { get; set; }
 
-        public Guid ContractId { get; set; }
+        public int ContractId { get; set; }
 
         public virtual Contract Contract { get; set; }
 

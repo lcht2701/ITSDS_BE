@@ -13,11 +13,11 @@ namespace Domain.Models.Contracts
         {
             AdditionalServices = new HashSet<Service>();
         }
-        public Guid ContractId { get; set; }
+        public int ContractId { get; set; }
 
         public virtual Contract Contract { get; set; }
 
-        public Guid? ServicePackId { get; set; }
+        public int? ServicePackId { get; set; }
 
         public virtual ServicePack ServicePack { get; set; }
 

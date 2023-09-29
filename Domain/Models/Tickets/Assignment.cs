@@ -11,13 +11,15 @@ public partial class Assignment : BaseEntity
 {
     public string Title { get; set; }
 
-    public string? Description { get; set; }
+    public string Description { get; set; }
+
+    public string? Note { get; set; }
 
     public int Status { get; set; }
 
     public Priority Priority { get; set; }
 
-    public Guid TeamId { get; set; }
+    public int TeamId { get; set; }
 
     public virtual Team Team { get; set; }
 
