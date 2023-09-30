@@ -30,9 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\Assignments\Requests\" />
-    <Folder Include="DTOs\Assignments\Responses\" />
-    <Folder Include="DTOs\Tickets\Responses\" />
+    <Folder Include="DTOs\Requests\Assignments\" />
+    <Folder Include="DTOs\Responses\Assignments\" />
+    <Folder Include="DTOs\Responses\Teams\" />
+    <Folder Include="DTOs\Responses\Tickets\" />
   </ItemGroup>
 
 </Project>

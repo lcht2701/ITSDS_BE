@@ -3,7 +3,7 @@ using Domain.Constants;
 using Domain.Models;
 using System.ComponentModel.DataAnnotations;
 
-namespace API.DTOs.Users.Responses
+namespace API.DTOs.Responses.Users
 {
     public class CreateUserResponse : IMapFrom<User>
     {

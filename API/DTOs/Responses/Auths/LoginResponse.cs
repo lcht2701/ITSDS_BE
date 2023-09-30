@@ -3,7 +3,7 @@ using Domain.Constants;
 using Domain.Models;
 using Domain.Models.Tickets;
 
-namespace API.DTOs.Auth.Responses;
+namespace API.DTOs.Responses.Auths;
 
 public class LoginResponse
 {

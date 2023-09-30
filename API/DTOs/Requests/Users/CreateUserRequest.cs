@@ -3,7 +3,7 @@ using Domain.Constants;
 using Domain.Models;
 using System.ComponentModel.DataAnnotations;
 
-namespace API.DTOs.Users.Requests
+namespace API.DTOs.Requests.Users
 {
     public class CreateUserRequest : IMapTo<User>
     {
@@ -18,7 +18,7 @@ namespace API.DTOs.Users.Requests
 
         [Required(ErrorMessage = "Password is required")]
         public string Password { get; set; }
-        
+
         [EmailAddress]
         [Required(ErrorMessage = "Email is required")]
         public string Email { get; set; }

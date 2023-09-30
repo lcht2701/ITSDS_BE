@@ -3,7 +3,7 @@ using Domain.Constants;
 using Domain.Models;
 using System.ComponentModel.DataAnnotations;
 
-namespace API.DTOs.Users.Requests
+namespace API.DTOs.Requests.Users
 {
     public class UpdateUserRequest : IMapTo<User>
     {

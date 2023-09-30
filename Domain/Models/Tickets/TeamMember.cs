@@ -5,15 +5,14 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Domain.Models.Contracts
+namespace Domain.Models.Tickets
 {
-    public partial class CompanyMember :  BaseEntity
-    { 
+    public partial class TeamMember : BaseEntity
+    {
         public int MemberId { get; set; }
 
-        public int CompanyId { get; set; }
+        public int TeamId { get; set; }
 
-        public string MemberPosition { get; set; }
-
+        public string Expertises { get; set; }
     }
 }

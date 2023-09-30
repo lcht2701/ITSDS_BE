@@ -1,6 +1,4 @@
-﻿using API.DTOs.Auth.Requests;
-using API.DTOs.Auth.Responses;
-using Domain.Exceptions;
+﻿using Domain.Exceptions;
 using Domain.Constants;
 using Domain.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +9,8 @@ using Persistence.Repositories.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using API.DTOs.Requests.Auths;
+using API.DTOs.Responses.Auths;
 
 namespace API.Controllers;
 

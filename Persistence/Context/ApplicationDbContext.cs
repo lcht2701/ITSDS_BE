@@ -15,9 +15,10 @@ namespace Persistence.Context
         }
 
         public virtual DbSet<User> Users { get; set; }
-        public virtual DbSet<Team> Teams { get; set; }
         public virtual DbSet<Configuration> Configurations { get; set; }
         //Ticket
+        public virtual DbSet<Team> Teams { get; set; }
+        public virtual DbSet<TeamMember> TeamMembers { get; set; }
         public virtual DbSet<Assignment> Assignments { get; set; }
         public virtual DbSet<Feedback> Feedbacks { get; set; }
         public virtual DbSet<Ticket> Tickets { get; set; }
@@ -32,7 +33,6 @@ namespace Persistence.Context
         public virtual DbSet<PaymentTerm> PaymentTerms { get; set; }
         public virtual DbSet<Service> Services { get; set; }
         public virtual DbSet<ServicePack> ServicePacks { get; set; }
-
 
 
         protected override void OnModelCreating(ModelBuilder builder)

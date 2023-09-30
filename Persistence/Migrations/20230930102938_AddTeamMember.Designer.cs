@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230930102938_AddTeamMember")]
+    partial class AddTeamMember
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -143,7 +145,9 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
-                    b.ToTable("CompanyMembers");
+                    b.HasIndex("MemberId");
+
+                    b.ToTable("CompanyMember");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Contract", b =>
@@ -452,11 +456,16 @@ namespace Persistence.Migrations
                     b.Property<int>("TicketId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DeletedAt");
 
                     b.HasIndex("TicketId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Feedbacks");
                 });
@@ -475,15 +484,8 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
-
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ManagerId")
                         .HasColumnType("int");
@@ -495,9 +497,14 @@ namespace Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("TeamMemberId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DeletedAt");
+
+                    b.HasIndex("TeamMemberId");
 
                     b.ToTable("Teams");
                 });
@@ -526,17 +533,15 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("TeamId")
-                        .HasColumnType("int");
+                    b.Property<string>("TeamId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DeletedAt");
 
-                    b.HasIndex("TeamId")
-                        .IsUnique();
-
-                    b.ToTable("TeamMembers");
+                    b.ToTable("TeamMember");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Ticket", b =>
@@ -792,11 +797,21 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Contracts.CompanyMember", b =>
                 {
-                    b.HasOne("Domain.Models.Contracts.Company", null)
+                    b.HasOne("Domain.Models.Contracts.Company", "Company")
                         .WithOne("CompanyMember")
                         .HasForeignKey("Domain.Models.Contracts.CompanyMember", "CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Domain.Models.User", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Contract", b =>
@@ -891,16 +906,22 @@ namespace Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Models.User", null)
+                        .WithMany("MyFeedbacks")
+                        .HasForeignKey("UserId");
+
                     b.Navigation("Ticket");
                 });
 
-            modelBuilder.Entity("Domain.Models.Tickets.TeamMember", b =>
+            modelBuilder.Entity("Domain.Models.Tickets.Team", b =>
                 {
-                    b.HasOne("Domain.Models.Tickets.Team", null)
-                        .WithOne("TeamMember")
-                        .HasForeignKey("Domain.Models.Tickets.TeamMember", "TeamId")
+                    b.HasOne("Domain.Models.Tickets.TeamMember", "TeamMember")
+                        .WithMany()
+                        .HasForeignKey("TeamMemberId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("TeamMember");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Ticket", b =>
@@ -975,9 +996,6 @@ namespace Persistence.Migrations
                 {
                     b.Navigation("Contracts");
 
-                    b.Navigation("TeamMember")
-                        .IsRequired();
-
                     b.Navigation("Tickets");
                 });
 
@@ -995,6 +1013,8 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Models.User", b =>
                 {
                     b.Navigation("Company");
+
+                    b.Navigation("MyFeedbacks");
 
                     b.Navigation("MyTickets");
                 });

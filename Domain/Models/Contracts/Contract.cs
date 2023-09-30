@@ -1,4 +1,5 @@
 ﻿using Domain.Constants;
+using Domain.Models.Tickets;
 using System;
 using System.Collections.Generic;
 using System.Linq;

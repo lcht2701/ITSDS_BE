@@ -1,10 +1,5 @@
 ﻿using Domain.Constants;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Domain.Models.Tickets;
 
@@ -12,27 +7,37 @@ public partial class Ticket : BaseEntity
 {
     public Ticket()
     {
+        Assignments = new HashSet<Assignment>();
         TicketTasks = new HashSet<TicketTask>();
         TicketApprovals = new HashSet<TicketApproval>();
+        Feedbacks = new HashSet<Feedback>();
     }
+    public int RequesterId { get; set; }
 
     public string Title { get; set; }
 
     public string? Description { get; set; }
 
+    public string AttachmentUrl { get; set; }
+
     public TicketStatus TicketStatus { get; set; }
 
-    public string? Note { get; set; }
+    public Priority Priority { get; set; }
 
-    public DateTime EndDate { get; set; }
+    public DateTime EstimatedFinishTime { get; set; }
 
-    public int RequesterId { get; set; }
+    public DateTime ActualFinishTime { get; set; }
 
-    public int AssignmentId { get; set; }
+    public string? RequesterNote { get; set; }
 
-    public virtual Assignment Assignment { get; set; }
+    public string? TechnicianNote { get; set; }
 
-    public int ServiceId { get; set; }
+    public int? TeamId { get; set; }
+
+    public virtual Team Team { get; set; }
+
+    [JsonIgnore]
+    public virtual ICollection<Assignment> Assignments { get; set; }
 
     [JsonIgnore]
     public virtual ICollection<TicketTask> TicketTasks { get; set; }

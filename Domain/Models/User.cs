@@ -11,9 +11,9 @@ public class User : BaseEntity
 {
     public User()
     {
-        Feedbacks = new HashSet<Feedback>();
-        Tickets = new HashSet<Ticket>();
+        MyTickets = new HashSet<Ticket>();
     }
+
     public string? FirstName { get; set; }
 
     public string? LastName { get; set; }
@@ -38,16 +38,11 @@ public class User : BaseEntity
 
     public virtual Gender? Gender { get; set; }
 
-    public int? TeamId { get; set; }
-
     public virtual Team? Team { get; set; }
 
-    public virtual CompanyMember? CompanyMember { get; set; }
+    public virtual Company? Company { get; set; }
 
     [JsonIgnore]
-    public virtual ICollection<Feedback> Feedbacks { get; set; }
-
-    [JsonIgnore]
-    public virtual ICollection<Ticket> Tickets { get; set; }
+    public virtual ICollection<Ticket> MyTickets { get; set; }
 
 }
