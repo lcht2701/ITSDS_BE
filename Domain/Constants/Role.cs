@@ -7,4 +7,5 @@ public enum Role
     Manager,
     Technician,
     Accountant,
+    CustomerAdmin,
 }

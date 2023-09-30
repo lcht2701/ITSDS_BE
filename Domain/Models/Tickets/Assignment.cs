@@ -1,5 +1,4 @@
-﻿using Domain.Constants;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,21 +8,11 @@ namespace Domain.Models.Tickets;
 
 public partial class Assignment : BaseEntity
 {
-    public string Title { get; set; }
-
-    public string Description { get; set; }
-
-    public string? Note { get; set; }
-
-    public int Status { get; set; }
-
-    public Priority Priority { get; set; }
-
-    public int TeamId { get; set; }
-
-    public virtual Team Team { get; set; }
+    public int TicketId { get; set; }
 
     public virtual Ticket Ticket { get; set; }
 
-    
+    public int TechnicianId { get; set; }
+
+    public virtual User User { get; set; }
 }

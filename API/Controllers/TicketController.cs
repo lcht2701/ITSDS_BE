@@ -1,10 +1,10 @@
-﻿using API.DTOs.Tickets.Requests;
+﻿using API.DTOs.Requests.Tickets;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Persistence.Repositories;
+using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
 
@@ -12,11 +12,11 @@ namespace API.Controllers;
 
 public class TicketController : BaseController
 {
-    private readonly RepositoryBase<Ticket> _ticketRepository;
-    private readonly RepositoryBase<User> _userRepository;
-    private readonly RepositoryBase<Team> _teamRepository;
+    private readonly IRepositoryBase<Ticket> _ticketRepository;
+    private readonly IRepositoryBase<User> _userRepository;
+    private readonly IRepositoryBase<Team> _teamRepository;
 
-    public TicketController(RepositoryBase<Ticket> ticketRepository, RepositoryBase<User> userRepository, RepositoryBase<Team> teamRepository)
+    public TicketController(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository)
     {
         _ticketRepository = ticketRepository;
         _userRepository = userRepository;
@@ -55,7 +55,7 @@ public class TicketController : BaseController
     [HttpGet("team/{teamId}")]
     public async Task<IActionResult> GetTicketsResponsibleByTeam(int teamId)
     {
-        var result = await _ticketRepository.WhereAsync(x => x.Assignment.TeamId.Equals(teamId));
+        var result = await _ticketRepository.WhereAsync(x => x.TeamId.Equals(teamId));
         if (result.Count == 0)
         {
             throw new NotFoundException("No tickets was found for this team");

@@ -1,5 +1,4 @@
-﻿using API.DTOs.Auth.Requests;
-using API.DTOs.Users.Requests;
+﻿using API.DTOs.Requests.Users;
 using AutoMapper;
 using CloudinaryDotNet.Actions;
 using Domain.Constants;

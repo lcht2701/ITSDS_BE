@@ -2,7 +2,7 @@
 using Domain.Constants;
 using Domain.Models.Tickets;
 
-namespace API.DTOs.Tickets.Requests
+namespace API.DTOs.Requests.Tickets
 {
     public class UpdateTicketRequest : IMapTo<Ticket>
     {
