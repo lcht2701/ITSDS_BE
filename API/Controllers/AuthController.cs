@@ -41,6 +41,10 @@ public class AuthController : BaseController
         {
             throw new UnauthorizedException("Password is incorrect");
         }
+        if (user.isActive == false)
+        {
+            throw new UnauthorizedException("Your account has been suspended");
+        }
         loginResponse.User = user;
         loginResponse.AccessToken = GenerateToken(user);
         SetCookie(ConstantItems.ACCESS_TOKEN, loginResponse.AccessToken);
