@@ -28,7 +28,7 @@ public class User : BaseEntity
 
     public string? AvatarUrl { get; set; }
 
-    public virtual Role? Role { get; set; }
+    public Role? Role { get; set; }
 
     public string? PhoneNumber { get; set; }
 
@@ -36,7 +36,7 @@ public class User : BaseEntity
 
     public DateOnly? DateOfBirth { get; set; }
 
-    public virtual Gender? Gender { get; set; }
+    public Gender? Gender { get; set; }
 
     public virtual Team? Team { get; set; }
 
