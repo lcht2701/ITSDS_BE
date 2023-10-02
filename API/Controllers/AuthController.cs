@@ -60,6 +60,11 @@ public class AuthController : BaseController
             throw new NotFoundException("User is not found");
         }
 
+        if (user.isActive == false)
+        {
+            throw new UnauthorizedException("Your account has been suspended");
+        }
+
         if (IsAdmin)
         {
             throw new UnauthorizedException("You are not allowed to enter");
