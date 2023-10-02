@@ -38,9 +38,9 @@ public class User : BaseEntity
 
     public Gender? Gender { get; set; }
 
-    public virtual Team? Team { get; set; }
+    //public virtual Team? Team { get; set; }
 
-    public virtual Company? Company { get; set; }
+    //public virtual Company? Company { get; set; }
 
     [JsonIgnore]
     public virtual ICollection<Ticket> MyTickets { get; set; }
