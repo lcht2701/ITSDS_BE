@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Requests.TeamMembers;
+using Domain.Constants;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
@@ -22,7 +23,7 @@ public class TeamMemberController : BaseController
         _userRepository = userRepository;
     }
 
-    [Authorize]
+    [Authorize(Roles = Roles.MANAGER)]
     [HttpGet("{teamId}")]
     public async Task<IActionResult> GetTeamMembers(int teamId)
     {
@@ -30,11 +31,15 @@ public class TeamMemberController : BaseController
         return Ok(result);
     }
 
-    [Authorize]
-    [HttpPost("assign-member")]
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpPost("assign")]
     public async Task<IActionResult> AssignMemberToTeam([FromBody] AssignMemberToTeamRequest model)
     {
         var user = await _userRepository.FoundOrThrow(x => x.Id.Equals(model.MemberId), new BadRequestException("User not found"));
+        if (user.Role != Role.Accountant || user.Role != Role.Technician)
+        {
+            throw new BadRequestException("This user is not allowed to assign to a team");
+        }
         var team = await _teamRepository.FoundOrThrow(x => x.Id.Equals(model.TeamId), new BadRequestException("Team not found"));
         var isInTeam = await _teamMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
         if (isInTeam != null)
@@ -46,4 +51,45 @@ public class TeamMemberController : BaseController
         await _teamMemberRepository.CreateAsync(entity);
         return Ok("Successfully");
     }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpPut("update")]
+    public async Task<IActionResult> UpdateTeamMember([FromBody] UpdateTeamMemberRequest model, int teamId, int memberId)
+    {
+        var user = await _teamMemberRepository.FoundOrThrow(x => x.TeamId.Equals(teamId) && x.MemberId.Equals(memberId), new NotFoundException("Member is not in this team."));
+        TeamMember entity = Mapper.Map(model, user);
+        await _teamMemberRepository.CreateAsync(entity);
+        return Ok("Successfully");
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpPatch("transfer")]
+    public async Task<IActionResult> TransferTeamMember(int memberId, int newTeamId)
+    {
+        var user = await _teamMemberRepository.FoundOrThrow(x => x.MemberId.Equals(memberId), new BadRequestException("User is currently not a member of any team"));
+
+        if (user.TeamId == newTeamId)
+        {
+            throw new BadRequestException("Cannot transfer in the same team");
+        }
+
+        user.TeamId = newTeamId;
+        await _teamMemberRepository.UpdateAsync(user);
+        return Ok("Successfully");
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpDelete("remove")]
+    public async Task<IActionResult> RemoveTeamMember(int memberId)
+    {
+        var user = await _teamMemberRepository.FoundOrThrow(x => x.MemberId.Equals(memberId), new BadRequestException("User is currently not a member of any team"));
+
+        await _teamMemberRepository.DeleteAsync(user);
+        return Ok("Successfully");
+    }
+
+
+
+
+
 }

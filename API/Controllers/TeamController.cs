@@ -1,8 +1,6 @@
 ﻿using API.DTOs.Requests.Teams;
-using API.DTOs.Requests.Users;
 using Domain.Constants;
 using Domain.Exceptions;
-using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,25 +12,33 @@ namespace API.Controllers;
 public class TeamController : BaseController
 {
     private readonly IRepositoryBase<Team> _teamRepository;
-    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
-    private readonly IRepositoryBase<User> _userRepository;
 
-    public TeamController(IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<User> userRepository)
+    public TeamController(IRepositoryBase<Team> teamRepository)
     {
         _teamRepository = teamRepository;
-        _teamMemberRepository = teamMemberRepository;
-        _userRepository = userRepository;
     }
 
-    [Authorize(Roles = Roles.MANAGER)]
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpGet]
     public async Task<IActionResult> GetTeams()
     {
-        var result = await _teamRepository.WhereAsync(x => x.ManagerId.Equals(CurrentUserID));
+        var result = await _teamRepository.ToListAsync();
         return Ok(result);
     }
 
     [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("my-teams")]
+    public async Task<IActionResult> GetMyTeams()
+    {
+        var result = await _teamRepository.WhereAsync(x => x.ManagerId.Equals(CurrentUserID));
+        if (result.Count == 0 )
+        {
+            throw new BadRequestException("You are currently not managing any team");
+        }
+        return Ok(result);
+    }
+
+    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet("{teamId}")]
     public async Task<IActionResult> GetTeamById(int teamId)
     {
@@ -40,18 +46,17 @@ public class TeamController : BaseController
         return Ok(result);
     }
 
-    [Authorize(Roles = Roles.MANAGER)]
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpPost]
     public async Task<IActionResult> CreateTeam([FromBody] CreateTeamRequest model)
     {
         var entity = Mapper.Map(model, new Team());
         entity.IsActive = true;
-        entity.ManagerId = CurrentUserID;
         await _teamRepository.CreateAsync(entity);
         return Ok();
     }
 
-    [Authorize(Roles = Roles.MANAGER)]
+    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpPut("{teamId}")]
     public async Task<IActionResult> UpdateTeam(int teamId, [FromBody] UpdateTeamRequest req)
     {
@@ -61,7 +66,7 @@ public class TeamController : BaseController
         return Accepted("Updated Successfully");
     }
 
-    [Authorize(Roles = Roles.MANAGER)]
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpDelete("{teamId}")]
     public async Task<IActionResult> DeleteTeam(int teamId)
     {

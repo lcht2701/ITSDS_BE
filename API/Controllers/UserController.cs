@@ -103,6 +103,6 @@ public class UserController : BaseController
         var result = await _photoService.AddPhotoAsync(file);
         user.AvatarUrl = result.Url.ToString();
         await _userRepository.UpdateAsync(user);
-        return Accepted("Updated Successfully");
+        return Accepted(user.AvatarUrl);
     }
 }
