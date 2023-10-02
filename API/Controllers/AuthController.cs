@@ -30,7 +30,6 @@ public class AuthController : BaseController
     public async Task<IActionResult> Login([FromBody] LoginRequest model)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Username.Equals(model.Username));
-        LoginResponse loginResponse = new();
         if (user == null)
         {
             throw new NotFoundException("User is not found");
@@ -41,21 +40,29 @@ public class AuthController : BaseController
         {
             throw new UnauthorizedException("Password is incorrect");
         }
-        loginResponse.User = user;
-        loginResponse.AccessToken = GenerateToken(user);
-        SetCookie(ConstantItems.ACCESS_TOKEN, loginResponse.AccessToken);
-        return Ok(loginResponse);
+        if (user.isActive == false)
+        {
+            throw new UnauthorizedException("Your account has been suspended");
+        }
+
+        var entity = Mapper.Map(user, new LoginResponse());
+        entity.AccessToken = GenerateToken(user);
+        SetCookie(ConstantItems.ACCESS_TOKEN, entity.AccessToken);
+        return Ok(entity);
     }
 
     [HttpPost("login-admin")]
     public async Task<IActionResult> LoginAdmin([FromBody] LoginRequest model)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Username.Equals(model.Username));
-        LoginResponse loginResponse = new();
-
         if (user == null)
         {
             throw new NotFoundException("User is not found");
+        }
+
+        if (user.isActive == false)
+        {
+            throw new UnauthorizedException("Your account has been suspended");
         }
 
         if (IsAdmin)
@@ -71,10 +78,10 @@ public class AuthController : BaseController
             throw new UnauthorizedException("Password is incorrect");
         }
 
-        loginResponse.User = user;
-        loginResponse.AccessToken = GenerateToken(user);
-        SetCookie(ConstantItems.ACCESS_TOKEN, loginResponse.AccessToken);
-        return Ok(loginResponse);
+        var entity = Mapper.Map(user, new LoginResponse());
+        entity.AccessToken = GenerateToken(user);
+        SetCookie(ConstantItems.ACCESS_TOKEN, entity.AccessToken);
+        return Ok(entity);
     }
 
     [Authorize]
