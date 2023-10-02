@@ -10,6 +10,8 @@ namespace API.DTOs.Requests.Teams
         public string Name { get; set; }
 
         [Required]
+        public int ManagerId { get; set; }
+
         public string Location { get; set; }
 
         public string Description { get; set; }

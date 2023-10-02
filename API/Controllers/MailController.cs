@@ -12,7 +12,7 @@ namespace API.Controllers;
 public class MailController : BaseController
 {
     private readonly IMailService _mailService;
-    //injecting the IMailService into the constructor
+
     public MailController(IMailService _MailService)
     {
         _mailService = _MailService;
