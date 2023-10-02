@@ -30,8 +30,8 @@ namespace Domain.Models.Contracts
 
         public virtual User CustomerAdmin { get; set; }
 
-        public virtual CompanyMember CompanyMember { get; set; }
-        
+        //public virtual CompanyMember CompanyMember { get; set; }
+
         [JsonIgnore]
         public virtual ICollection<Contract> Contracts { get; set; }
 
