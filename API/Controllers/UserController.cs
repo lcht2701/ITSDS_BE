@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Requests.Users;
+using API.DTOs.Responses.Users;
 using AutoMapper;
 using CloudinaryDotNet.Actions;
 using Domain.Constants;
@@ -64,7 +65,7 @@ public class UserController : BaseController
         var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("User not found"));
         User entity = Mapper.Map(req, target);
         await _userRepository.UpdateAsync(entity);
-        return Accepted("Updated Successfully");
+        return Ok("Updated Successfully");
     }
 
     [Authorize(Roles = Roles.ADMIN)]
@@ -92,7 +93,7 @@ public class UserController : BaseController
         var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
         User entity = Mapper.Map(req, target);
         await _userRepository.UpdateAsync(entity);
-        return Accepted("Updated Successfully");
+        return Ok("Updated Successfully");
     }
 
     [Authorize]
@@ -102,7 +103,9 @@ public class UserController : BaseController
         var user = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
         var result = await _photoService.AddPhotoAsync(file);
         user.AvatarUrl = result.Url.ToString();
+        UploadAvatarProfileResponse entity = new();
+        entity.AvatarUrl = user.AvatarUrl;
         await _userRepository.UpdateAsync(user);
-        return Accepted(user.AvatarUrl);
+        return Ok(entity);
     }
 }
