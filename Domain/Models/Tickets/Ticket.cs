@@ -1,4 +1,5 @@
 ﻿using Domain.Constants;
+using Domain.Models.Contracts;
 using System.Text.Json.Serialization;
 
 namespace Domain.Models.Tickets;
@@ -18,15 +19,19 @@ public partial class Ticket : BaseEntity
 
     public string? Description { get; set; }
 
-    public string AttachmentUrl { get; set; }
+    public int ServiceId { get; set; } 
+
+    public Service Service { get; set; }
+
+    public string? AttachmentUrl { get; set; }
 
     public TicketStatus TicketStatus { get; set; }
 
-    public Priority Priority { get; set; }
+    public Priority? Priority { get; set; }
 
-    public DateTime EstimatedFinishTime { get; set; }
+    public DateTime? EstimatedFinishTime { get; set; }
 
-    public DateTime ActualFinishTime { get; set; }
+    public DateTime? ActualFinishTime { get; set; }
 
     public string? RequesterNote { get; set; }
 
