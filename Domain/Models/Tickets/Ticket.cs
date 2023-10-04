@@ -11,35 +11,41 @@ public partial class Ticket : BaseEntity
         Assignments = new HashSet<Assignment>();
         TicketTasks = new HashSet<TicketTask>();
         TicketApprovals = new HashSet<TicketApproval>();
-        Feedbacks = new HashSet<Feedback>();
     }
-    public int RequesterId { get; set; }
+    public int? RequesterId { get; set; }
+
+    public int? CompanyId { get; set; }
 
     public string Title { get; set; }
 
     public string? Description { get; set; }
 
-    public int ServiceId { get; set; } 
+    public int? ServicePackId { get; set; }
 
-    public Service Service { get; set; }
+    public int? ServiceId { get; set; }
 
-    public string? AttachmentUrl { get; set; }
-
-    public TicketStatus TicketStatus { get; set; }
+    public TicketStatus? TicketStatus { get; set; }
 
     public Priority? Priority { get; set; }
 
-    public DateTime? EstimatedFinishTime { get; set; }
+    public DateTime? DueDate { get; set; }
 
-    public DateTime? ActualFinishTime { get; set; }
-
-    public string? RequesterNote { get; set; }
-
-    public string? TechnicianNote { get; set; }
+    public DateTime? ClosedDate { get; set; }
 
     public int? TeamId { get; set; }
 
+    public string? AttachmentUrl { get; set; }  
+
+    [JsonIgnore]
+    public virtual User Requester { get; set; }    
+    [JsonIgnore]
+    public virtual ServicePack ServicePack { get; set; }
+    [JsonIgnore]
+    public virtual Service Service { get; set; }
+    [JsonIgnore]
     public virtual Team Team { get; set; }
+    [JsonIgnore]
+    public virtual Company Company { get; set; }
 
     [JsonIgnore]
     public virtual ICollection<Assignment> Assignments { get; set; }
@@ -49,9 +55,4 @@ public partial class Ticket : BaseEntity
 
     [JsonIgnore]
     public virtual ICollection<TicketApproval> TicketApprovals { get; set; }
-
-    [JsonIgnore]
-    public virtual ICollection<Feedback> Feedbacks { get; set; }
-
-
 }

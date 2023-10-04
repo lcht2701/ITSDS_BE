@@ -81,23 +81,28 @@ public class TicketController : BaseController
         return Ok(result);
     }
 
-    [Authorize]
-    [HttpPost]
+    [Authorize(Roles = $"{Roles.CUSTOMERADMIN},{Roles.CUSTOMER}")]
+    [HttpPost("new-ticket")]
     public async Task<IActionResult> CreateTicket([FromBody] CreateTicketRequest model)
     {
         Ticket entity = Mapper.Map(model, new Ticket());
         //Logic
+        entity.RequesterId = CurrentUserID;
         entity.TicketStatus = TicketStatus.Open;
+        //Create
         await _ticketRepository.CreateAsync(entity);
         return Ok("Create Successfully");
     }
 
-    //Chưa làm Author
-    [Authorize]
+    [Authorize(Roles = $"{Roles.CUSTOMERADMIN},{Roles.CUSTOMER}")]
     [HttpPut("{ticketId}")]
     public async Task<IActionResult> UpdateTicketInformation(int ticketId, [FromBody]UpdateTicketRequest model)
     {
         var target = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
+        if (target.TicketStatus == TicketStatus.Open)
+        {
+            throw new BadRequestException("Ticket can not be updated when it is being executed");
+        }
         var entity = Mapper.Map(model, new Ticket());
         await _ticketRepository.UpdateAsync(entity);
         return Accepted(entity);
@@ -111,6 +116,20 @@ public class TicketController : BaseController
         var target = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
         await _ticketRepository.DeleteAsync(target);
         return Accepted(target);
+    }
+
+    [Authorize]
+    [HttpPost("assign-ticket")]
+    public async Task<IActionResult> AssignTicketByManual(int ticketId, int teamId)
+    {
+        Ticket ticket = await _ticketRepository.FoundOrThrow(o => o.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
+        if (ticket.TicketStatus == TicketStatus.Open)
+        {
+            return BadRequest("Ticket has already executed");
+        }
+        var team = _teamRepository.FoundOrThrow(o => o.Id.Equals(teamId), new NotFoundException("Team not found"));
+        
+        return Ok();
     }
 }
 

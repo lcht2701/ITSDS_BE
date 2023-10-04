@@ -20,7 +20,6 @@ namespace Persistence.Context
         public virtual DbSet<Team> Teams { get; set; }
         public virtual DbSet<TeamMember> TeamMembers { get; set; }
         public virtual DbSet<Assignment> Assignments { get; set; }
-        public virtual DbSet<Feedback> Feedbacks { get; set; }
         public virtual DbSet<Ticket> Tickets { get; set; }
         public virtual DbSet<TicketApproval> TicketApprovals { get; set; }
         public virtual DbSet<TicketTask> TicketTasks { get; set; }
