@@ -1,3 +1,4 @@
+using API.DTOs.Requests.Users;
 using API.DTOs.Responses.Users;
 using AutoMapper;
 using CloudinaryDotNet.Actions;
