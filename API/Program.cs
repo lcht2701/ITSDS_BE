@@ -12,6 +12,7 @@ using System.Reflection;
 using Persistence.Services.Interfaces;
 using Persistence.Services.Implements;
 using Domain.Application.AppConfig;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -29,11 +30,17 @@ builder.Services.Configure<CloudinarySettings>(configuration.GetSection(nameof(C
 builder.Services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<IMailService, MailService>();
+builder.Services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
+builder.Services.AddSingleton<FirebaseStorageService>();
 
 builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>())
                 .AddJsonOptions(opt => opt.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter()));
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = int.MaxValue;
+});
 
 builder.Services.AddSwaggerGen(option =>
 {
