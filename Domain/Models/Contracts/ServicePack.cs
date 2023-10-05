@@ -11,12 +11,14 @@ namespace Domain.Models.Contracts
     {
         public ServicePack()
         {
-            Services = new HashSet<Service>();
+            ContractDetails = new HashSet<ContractDetail>();
         }
-
-        public string Description { get; set; }
+        public string? Description { get; set; }
+        public string? Price { get; set; }
 
         [JsonIgnore]
-        public virtual ICollection<Service> Services { get; set; }
+        public virtual ICollection<Service>? Services { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<ContractDetail>? ContractDetails { get; set; }
     }
 }

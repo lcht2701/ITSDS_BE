@@ -16,11 +16,9 @@ public partial class Ticket : BaseEntity
 
     public int? CompanyId { get; set; }
 
-    public string Title { get; set; }
+    public string? Title { get; set; }
 
     public string? Description { get; set; }
-
-    public int? ServicePackId { get; set; }
 
     public int? ServiceId { get; set; }
 
@@ -32,27 +30,18 @@ public partial class Ticket : BaseEntity
 
     public DateTime? ClosedDate { get; set; }
 
-    public int? TeamId { get; set; }
-
     public string? AttachmentUrl { get; set; }  
 
     [JsonIgnore]
-    public virtual User Requester { get; set; }    
+    public virtual User? Requester { get; set; }    
     [JsonIgnore]
-    public virtual ServicePack ServicePack { get; set; }
+    public virtual Service? Service { get; set; }
     [JsonIgnore]
-    public virtual Service Service { get; set; }
+    public virtual Company? Company { get; set; }
     [JsonIgnore]
-    public virtual Team Team { get; set; }
+    public virtual ICollection<Assignment>? Assignments { get; set; }
     [JsonIgnore]
-    public virtual Company Company { get; set; }
-
+    public virtual ICollection<TicketTask>? TicketTasks { get; set; }
     [JsonIgnore]
-    public virtual ICollection<Assignment> Assignments { get; set; }
-
-    [JsonIgnore]
-    public virtual ICollection<TicketTask> TicketTasks { get; set; }
-
-    [JsonIgnore]
-    public virtual ICollection<TicketApproval> TicketApprovals { get; set; }
+    public virtual ICollection<TicketApproval>? TicketApprovals { get; set; }
 }

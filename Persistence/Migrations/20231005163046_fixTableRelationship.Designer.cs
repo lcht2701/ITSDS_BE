@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231005163046_fixTableRelationship")]
+    partial class fixTableRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -332,17 +334,12 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("ServicePackId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Type")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DeletedAt");
-
-                    b.HasIndex("ServicePackId");
 
                     b.ToTable("Services");
                 });
@@ -370,9 +367,14 @@ namespace Persistence.Migrations
                     b.Property<string>("Price")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ServiceId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DeletedAt");
+
+                    b.HasIndex("ServiceId");
 
                     b.ToTable("ServicePacks");
                 });
@@ -814,13 +816,13 @@ namespace Persistence.Migrations
                     b.Navigation("Payment");
                 });
 
-            modelBuilder.Entity("Domain.Models.Contracts.Service", b =>
+            modelBuilder.Entity("Domain.Models.Contracts.ServicePack", b =>
                 {
-                    b.HasOne("Domain.Models.Contracts.ServicePack", "ServicePacks")
-                        .WithMany("Services")
-                        .HasForeignKey("ServicePackId");
+                    b.HasOne("Domain.Models.Contracts.Service", "Service")
+                        .WithMany("ServicePacks")
+                        .HasForeignKey("ServiceId");
 
-                    b.Navigation("ServicePacks");
+                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Assignment", b =>
@@ -948,14 +950,14 @@ namespace Persistence.Migrations
                 {
                     b.Navigation("ContractDetails");
 
+                    b.Navigation("ServicePacks");
+
                     b.Navigation("Tickets");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.ServicePack", b =>
                 {
                     b.Navigation("ContractDetails");
-
-                    b.Navigation("Services");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Team", b =>

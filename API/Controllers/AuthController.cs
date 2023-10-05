@@ -40,7 +40,7 @@ public class AuthController : BaseController
         {
             throw new UnauthorizedException("Password is incorrect");
         }
-        if (user.isActive == false)
+        if (user.IsActive == false)
         {
             throw new UnauthorizedException("Your account has been suspended");
         }
@@ -60,7 +60,7 @@ public class AuthController : BaseController
             throw new NotFoundException("User is not found");
         }
 
-        if (user.isActive == false)
+        if (user.IsActive == false)
         {
             throw new UnauthorizedException("Your account has been suspended");
         }

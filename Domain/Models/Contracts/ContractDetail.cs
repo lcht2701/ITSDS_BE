@@ -11,17 +11,19 @@ namespace Domain.Models.Contracts
     {
         public ContractDetail()
         {
-            AdditionalServices = new HashSet<Service>();
         }
-        public int ContractId { get; set; }
-
-        public virtual Contract Contract { get; set; }
+        public int? ContractId { get; set; }
 
         public int? ServicePackId { get; set; }
 
-        public virtual ServicePack ServicePack { get; set; }
+        public int? AdditionalServiceId { get; set; }
 
-        public virtual ICollection<Service>? AdditionalServices { get; set; }
+        [JsonIgnore]
+        public virtual Contract? Contract { get; set; }
+        [JsonIgnore]
+        public virtual ServicePack? ServicePack { get; set; }
+        [JsonIgnore]
+        public virtual Service? AdditionalService { get; set; }
 
     }
 }

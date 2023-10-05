@@ -55,7 +55,7 @@ public class UserController : BaseController
         //Hash password
         var passwordHasher = new PasswordHasher<User>();
         entity.Password = passwordHasher.HashPassword(entity, model.Password);
-        entity.isActive = true;
+        entity.IsActive = true;
         await _userRepository.CreateAsync(entity);
         return Ok("Created Successfully");
     }

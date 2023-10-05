@@ -10,13 +10,13 @@ namespace Domain.Models.Tickets;
 
 public partial class TicketApproval : BaseEntity
 {
-    public int TicketId { get; set; }
+    public int? TicketId { get; set; }
 
     public int? ApprovalCreaterId { get; set; }
 
     public int? ApproverId { get; set; }
 
-    public string Title { get; set; }
+    public string? Title { get; set; }
 
     public string? Description { get; set; }
 
@@ -31,9 +31,9 @@ public partial class TicketApproval : BaseEntity
     public TicketStatus? Stage { get; set; }
 
     [JsonIgnore]
-    public virtual Ticket Ticket { get; set; }
+    public virtual Ticket? Ticket { get; set; }
     [JsonIgnore]
-    public virtual User ApprovalCreater { get; set; }
+    public virtual User? ApprovalCreater { get; set; }
     [JsonIgnore]
-    public virtual User Approver { get; set; }
+    public virtual User? Approver { get; set; }
 }

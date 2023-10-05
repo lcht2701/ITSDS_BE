@@ -9,19 +9,19 @@ namespace Domain.Models.Tickets;
 
 public partial class TicketTask : BaseEntity
 {
-    public int TechnicianId { get; set; }
+    public int? TechnicianId { get; set; }
 
-    public int TicketId { get; set; }
+    public int? TicketId { get; set; }
 
-    public string Title { get; set; }
+    public string? Title { get; set; }
 
     public string? Description { get; set; }
 
     public string? Note { get; set; }
 
-    public bool isDone { get; set; }
+    public bool? IsDone { get; set; }
 
-    public TaskStatus TaskStatus { get; set; }
+    public TaskStatus? TaskStatus { get; set; }
 
     public DateTime? ScheduledStartTime { get; set; }
 
@@ -32,7 +32,7 @@ public partial class TicketTask : BaseEntity
     public DateTime? DateCompleted { get; set; }
 
     [JsonIgnore]
-    public virtual Ticket Ticket { get; set; }
+    public virtual Ticket? Ticket { get; set; }
     [JsonIgnore]
-    public virtual User Technician { get; set; }
+    public virtual User? Technician { get; set; }
 }

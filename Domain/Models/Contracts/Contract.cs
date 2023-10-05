@@ -21,25 +21,25 @@ namespace Domain.Models.Contracts
 
         public string? AttachmentURl { get; set; }
 
-        public DateOnly StartDate { get; set; }
+        public DateOnly? StartDate { get; set; }
 
-        public int Duration { get; set; }
+        public int? Duration { get; set; }
 
-        public double Value { get; set; }
+        public double? Value { get; set; }
 
         public TicketStatus? Status { get; set; }
 
-        public int TeamId { get; set; }
+        public int? TeamId { get; set; }
 
-        public virtual Team Team { get; set; }
-
-        public int CompanyId { get; set; }
-
-        public virtual Company Company { get; set; }
+        public int? CompanyId { get; set; }
 
         [JsonIgnore]
-        public virtual ICollection<Payment> Payments { get; set; }
+        public virtual Team? Team { get; set; }
         [JsonIgnore]
-        public virtual ICollection<ContractDetail> ContractDetails { get; set; }
+        public virtual Company? Company { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Payment>? Payments { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<ContractDetail>? ContractDetails { get; set; }
     }
 }

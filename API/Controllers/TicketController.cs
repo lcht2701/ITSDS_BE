@@ -24,7 +24,6 @@ public class TicketController : BaseController
         _teamRepository = teamRepository;
     }
 
-    //Chưa biết để role gì
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetTickets()
@@ -33,20 +32,14 @@ public class TicketController : BaseController
         return Ok(result);
     }
 
-    //Dùng cho customer && CustomerAdmin
-    [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.CUSTOMERADMIN}")]
-    [HttpGet("my-tickets")]
-    public async Task<IActionResult> GetTicketOfCurrentUser()
+    [Authorize(Roles = Roles.COMPANYMEMBERS)]
+    [HttpGet("my-requests")]
+    public async Task<IActionResult> GetMyRequestedTickets()
     {
-        var result = await _ticketRepository.WhereAsync(x => x.Id.Equals(CurrentUserID));
-        if (result.Count == 0)
-        {
-            throw new NotFoundException("No tickets was found for this user");
-        }
+        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(CurrentUserID));
         return Ok(result);
     }
 
-    //Chưa sure
     [Authorize]
     [HttpGet("user/{userId}")]
     public async Task<IActionResult> GetTicketsByUser(int userId)
@@ -59,25 +52,11 @@ public class TicketController : BaseController
         return Ok(result);
     }
 
-    //Ngoại trừ Admin + Accountant
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER},{Roles.CUSTOMERADMIN}")]
+    [Authorize(Roles = Roles.TICKETPARTICIPANTS)]
     [HttpGet("{ticketId}")]
     public async Task<IActionResult> GetTicketById(int ticketId)
     {
         var result = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
-        return Ok(result);
-    }
-
-    //Dành cho manager và technical để quản lý của team
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
-    [HttpGet("team/{teamId}")]
-    public async Task<IActionResult> GetTicketsResponsibleByTeam(int teamId)
-    {
-        var result = await _ticketRepository.WhereAsync(x => x.TeamId.Equals(teamId));
-        if (result.Count == 0)
-        {
-            throw new NotFoundException("No tickets was found for this team");
-        }
         return Ok(result);
     }
 
@@ -116,20 +95,6 @@ public class TicketController : BaseController
         var target = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
         await _ticketRepository.DeleteAsync(target);
         return Accepted(target);
-    }
-
-    [Authorize]
-    [HttpPost("assign-ticket")]
-    public async Task<IActionResult> AssignTicketByManual(int ticketId, int teamId)
-    {
-        Ticket ticket = await _ticketRepository.FoundOrThrow(o => o.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
-        if (ticket.TicketStatus == TicketStatus.Open)
-        {
-            return BadRequest("Ticket has already executed");
-        }
-        var team = _teamRepository.FoundOrThrow(o => o.Id.Equals(teamId), new NotFoundException("Team not found"));
-        
-        return Ok();
     }
 }
 
