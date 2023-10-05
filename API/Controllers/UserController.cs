@@ -99,6 +99,28 @@ public class UserController : BaseController
         return Ok("Updated Successfully");
     }
 
+    [Authorize]
+    [HttpPatch("update-profile-with-avatar")]
+    public async Task<IActionResult> UpdateProfileWithAvatar([FromForm] UpdateProfileWithAvatarRequest req)
+    {
+        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
+        //Upload Image
+        if (req.AvatarImage == null || req.AvatarImage.Length == 0)
+        {
+            throw new BadRequestException("No file uploaded.");
+        }
+        var stream = new MemoryStream();
+        await req.AvatarImage.CopyToAsync(stream);
+        stream.Position = 0;
+        var linkImage = await _firebaseStorageService.UploadImageFirebaseAsync(stream, req.AvatarImage.FileName);
+
+        //Update User
+        User entity = Mapper.Map(req.UpdateProfileRequest, target);
+        entity.AvatarUrl = linkImage;
+        await _userRepository.UpdateAsync(entity);
+        return Ok("Updated Successfully");
+    }
+
     //[Authorize]
     //[HttpPatch("uploadAvatarCloudinary")]
     //public async Task<IActionResult> UploadAvatarProfileCloudinary(IFormFile file)
@@ -127,7 +149,8 @@ public class UserController : BaseController
         var linkImage = await _firebaseStorageService.UploadImageFirebaseAsync(stream, file.FileName);
         user.AvatarUrl = linkImage;
         await _userRepository.UpdateAsync(user);
-        return Ok(linkImage); 
+        return Ok(linkImage);
+      
     }
 
 }

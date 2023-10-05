@@ -13,7 +13,7 @@ namespace API.DTOs.Requests.Users
         public string? LastName { get; set; }
 
         [EmailAddress]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         [Phone]
         public string? PhoneNumber { get; set; }
@@ -22,6 +22,6 @@ namespace API.DTOs.Requests.Users
 
         public DateOnly? DateOfBirth { get; set; }
 
-        public string Address { get; set; }
+        public string? Address { get; set; }
     }
 }
