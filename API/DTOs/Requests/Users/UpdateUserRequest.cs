@@ -24,5 +24,7 @@ namespace API.DTOs.Requests.Users
         public DateOnly DateOfBirth { get; set; }
 
         public string Address { get; set; }
+
+        public string AvatarUrl { get; set; }
     }
 }
