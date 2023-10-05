@@ -27,6 +27,8 @@ public partial class Team : BaseEntity
     public int ManagerId { get; set; }
 
     [JsonIgnore]
+    public virtual User Manager { get; set; }
+    [JsonIgnore]
     public virtual ICollection<Ticket> Tickets { get; set; }
     [JsonIgnore]
     public virtual ICollection<Contract> Contracts { get; set; }

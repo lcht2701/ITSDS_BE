@@ -127,8 +127,7 @@ public class UserController : BaseController
         var linkImage = await _firebaseStorageService.UploadImageFirebaseAsync(stream, file.FileName);
         user.AvatarUrl = linkImage;
         await _userRepository.UpdateAsync(user);
-        return Ok(linkImage);
-      
+        return Ok(linkImage); 
     }
 
 }
