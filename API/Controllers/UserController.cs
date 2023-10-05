@@ -63,7 +63,7 @@ public class UserController : BaseController
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest req)
+    public async Task<IActionResult> UpdateUser(int id, [FromForm] UpdateUserRequest req)
     {
         var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("User not found"));
         User entity = Mapper.Map(req, target);
@@ -101,22 +101,10 @@ public class UserController : BaseController
 
     [Authorize]
     [HttpPatch("update-profile-with-avatar")]
-    public async Task<IActionResult> UpdateProfileWithAvatar([FromForm] UpdateProfileWithAvatarRequest req)
+    public async Task<IActionResult> UpdateProfileWithAvatar([FromBody] UpdateProfileRequest req)
     {
         var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
-        //Upload Image
-        if (req.AvatarImage == null || req.AvatarImage.Length == 0)
-        {
-            throw new BadRequestException("No file uploaded.");
-        }
-        var stream = new MemoryStream();
-        await req.AvatarImage.CopyToAsync(stream);
-        stream.Position = 0;
-        var linkImage = await _firebaseStorageService.UploadImageFirebaseAsync(stream, req.AvatarImage.FileName);
-
-        //Update User
-        User entity = Mapper.Map(req.UpdateProfileRequest, target);
-        entity.AvatarUrl = linkImage;
+        User entity = Mapper.Map(req, target);
         await _userRepository.UpdateAsync(entity);
         return Ok("Updated Successfully");
     }
