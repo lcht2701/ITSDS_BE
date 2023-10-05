@@ -1,4 +1,7 @@
-﻿using API.DTOs.Requests.Users;
+using API.DTOs.Requests.Users;
+using API.DTOs.Responses.Users;
+using AutoMapper;
+using CloudinaryDotNet.Actions;
 using Domain.Constants;
 using Domain.Exceptions;
 using Domain.Models;
@@ -125,6 +128,7 @@ public class UserController : BaseController
         user.AvatarUrl = linkImage;
         await _userRepository.UpdateAsync(user);
         return Ok(linkImage);
+      
     }
 
 }
