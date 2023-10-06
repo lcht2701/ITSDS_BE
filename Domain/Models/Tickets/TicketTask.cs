@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Domain.Constants;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Domain.Models.Tickets;
 
 public partial class TicketTask : BaseEntity
 {
-    public int? TechnicianId { get; set; }
-
     public int? TicketId { get; set; }
 
     public string? Title { get; set; }
@@ -19,18 +13,34 @@ public partial class TicketTask : BaseEntity
 
     public string? Note { get; set; }
 
-    public bool? IsDone { get; set; }
+    public int? TechnicianId { get; set; }
 
-    public TaskStatus? TaskStatus { get; set; }
+    public int? TeamId { get; set; }
+
+    public Priority? Priority { get; set; }
+
+    public TicketTaskStatus? TaskStatus { get; set; }
 
     public DateTime? ScheduledStartTime { get; set; }
 
     public DateTime? ScheduledEndTime { get; set; }
 
+    public DateTime? ActualStartTime { get; set; }
+
+    public DateTime? ActualEndTime { get; set; }
+
+    public int? Progress { get; set; }
+
+    public double? AdditionalCost { get; set; }
+
+    public string? AttachmentUrl { get; set; }
+
     public int? TimeSpent { get; set; }
 
     public DateTime? DateCompleted { get; set; }
 
+    [JsonIgnore]
+    public virtual Team? Team { get; set; }
     [JsonIgnore]
     public virtual Ticket? Ticket { get; set; }
 }
