@@ -18,7 +18,7 @@ public class TeamController : BaseController
         _teamRepository = teamRepository;
     }
 
-    [Authorize(Roles = Roles.ADMIN)]
+    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet]
     public async Task<IActionResult> GetTeams()
     {
@@ -26,14 +26,14 @@ public class TeamController : BaseController
         return Ok(result);
     }
 
-    [Authorize(Roles = Roles.MANAGER)]
+    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet("my-teams")]
     public async Task<IActionResult> GetMyTeams()
     {
         var result = await _teamRepository.WhereAsync(x => x.OwnerId.Equals(CurrentUserID));
         if (result.Count == 0 )
         {
-            throw new BadRequestException("You are currently not managing any team");
+            throw new BadRequestException("You are currently not owning any team");
         }
         return Ok(result);
     }
@@ -46,7 +46,7 @@ public class TeamController : BaseController
         return Ok(result);
     }
 
-    [Authorize(Roles = Roles.ADMIN)]
+    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpPost]
     public async Task<IActionResult> CreateTeam([FromBody] CreateTeamRequest model)
     {
@@ -66,7 +66,7 @@ public class TeamController : BaseController
         return Accepted("Updated Successfully");
     }
 
-    [Authorize(Roles = Roles.ADMIN)]
+    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpDelete("{teamId}")]
     public async Task<IActionResult> DeleteTeam(int teamId)
     {

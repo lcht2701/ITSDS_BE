@@ -9,8 +9,7 @@ namespace API.DTOs.Requests.Teams
         [Required]
         public string Name { get; set; }
 
-        [Required]
-        public int ManagerId { get; set; }
+        public int OwnerId { get; set; }
 
         public string Location { get; set; }
 

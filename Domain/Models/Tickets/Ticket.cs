@@ -8,9 +8,9 @@ public partial class Ticket : BaseEntity
 {
     public Ticket()
     {
-        Assignments = new HashSet<Assignment>();
         TicketAnalysts = new HashSet<TicketAnalyst>();
         TicketTasks = new HashSet<TicketTask>();
+        Histories = new HashSet<History>();
     }
     public int? RequesterId { get; set; }
 
@@ -23,6 +23,8 @@ public partial class Ticket : BaseEntity
     public int? ServiceId { get; set; }
 
     public int? TeamId { get; set; }
+
+    public int? CategoryId { get; set; }
 
     public TicketStatus? TicketStatus { get; set; }
 
@@ -40,12 +42,12 @@ public partial class Ticket : BaseEntity
     
     public Urgency? Urgency { get; set; }
 
-    public int? CategoryId { get; set; }
-
     public string? AttachmentUrl { get; set; }
 
     [JsonIgnore]
     public virtual User? Requester { get; set; }  
+    [JsonIgnore]
+    public virtual Assignment? Assignment { get; set; }  
     [JsonIgnore]
     public virtual Team? Team { get; set; }    
     [JsonIgnore]
@@ -54,8 +56,6 @@ public partial class Ticket : BaseEntity
     public virtual Category? Category { get; set; }
     [JsonIgnore]
     public virtual Mode? Mode { get; set; }
-    [JsonIgnore]
-    public virtual ICollection<Assignment>? Assignments { get; set; }
     [JsonIgnore]
     public virtual ICollection<TicketAnalyst>? TicketAnalysts { get; set; }
     [JsonIgnore]

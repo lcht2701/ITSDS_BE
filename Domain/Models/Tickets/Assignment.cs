@@ -20,5 +20,5 @@ public partial class Assignment : BaseEntity
     //[JsonIgnore]
     //public virtual Team? Team { get; set; }
     [JsonIgnore]
-    public virtual Ticket? Ticket { get; set; }
+    public virtual Ticket Ticket { get; set; }
 }
