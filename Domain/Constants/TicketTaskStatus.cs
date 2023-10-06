@@ -1,6 +1,6 @@
 ﻿namespace Domain.Constants;
 
-public enum TicketStatus
+public enum TicketTaskStatus
 {
     Open,
     Assigned,

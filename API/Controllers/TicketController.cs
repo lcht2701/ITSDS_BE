@@ -24,7 +24,6 @@ public class TicketController : BaseController
         _teamRepository = teamRepository;
     }
 
-    //Chưa biết để role gì
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetTickets()
@@ -33,20 +32,14 @@ public class TicketController : BaseController
         return Ok(result);
     }
 
-    //Dùng cho customer && CustomerAdmin
-    [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.CUSTOMERADMIN}")]
-    [HttpGet("my-tickets")]
-    public async Task<IActionResult> GetTicketOfCurrentUser()
+    [Authorize(Roles = Roles.COMPANYMEMBERS)]
+    [HttpGet("my-requests")]
+    public async Task<IActionResult> GetMyRequestedTickets()
     {
-        var result = await _ticketRepository.WhereAsync(x => x.Id.Equals(CurrentUserID));
-        if (result.Count == 0)
-        {
-            throw new NotFoundException("No tickets was found for this user");
-        }
+        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(CurrentUserID));
         return Ok(result);
     }
 
-    //Chưa sure
     [Authorize]
     [HttpGet("user/{userId}")]
     public async Task<IActionResult> GetTicketsByUser(int userId)
@@ -59,8 +52,7 @@ public class TicketController : BaseController
         return Ok(result);
     }
 
-    //Ngoại trừ Admin + Accountant
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER},{Roles.CUSTOMERADMIN}")]
+    [Authorize(Roles = Roles.TICKETPARTICIPANTS)]
     [HttpGet("{ticketId}")]
     public async Task<IActionResult> GetTicketById(int ticketId)
     {
@@ -68,36 +60,28 @@ public class TicketController : BaseController
         return Ok(result);
     }
 
-    //Dành cho manager và technical để quản lý của team
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
-    [HttpGet("team/{teamId}")]
-    public async Task<IActionResult> GetTicketsResponsibleByTeam(int teamId)
-    {
-        var result = await _ticketRepository.WhereAsync(x => x.TeamId.Equals(teamId));
-        if (result.Count == 0)
-        {
-            throw new NotFoundException("No tickets was found for this team");
-        }
-        return Ok(result);
-    }
-
-    [Authorize]
-    [HttpPost]
+    [Authorize(Roles = $"{Roles.CUSTOMERADMIN},{Roles.CUSTOMER}")]
+    [HttpPost("new-ticket")]
     public async Task<IActionResult> CreateTicket([FromBody] CreateTicketRequest model)
     {
         Ticket entity = Mapper.Map(model, new Ticket());
         //Logic
+        entity.RequesterId = CurrentUserID;
         entity.TicketStatus = TicketStatus.Open;
+        //Create
         await _ticketRepository.CreateAsync(entity);
         return Ok("Create Successfully");
     }
 
-    //Chưa làm Author
-    [Authorize]
+    [Authorize(Roles = $"{Roles.CUSTOMERADMIN},{Roles.CUSTOMER}")]
     [HttpPut("{ticketId}")]
     public async Task<IActionResult> UpdateTicketInformation(int ticketId, [FromBody]UpdateTicketRequest model)
     {
         var target = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
+        if (target.TicketStatus == TicketStatus.Open)
+        {
+            throw new BadRequestException("Ticket can not be updated when it is being executed");
+        }
         var entity = Mapper.Map(model, new Ticket());
         await _ticketRepository.UpdateAsync(entity);
         return Accepted(entity);

@@ -12,13 +12,13 @@ public partial class Team : BaseEntity
 {
     public Team()
     {
-        Tickets = new HashSet<Ticket>();
+        Assignments = new HashSet<Assignment>();
         Contracts = new HashSet<Contract>();
     }
 
     public string Name { get; set; }
 
-    public string Location { get; set; }
+    public string? Location { get; set; }
 
     public string? Description { get; set; }
 
@@ -26,11 +26,10 @@ public partial class Team : BaseEntity
 
     public int ManagerId { get; set; }
 
-    //public virtual TeamMember TeamMember { get; set; }
-
     [JsonIgnore]
-    public virtual ICollection<Ticket> Tickets { get; set; }
-
+    public virtual User? Manager { get; set; }
     [JsonIgnore]
-    public virtual ICollection<Contract> Contracts { get; set; }
+    public virtual ICollection<Assignment>? Assignments { get; set; }
+    [JsonIgnore]
+    public virtual ICollection<Contract>? Contracts { get; set; }
 }

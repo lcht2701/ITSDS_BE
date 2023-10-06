@@ -11,16 +11,16 @@ public class User : BaseEntity
 {
     public User()
     {
-        MyTickets = new HashSet<Ticket>();
+        Tickets = new HashSet<Ticket>();
     }
 
     public string? FirstName { get; set; }
 
     public string? LastName { get; set; }
 
-    public string Username { get; set; }
+    public string? Username { get; set; }
 
-    public string Password { get; set; }
+    public string? Password { get; set; }
 
     public string? Email { get; set; }
 
@@ -32,17 +32,13 @@ public class User : BaseEntity
 
     public string? PhoneNumber { get; set; }
 
-    public bool? isActive { get; set; }
+    public bool? IsActive { get; set; }
 
     public DateOnly? DateOfBirth { get; set; }
 
     public Gender? Gender { get; set; }
 
-    //public virtual Team? Team { get; set; }
-
-    //public virtual Company? Company { get; set; }
-
     [JsonIgnore]
-    public virtual ICollection<Ticket> MyTickets { get; set; }
+    public virtual ICollection<Ticket> Tickets { get; set; }
 
 }

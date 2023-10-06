@@ -8,15 +8,15 @@ namespace Domain.Models.Contracts
         {
             Contracts = new HashSet<Contract>();
         }
-        public string CompanyName { get; set; }
+        public string? CompanyName { get; set; }
 
-        public string TaxCode { get; set; }
+        public string? TaxCode { get; set; }
 
-        public string Website { get; set; }
+        public string? Website { get; set; }
 
-        public string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
 
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         public string? CompanyAddress { get; set; }
 
@@ -28,12 +28,10 @@ namespace Domain.Models.Contracts
 
         public int? CustomerAdminId { get; set; }
 
-        public virtual User CustomerAdmin { get; set; }
-
-        //public virtual CompanyMember CompanyMember { get; set; }
-
         [JsonIgnore]
-        public virtual ICollection<Contract> Contracts { get; set; }
+        public virtual User? CustomerAdmin { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Contract>? Contracts { get; set; }
 
     }
 }

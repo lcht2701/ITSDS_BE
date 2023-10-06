@@ -1,5 +1,5 @@
 ﻿using Domain.Application.AppConfig;
-using Domain.Entities;
+using Domain.Entities.Mails;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
