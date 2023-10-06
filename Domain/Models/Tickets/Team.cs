@@ -16,18 +16,18 @@ public partial class Team : BaseEntity
         Contracts = new HashSet<Contract>();
     }
 
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     public string? Location { get; set; }
 
     public string? Description { get; set; }
 
-    public bool IsActive { get; set; }
+    public bool? IsActive { get; set; }
 
-    public int ManagerId { get; set; }
+    public int? OwnerId { get; set; }
 
     [JsonIgnore]
-    public virtual User? Manager { get; set; }
+    public virtual User? Owner { get; set; }
     [JsonIgnore]
     public virtual ICollection<Assignment>? Assignments { get; set; }
     [JsonIgnore]

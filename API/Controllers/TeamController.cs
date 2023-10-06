@@ -30,7 +30,7 @@ public class TeamController : BaseController
     [HttpGet("my-teams")]
     public async Task<IActionResult> GetMyTeams()
     {
-        var result = await _teamRepository.WhereAsync(x => x.ManagerId.Equals(CurrentUserID));
+        var result = await _teamRepository.WhereAsync(x => x.OwnerId.Equals(CurrentUserID));
         if (result.Count == 0 )
         {
             throw new BadRequestException("You are currently not managing any team");
