@@ -63,7 +63,7 @@ public class UserController : BaseController
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(int id, [FromForm] UpdateUserRequest req)
+    public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest req)
     {
         var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("User not found"));
         User entity = Mapper.Map(req, target);
