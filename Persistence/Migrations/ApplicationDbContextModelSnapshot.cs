@@ -951,17 +951,19 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Assignment", b =>
                 {
-                    b.HasOne("Domain.Models.Tickets.Team", null)
+                    b.HasOne("Domain.Models.Tickets.Team", "Team")
                         .WithMany("Assignments")
                         .HasForeignKey("TeamId");
 
                     b.HasOne("Domain.Models.User", "Technician")
-                        .WithMany()
+                        .WithMany("Assignments")
                         .HasForeignKey("TechnicianId");
 
                     b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
                         .WithMany("Assignments")
                         .HasForeignKey("TicketId");
+
+                    b.Navigation("Team");
 
                     b.Navigation("Technician");
 
@@ -998,7 +1000,7 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Models.Tickets.TeamMember", b =>
                 {
                     b.HasOne("Domain.Models.User", "Member")
-                        .WithMany()
+                        .WithMany("TeamMembers")
                         .HasForeignKey("MemberId");
 
                     b.HasOne("Domain.Models.Tickets.Team", "Team")
@@ -1128,6 +1130,10 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.User", b =>
                 {
+                    b.Navigation("Assignments");
+
+                    b.Navigation("TeamMembers");
+
                     b.Navigation("Tickets");
                 });
 #pragma warning restore 612, 618
