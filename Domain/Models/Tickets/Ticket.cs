@@ -9,6 +9,7 @@ public partial class Ticket : BaseEntity
     public Ticket()
     {
         Assignments = new HashSet<Assignment>();
+        TicketAnalysts = new HashSet<TicketAnalyst>();
         TicketTasks = new HashSet<TicketTask>();
         TicketApprovals = new HashSet<TicketApproval>();
     }
@@ -40,6 +41,8 @@ public partial class Ticket : BaseEntity
     public virtual Company? Company { get; set; }
     [JsonIgnore]
     public virtual ICollection<Assignment>? Assignments { get; set; }
+    [JsonIgnore]
+    public virtual ICollection<TicketAnalyst>? TicketAnalysts { get; set; }
     [JsonIgnore]
     public virtual ICollection<TicketTask>? TicketTasks { get; set; }
     [JsonIgnore]

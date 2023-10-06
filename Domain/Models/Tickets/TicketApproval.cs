@@ -32,8 +32,4 @@ public partial class TicketApproval : BaseEntity
 
     [JsonIgnore]
     public virtual Ticket? Ticket { get; set; }
-    [JsonIgnore]
-    public virtual User? ApprovalCreater { get; set; }
-    [JsonIgnore]
-    public virtual User? Approver { get; set; }
 }

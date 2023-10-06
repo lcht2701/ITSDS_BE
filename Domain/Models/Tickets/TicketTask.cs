@@ -33,6 +33,4 @@ public partial class TicketTask : BaseEntity
 
     [JsonIgnore]
     public virtual Ticket? Ticket { get; set; }
-    [JsonIgnore]
-    public virtual User? Technician { get; set; }
 }

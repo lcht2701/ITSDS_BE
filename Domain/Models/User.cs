@@ -37,6 +37,7 @@ public class User : BaseEntity
     public DateOnly? DateOfBirth { get; set; }
 
     public Gender? Gender { get; set; }
+
     [JsonIgnore]
     public virtual ICollection<Ticket> Tickets { get; set; }
 
