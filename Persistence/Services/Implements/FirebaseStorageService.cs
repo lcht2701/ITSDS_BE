@@ -19,7 +19,7 @@ namespace Persistence.Services.Implements
         private static string AuthEmail = "itsds@gmail.com";
         private static string AuthPassword = "itsds@123";
 
-        public async Task<string> UploadImageFirebaseAsync(MemoryStream stream, string fileName)
+        public async Task<string> UploadFirebaseAsync(MemoryStream stream, string fileName)
         {
             string link = "";
             var auth = new FirebaseAuthProvider(new FirebaseConfig(Apikey));
