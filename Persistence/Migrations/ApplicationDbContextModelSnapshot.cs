@@ -394,9 +394,6 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("TeamId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("TechnicianId")
                         .HasColumnType("int");
 
@@ -406,8 +403,6 @@ namespace Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DeletedAt");
-
-                    b.HasIndex("TeamId");
 
                     b.HasIndex("TechnicianId");
 
@@ -951,10 +946,6 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Assignment", b =>
                 {
-                    b.HasOne("Domain.Models.Tickets.Team", "Team")
-                        .WithMany("Assignments")
-                        .HasForeignKey("TeamId");
-
                     b.HasOne("Domain.Models.User", "Technician")
                         .WithMany("Assignments")
                         .HasForeignKey("TechnicianId");
@@ -962,8 +953,6 @@ namespace Persistence.Migrations
                     b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
                         .WithMany("Assignments")
                         .HasForeignKey("TicketId");
-
-                    b.Navigation("Team");
 
                     b.Navigation("Technician");
 
@@ -1112,8 +1101,6 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Team", b =>
                 {
-                    b.Navigation("Assignments");
-
                     b.Navigation("Contracts");
                 });
 
