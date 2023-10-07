@@ -36,7 +36,7 @@ public class User : BaseEntity
 
     public bool? IsActive { get; set; }
 
-    public DateOnly? DateOfBirth { get; set; }
+    public DateTime? DateOfBirth { get; set; }
 
     public Gender? Gender { get; set; }
 

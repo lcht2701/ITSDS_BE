@@ -10,7 +10,7 @@ namespace API.DTOs.Requests.Contracts
     {
         
         [Required(ErrorMessage = "StartDate is required")]
-        public DateOnly StartDate { get; set; }
+        public DateTime StartDate { get; set; }
 
         public string AttachmentURl { get; set; }
 
