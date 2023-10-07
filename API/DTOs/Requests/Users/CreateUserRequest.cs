@@ -17,6 +17,8 @@ namespace API.DTOs.Requests.Users
         public string Username { get; set; }
 
         [Required(ErrorMessage = "Password is required")]
+        [StringLength(20, MinimumLength = 12, ErrorMessage = "Password must be between 12 and 20 characters.")]
+        [RegularExpression(@"^(?=.*[A-Z])(?=.*\d)", ErrorMessage = "Password must contain at least one uppercase, at least one number")]
         public string Password { get; set; }
 
         [EmailAddress]

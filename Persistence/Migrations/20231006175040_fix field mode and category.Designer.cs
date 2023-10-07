@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231006175040_fix field mode and category")]
+    partial class fixfieldmodeandcategory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -394,6 +396,9 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("TeamId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("TechnicianId")
                         .HasColumnType("int");
 
@@ -404,11 +409,11 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
+                    b.HasIndex("TeamId");
+
                     b.HasIndex("TechnicianId");
 
-                    b.HasIndex("TicketId")
-                        .IsUnique()
-                        .HasFilter("[TicketId] IS NOT NULL");
+                    b.HasIndex("TicketId");
 
                     b.ToTable("Assignments");
                 });
@@ -948,13 +953,19 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Assignment", b =>
                 {
+                    b.HasOne("Domain.Models.Tickets.Team", "Team")
+                        .WithMany("Assignments")
+                        .HasForeignKey("TeamId");
+
                     b.HasOne("Domain.Models.User", "Technician")
                         .WithMany("Assignments")
                         .HasForeignKey("TechnicianId");
 
                     b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
-                        .WithOne("Assignment")
-                        .HasForeignKey("Domain.Models.Tickets.Assignment", "TicketId");
+                        .WithMany("Assignments")
+                        .HasForeignKey("TicketId");
+
+                    b.Navigation("Team");
 
                     b.Navigation("Technician");
 
@@ -1103,12 +1114,14 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Team", b =>
                 {
+                    b.Navigation("Assignments");
+
                     b.Navigation("Contracts");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Ticket", b =>
                 {
-                    b.Navigation("Assignment");
+                    b.Navigation("Assignments");
 
                     b.Navigation("Histories");
 
