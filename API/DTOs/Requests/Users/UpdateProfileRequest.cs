@@ -20,7 +20,7 @@ namespace API.DTOs.Requests.Users
 
         public Gender? Gender { get; set; }
 
-        public DateOnly? DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
 
         public string? Address { get; set; }
 

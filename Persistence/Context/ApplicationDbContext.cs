@@ -50,34 +50,5 @@ namespace Persistence.Context
             }
 
         }
-
-        #region Add Convention for DateOnly & TimeOnly
-        protected override void ConfigureConventions(ModelConfigurationBuilder builder)
-        {
-            base.ConfigureConventions(builder);
-            builder.Properties<DateOnly>()
-                .HaveConversion<DateOnlyConverter>();
-            builder.Properties<TimeOnly>()
-                .HaveConversion<TimeOnlyConverter>();
-        }
-        #endregion
-
-        #region DateOnly & TimeOnly Converter
-        public class DateOnlyConverter : ValueConverter<DateOnly, DateTime>
-        {
-            public DateOnlyConverter() : base(
-                dateOnly => dateOnly.ToDateTime(TimeOnly.MinValue),
-                dateTime => DateOnly.FromDateTime(dateTime))
-            { }
-        }
-
-        public class TimeOnlyConverter : ValueConverter<TimeOnly, TimeSpan>
-        {
-            public TimeOnlyConverter() : base(
-                timeOnly => timeOnly.ToTimeSpan(),
-                timeSpan => TimeOnly.FromTimeSpan(timeSpan))
-            { }
-        }
-        #endregion
     }
 }

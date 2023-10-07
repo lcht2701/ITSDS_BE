@@ -21,7 +21,7 @@ namespace Domain.Models.Contracts
 
         public string? AttachmentURl { get; set; }
 
-        public DateOnly? StartDate { get; set; }
+        public DateTime? StartDate { get; set; }
 
         public int? Duration { get; set; }
 
