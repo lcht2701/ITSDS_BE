@@ -12,8 +12,8 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231005155135_removeTicketFromTeam")]
-    partial class removeTicketFromTeam
+    [Migration("20231008075805_RedoDatabase")]
+    partial class RedoDatabase
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -60,7 +60,6 @@ namespace Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CompanyName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -73,7 +72,6 @@ namespace Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FieldOfBusiness")
@@ -86,15 +84,12 @@ namespace Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("PhoneNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TaxCode")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Website")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("isActive")
@@ -117,7 +112,7 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("CompanyId")
+                    b.Property<int?>("CompanyId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -126,11 +121,10 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("MemberId")
+                    b.Property<int?>("MemberId")
                         .HasColumnType("int");
 
                     b.Property<string>("MemberPosition")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("ModifiedAt")
@@ -161,7 +155,7 @@ namespace Persistence.Migrations
                     b.Property<string>("AttachmentURl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("CompanyId")
+                    b.Property<int?>("CompanyId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -170,22 +164,22 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Duration")
+                    b.Property<int?>("Duration")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("StartDate")
+                    b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("Status")
                         .HasColumnType("int");
 
-                    b.Property<int>("TeamId")
+                    b.Property<int?>("TeamId")
                         .HasColumnType("int");
 
-                    b.Property<double>("Value")
+                    b.Property<double?>("Value")
                         .HasColumnType("float");
 
                     b.HasKey("Id");
@@ -207,7 +201,10 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("ContractId")
+                    b.Property<int?>("AdditionalServiceId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ContractId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -223,6 +220,8 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AdditionalServiceId");
 
                     b.HasIndex("ContractId");
 
@@ -241,7 +240,7 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("ContractId")
+                    b.Property<int?>("ContractId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -251,7 +250,6 @@ namespace Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("ModifiedAt")
@@ -260,13 +258,13 @@ namespace Persistence.Migrations
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("PaymentEnd")
+                    b.Property<DateTime?>("PaymentEnd")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("PaymentFinishTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("PaymentStart")
+                    b.Property<DateTime?>("PaymentStart")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("PaymentStatus")
@@ -322,11 +320,7 @@ namespace Persistence.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Amount")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ContractDetailId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -335,7 +329,6 @@ namespace Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("ModifiedAt")
@@ -345,12 +338,9 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Type")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ContractDetailId");
 
                     b.HasIndex("DeletedAt");
 
@@ -374,11 +364,13 @@ namespace Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Price")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -421,9 +413,114 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TechnicianId");
 
-                    b.HasIndex("TicketId");
+                    b.HasIndex("TicketId")
+                        .IsUnique()
+                        .HasFilter("[TicketId] IS NOT NULL");
 
                     b.ToTable("Assignments");
+                });
+
+            modelBuilder.Entity("Domain.Models.Tickets.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int?>("AssignedTechnicalId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedTechnicalId");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("Domain.Models.Tickets.History", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("TicketId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TicketStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("Histories");
+                });
+
+            modelBuilder.Entity("Domain.Models.Tickets.Mode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.ToTable("Modes");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Team", b =>
@@ -443,20 +540,19 @@ namespace Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool?>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ManagerId")
+                    b.Property<int?>("ManagerId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -516,11 +612,11 @@ namespace Persistence.Migrations
                     b.Property<string>("AttachmentUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("ClosedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CompanyId")
+                    b.Property<int?>("CategoryId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -531,8 +627,14 @@ namespace Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("DueDate")
+                    b.Property<DateTime?>("DueTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("Impact")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModeId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
@@ -543,35 +645,45 @@ namespace Persistence.Migrations
                     b.Property<int?>("RequesterId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("ScheduledEndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ScheduledStartTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("ServiceId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ServicePackId")
+                    b.Property<int?>("TeamId")
                         .HasColumnType("int");
 
                     b.Property<int?>("TicketStatus")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Urgency")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("DeletedAt");
+
+                    b.HasIndex("ModeId");
 
                     b.HasIndex("RequesterId");
 
                     b.HasIndex("ServiceId");
 
-                    b.HasIndex("ServicePackId");
+                    b.HasIndex("TeamId");
 
                     b.ToTable("Tickets");
                 });
 
-            modelBuilder.Entity("Domain.Models.Tickets.TicketApproval", b =>
+            modelBuilder.Entity("Domain.Models.Tickets.TicketAnalyst", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -579,16 +691,7 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int?>("ApprovalCreaterId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("ApprovalDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("ApproverId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Comments")
+                    b.Property<string>("Attachments")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -597,39 +700,31 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("Impact")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool?>("IsApproved")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("Stage")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TicketId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
+                    b.Property<string>("RootCause")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Solution")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Symptoms")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("TicketId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
-
-                    b.HasIndex("ApprovalCreaterId");
-
-                    b.HasIndex("ApproverId");
 
                     b.HasIndex("DeletedAt");
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("TicketApprovals");
+                    b.ToTable("TicketAnalysts");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.TicketTask", b =>
@@ -639,6 +734,18 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime?>("ActualEndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ActualStartTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double?>("AdditionalCost")
+                        .HasColumnType("float");
+
+                    b.Property<string>("AttachmentUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -658,36 +765,41 @@ namespace Persistence.Migrations
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Progress")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("ScheduledEndTime")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ScheduledStartTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("TaskStatus")
+                    b.Property<int?>("TaskStatus")
                         .HasColumnType("int");
 
-                    b.Property<int>("TechnicianId")
+                    b.Property<int?>("TeamId")
                         .HasColumnType("int");
 
-                    b.Property<int>("TicketId")
+                    b.Property<int?>("TechnicianId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TicketId")
                         .HasColumnType("int");
 
                     b.Property<int?>("TimeSpent")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("isDone")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DeletedAt");
 
-                    b.HasIndex("TechnicianId");
+                    b.HasIndex("TeamId");
 
                     b.HasIndex("TicketId");
 
@@ -726,6 +838,9 @@ namespace Persistence.Migrations
                     b.Property<int?>("Gender")
                         .HasColumnType("int");
 
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
 
@@ -733,7 +848,6 @@ namespace Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Password")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
@@ -743,11 +857,7 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Username")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool?>("isActive")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -769,15 +879,11 @@ namespace Persistence.Migrations
                 {
                     b.HasOne("Domain.Models.Contracts.Company", "Company")
                         .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CompanyId");
 
                     b.HasOne("Domain.Models.User", "Member")
                         .WithMany()
-                        .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("MemberId");
 
                     b.Navigation("Company");
 
@@ -788,15 +894,11 @@ namespace Persistence.Migrations
                 {
                     b.HasOne("Domain.Models.Contracts.Company", "Company")
                         .WithMany("Contracts")
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CompanyId");
 
                     b.HasOne("Domain.Models.Tickets.Team", "Team")
                         .WithMany("Contracts")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TeamId");
 
                     b.Navigation("Company");
 
@@ -805,15 +907,19 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Contracts.ContractDetail", b =>
                 {
+                    b.HasOne("Domain.Models.Contracts.Service", "AdditionalService")
+                        .WithMany("ContractDetails")
+                        .HasForeignKey("AdditionalServiceId");
+
                     b.HasOne("Domain.Models.Contracts.Contract", "Contract")
                         .WithMany("ContractDetails")
-                        .HasForeignKey("ContractId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ContractId");
 
                     b.HasOne("Domain.Models.Contracts.ServicePack", "ServicePack")
-                        .WithMany()
+                        .WithMany("ContractDetails")
                         .HasForeignKey("ServicePackId");
+
+                    b.Navigation("AdditionalService");
 
                     b.Navigation("Contract");
 
@@ -824,29 +930,27 @@ namespace Persistence.Migrations
                 {
                     b.HasOne("Domain.Models.Contracts.Contract", "Contract")
                         .WithMany("Payments")
-                        .HasForeignKey("ContractId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ContractId");
 
                     b.Navigation("Contract");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.PaymentTerm", b =>
                 {
-                    b.HasOne("Domain.Models.Contracts.Payment", null)
+                    b.HasOne("Domain.Models.Contracts.Payment", "Payment")
                         .WithMany("PaymentTerms")
                         .HasForeignKey("PaymentId");
+
+                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Service", b =>
                 {
-                    b.HasOne("Domain.Models.Contracts.ContractDetail", null)
-                        .WithMany("AdditionalServices")
-                        .HasForeignKey("ContractDetailId");
-
-                    b.HasOne("Domain.Models.Contracts.ServicePack", null)
+                    b.HasOne("Domain.Models.Contracts.ServicePack", "ServicePacks")
                         .WithMany("Services")
                         .HasForeignKey("ServicePackId");
+
+                    b.Navigation("ServicePacks");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Assignment", b =>
@@ -856,12 +960,12 @@ namespace Persistence.Migrations
                         .HasForeignKey("TeamId");
 
                     b.HasOne("Domain.Models.User", "Technician")
-                        .WithMany()
+                        .WithMany("Assignments")
                         .HasForeignKey("TechnicianId");
 
                     b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
-                        .WithMany("Assignments")
-                        .HasForeignKey("TicketId");
+                        .WithOne("Assignment")
+                        .HasForeignKey("Domain.Models.Tickets.Assignment", "TicketId");
 
                     b.Navigation("Team");
 
@@ -870,13 +974,29 @@ namespace Persistence.Migrations
                     b.Navigation("Ticket");
                 });
 
+            modelBuilder.Entity("Domain.Models.Tickets.Category", b =>
+                {
+                    b.HasOne("Domain.Models.User", "AssignedTechnical")
+                        .WithMany()
+                        .HasForeignKey("AssignedTechnicalId");
+
+                    b.Navigation("AssignedTechnical");
+                });
+
+            modelBuilder.Entity("Domain.Models.Tickets.History", b =>
+                {
+                    b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
+                        .WithMany("Histories")
+                        .HasForeignKey("TicketId");
+
+                    b.Navigation("Ticket");
+                });
+
             modelBuilder.Entity("Domain.Models.Tickets.Team", b =>
                 {
                     b.HasOne("Domain.Models.User", "Manager")
                         .WithMany()
-                        .HasForeignKey("ManagerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ManagerId");
 
                     b.Navigation("Manager");
                 });
@@ -884,7 +1004,7 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Models.Tickets.TeamMember", b =>
                 {
                     b.HasOne("Domain.Models.User", "Member")
-                        .WithMany()
+                        .WithMany("TeamMembers")
                         .HasForeignKey("MemberId");
 
                     b.HasOne("Domain.Models.Tickets.Team", "Team")
@@ -898,69 +1018,57 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Ticket", b =>
                 {
-                    b.HasOne("Domain.Models.Contracts.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId");
+                    b.HasOne("Domain.Models.Tickets.Category", "Category")
+                        .WithMany("Tickets")
+                        .HasForeignKey("CategoryId");
+
+                    b.HasOne("Domain.Models.Tickets.Mode", "Mode")
+                        .WithMany("Tickets")
+                        .HasForeignKey("ModeId");
 
                     b.HasOne("Domain.Models.User", "Requester")
                         .WithMany("Tickets")
                         .HasForeignKey("RequesterId");
 
                     b.HasOne("Domain.Models.Contracts.Service", "Service")
-                        .WithMany()
+                        .WithMany("Tickets")
                         .HasForeignKey("ServiceId");
 
-                    b.HasOne("Domain.Models.Contracts.ServicePack", "ServicePack")
+                    b.HasOne("Domain.Models.Tickets.Team", "Team")
                         .WithMany()
-                        .HasForeignKey("ServicePackId");
+                        .HasForeignKey("TeamId");
 
-                    b.Navigation("Company");
+                    b.Navigation("Category");
+
+                    b.Navigation("Mode");
 
                     b.Navigation("Requester");
 
                     b.Navigation("Service");
 
-                    b.Navigation("ServicePack");
+                    b.Navigation("Team");
                 });
 
-            modelBuilder.Entity("Domain.Models.Tickets.TicketApproval", b =>
+            modelBuilder.Entity("Domain.Models.Tickets.TicketAnalyst", b =>
                 {
-                    b.HasOne("Domain.Models.User", "ApprovalCreater")
-                        .WithMany()
-                        .HasForeignKey("ApprovalCreaterId");
-
-                    b.HasOne("Domain.Models.User", "Approver")
-                        .WithMany()
-                        .HasForeignKey("ApproverId");
-
                     b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
-                        .WithMany("TicketApprovals")
-                        .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ApprovalCreater");
-
-                    b.Navigation("Approver");
+                        .WithMany("TicketAnalysts")
+                        .HasForeignKey("TicketId");
 
                     b.Navigation("Ticket");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.TicketTask", b =>
                 {
-                    b.HasOne("Domain.Models.User", "Technician")
+                    b.HasOne("Domain.Models.Tickets.Team", "Team")
                         .WithMany()
-                        .HasForeignKey("TechnicianId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TeamId");
 
                     b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
                         .WithMany("TicketTasks")
-                        .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TicketId");
 
-                    b.Navigation("Technician");
+                    b.Navigation("Team");
 
                     b.Navigation("Ticket");
                 });
@@ -977,19 +1085,33 @@ namespace Persistence.Migrations
                     b.Navigation("Payments");
                 });
 
-            modelBuilder.Entity("Domain.Models.Contracts.ContractDetail", b =>
-                {
-                    b.Navigation("AdditionalServices");
-                });
-
             modelBuilder.Entity("Domain.Models.Contracts.Payment", b =>
                 {
                     b.Navigation("PaymentTerms");
                 });
 
+            modelBuilder.Entity("Domain.Models.Contracts.Service", b =>
+                {
+                    b.Navigation("ContractDetails");
+
+                    b.Navigation("Tickets");
+                });
+
             modelBuilder.Entity("Domain.Models.Contracts.ServicePack", b =>
                 {
+                    b.Navigation("ContractDetails");
+
                     b.Navigation("Services");
+                });
+
+            modelBuilder.Entity("Domain.Models.Tickets.Category", b =>
+                {
+                    b.Navigation("Tickets");
+                });
+
+            modelBuilder.Entity("Domain.Models.Tickets.Mode", b =>
+                {
+                    b.Navigation("Tickets");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Team", b =>
@@ -1001,15 +1123,21 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Ticket", b =>
                 {
-                    b.Navigation("Assignments");
+                    b.Navigation("Assignment");
 
-                    b.Navigation("TicketApprovals");
+                    b.Navigation("Histories");
+
+                    b.Navigation("TicketAnalysts");
 
                     b.Navigation("TicketTasks");
                 });
 
             modelBuilder.Entity("Domain.Models.User", b =>
                 {
+                    b.Navigation("Assignments");
+
+                    b.Navigation("TeamMembers");
+
                     b.Navigation("Tickets");
                 });
 #pragma warning restore 612, 618
