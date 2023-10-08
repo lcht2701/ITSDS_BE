@@ -14,6 +14,6 @@ namespace API.DTOs.Requests.Teams
 
         public bool? IsActive { get; set; }
 
-        public int? OwnerId { get; set; }
+        public int? ManagerId { get; set; }
     }
 }

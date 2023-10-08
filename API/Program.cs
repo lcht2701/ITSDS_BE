@@ -31,8 +31,7 @@ builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
 builder.Services.AddSingleton<FirebaseStorageService>();
 
-builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>())
-                .AddJsonOptions(opt => opt.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter()));
+builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>());
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.Configure<FormOptions>(options =>

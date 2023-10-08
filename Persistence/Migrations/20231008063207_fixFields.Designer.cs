@@ -12,8 +12,8 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231007122830_fix all datetime")]
-    partial class fixalldatetime
+    [Migration("20231008063207_fixFields")]
+    partial class fixFields
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -413,7 +413,9 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TechnicianId");
 
-                    b.HasIndex("TicketId");
+                    b.HasIndex("TicketId")
+                        .IsUnique()
+                        .HasFilter("[TicketId] IS NOT NULL");
 
                     b.ToTable("Assignments");
                 });
@@ -954,7 +956,7 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Models.Tickets.Assignment", b =>
                 {
                     b.HasOne("Domain.Models.Tickets.Team", "Team")
-                        .WithMany("Assignments")
+                        .WithMany()
                         .HasForeignKey("TeamId");
 
                     b.HasOne("Domain.Models.User", "Technician")
@@ -962,8 +964,8 @@ namespace Persistence.Migrations
                         .HasForeignKey("TechnicianId");
 
                     b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
-                        .WithMany("Assignments")
-                        .HasForeignKey("TicketId");
+                        .WithOne("Assignment")
+                        .HasForeignKey("Domain.Models.Tickets.Assignment", "TicketId");
 
                     b.Navigation("Team");
 
@@ -1114,14 +1116,12 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Team", b =>
                 {
-                    b.Navigation("Assignments");
-
                     b.Navigation("Contracts");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Ticket", b =>
                 {
-                    b.Navigation("Assignments");
+                    b.Navigation("Assignment");
 
                     b.Navigation("Histories");
 

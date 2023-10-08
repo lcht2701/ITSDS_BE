@@ -23,7 +23,7 @@ public class LoginResponse : IMapFrom<User>
 
     public string PhoneNumber { get; set; }
 
-    public DateOnly DateOfBirth { get; set; }
+    public DateTime DateOfBirth { get; set; }
 
     public Gender Gender { get; set; }
 

@@ -28,9 +28,9 @@ public class TeamController : BaseController
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet("my-teams")]
-    public async Task<IActionResult> GetMyTeams()
+    public async Task<IActionResult> GetTeamsByManager()
     {
-        var result = await _teamRepository.WhereAsync(x => x.OwnerId.Equals(CurrentUserID));
+        var result = await _teamRepository.WhereAsync(x => x.ManagerId.Equals(CurrentUserID));
         if (result.Count == 0 )
         {
             throw new BadRequestException("You are currently not owning any team");

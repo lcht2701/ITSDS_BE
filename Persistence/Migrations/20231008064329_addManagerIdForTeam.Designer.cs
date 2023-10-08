@@ -12,8 +12,8 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231006074953_AddFieldsForTickets")]
-    partial class AddFieldsForTickets
+    [Migration("20231008064329_addManagerIdForTeam")]
+    partial class addManagerIdForTeam
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -413,7 +413,9 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TechnicianId");
 
-                    b.HasIndex("TicketId");
+                    b.HasIndex("TicketId")
+                        .IsUnique()
+                        .HasFilter("[TicketId] IS NOT NULL");
 
                     b.ToTable("Assignments");
                 });
@@ -435,14 +437,14 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("Description")
-                        .HasColumnType("int");
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("Name")
-                        .HasColumnType("int");
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -505,14 +507,14 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("Description")
-                        .HasColumnType("int");
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("Name")
-                        .HasColumnType("int");
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -538,20 +540,19 @@ namespace Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool?>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ManagerId")
+                    b.Property<int?>("ManagerId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -959,12 +960,12 @@ namespace Persistence.Migrations
                         .HasForeignKey("TeamId");
 
                     b.HasOne("Domain.Models.User", "Technician")
-                        .WithMany()
+                        .WithMany("Assignments")
                         .HasForeignKey("TechnicianId");
 
                     b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
-                        .WithMany("Assignments")
-                        .HasForeignKey("TicketId");
+                        .WithOne("Assignment")
+                        .HasForeignKey("Domain.Models.Tickets.Assignment", "TicketId");
 
                     b.Navigation("Team");
 
@@ -995,9 +996,7 @@ namespace Persistence.Migrations
                 {
                     b.HasOne("Domain.Models.User", "Manager")
                         .WithMany()
-                        .HasForeignKey("ManagerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ManagerId");
 
                     b.Navigation("Manager");
                 });
@@ -1005,7 +1004,7 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Models.Tickets.TeamMember", b =>
                 {
                     b.HasOne("Domain.Models.User", "Member")
-                        .WithMany()
+                        .WithMany("TeamMembers")
                         .HasForeignKey("MemberId");
 
                     b.HasOne("Domain.Models.Tickets.Team", "Team")
@@ -1124,7 +1123,7 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Ticket", b =>
                 {
-                    b.Navigation("Assignments");
+                    b.Navigation("Assignment");
 
                     b.Navigation("Histories");
 
@@ -1135,6 +1134,10 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.User", b =>
                 {
+                    b.Navigation("Assignments");
+
+                    b.Navigation("TeamMembers");
+
                     b.Navigation("Tickets");
                 });
 #pragma warning restore 612, 618

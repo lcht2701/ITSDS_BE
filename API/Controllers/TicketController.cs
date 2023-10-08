@@ -64,7 +64,7 @@ public class TicketController : BaseController
         return Ok(result);
     }
 
-    [Authorize(Roles = Roles.COMPANYMEMBERS)]
+    [Authorize(Roles = Roles.CUSTOMER)]
     [HttpPost("customer/new")]
     public async Task<IActionResult> CreateTicketByCustomer([FromBody] CreateTicketCustomerRequest model)
     {
@@ -77,7 +77,7 @@ public class TicketController : BaseController
         return Ok("Create Successfully");
     }
 
-    [Authorize(Roles = Roles.COMPANYMEMBERS)]
+    [Authorize(Roles = Roles.CUSTOMER)]
     [HttpPut("customer/{ticketId}")]
     public async Task<IActionResult> UpdateTicketByCustomer(int ticketId, [FromBody] UpdateTicketCustomerRequest model)
     {

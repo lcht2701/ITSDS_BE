@@ -4,24 +4,9 @@
 
 namespace Persistence.Migrations
 {
-    public partial class removeTeamFromAssignment : Migration
+    public partial class fixFields : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Assignments_Teams_TeamId",
-                table: "Assignments");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Assignments_TeamId",
-                table: "Assignments");
-
-            migrationBuilder.DropColumn(
-                name: "TeamId",
-                table: "Assignments");
-        }
-
-        protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
                 name: "TeamId",
@@ -40,6 +25,21 @@ namespace Persistence.Migrations
                 column: "TeamId",
                 principalTable: "Teams",
                 principalColumn: "Id");
+        }
+
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Assignments_Teams_TeamId",
+                table: "Assignments");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Assignments_TeamId",
+                table: "Assignments");
+
+            migrationBuilder.DropColumn(
+                name: "TeamId",
+                table: "Assignments");
         }
     }
 }
