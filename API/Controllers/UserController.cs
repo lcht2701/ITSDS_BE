@@ -43,7 +43,6 @@ public class UserController : BaseController
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest model)
     {
-
         User entity = Mapper.Map(model, new User());
         //Hash password
         var passwordHasher = new PasswordHasher<User>();
