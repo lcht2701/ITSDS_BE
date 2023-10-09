@@ -22,7 +22,7 @@ public partial class Ticket : BaseEntity
 
     public int? ServiceId { get; set; }
 
-    public int? TeamId { get; set; }
+    //public int? TeamId { get; set; }
 
     public int? CategoryId { get; set; }
 
@@ -45,11 +45,11 @@ public partial class Ticket : BaseEntity
     public string? AttachmentUrl { get; set; }
 
     [JsonIgnore]
-    public virtual User? Requester { get; set; }  
+    public virtual User? Requester { get; set; }
     [JsonIgnore]
     public virtual Assignment? Assignment { get; set; }  
-    [JsonIgnore]
-    public virtual Team? Team { get; set; }    
+    //[JsonIgnore]
+    //public virtual Team? Team { get; set; }    
     [JsonIgnore]
     public virtual Service? Service { get; set; }
     [JsonIgnore]

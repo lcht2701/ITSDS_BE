@@ -1,4 +1,5 @@
-﻿using API.DTOs.Requests.Tickets;
+﻿using API.DTOs.Requests.Assignments;
+using API.DTOs.Requests.Tickets;
 using Domain.Constants;
 using Domain.Exceptions;
 using Domain.Models;
@@ -15,18 +16,14 @@ namespace API.Controllers;
 public class AssignmentController : BaseController
 {
     private readonly IRepositoryBase<Ticket> _ticketRepository;
-    private readonly IRepositoryBase<Team> _teamRepository;
     private readonly IRepositoryBase<Assignment> _assignmentRepository;
-    private readonly IRepositoryBase<User> _userRepository;
-    private readonly IAssignmentService _assignmentService;
+    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
 
-    public AssignmentController(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<User> userRepository, IAssignmentService assignmentService)
+    public AssignmentController(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TeamMember> teamMemberRepository)
     {
         _ticketRepository = ticketRepository;
-        _teamRepository = teamRepository;
         _assignmentRepository = assignmentRepository;
-        _userRepository = userRepository;
-        _assignmentService = assignmentService;
+        _teamMemberRepository = teamMemberRepository;
     }
 
     [Authorize]
@@ -46,18 +43,13 @@ public class AssignmentController : BaseController
     }
 
     [Authorize]
-    [HttpGet("{assignmentId}/technician-info")]
-    public async Task<IActionResult> GetTechnicianOfAssignment(int assignmentId, int technicianId)
+    [HttpGet("team/{teamId}")]
+    public async Task<IActionResult> GetAssignmentsByTeam(int teamId)
     {
-        var check  = await _assignmentRepository.FirstOrDefaultAsync(x => x.TechnicianId.Equals(technicianId) && x.Id.Equals(assignmentId));
-        if (check == null)
-        {
-            throw new NotFoundException("Technician is not assigned with this assignment.");
-        }
-        var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(check.TechnicianId));
-        return Ok(user);
+        var entity = await _assignmentRepository.WhereAsync(x => x.TeamId.Equals(teamId));
+        return Ok(entity);
     }
-    
+
     [Authorize]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetAssignmentById(int id)
@@ -67,83 +59,35 @@ public class AssignmentController : BaseController
     }
 
     [Authorize]
-    [HttpPatch("{ticketId}/assign-team")]
-    public async Task<IActionResult> AssignTeamToTicketManual(int ticketId, int teamId)
+    [HttpPatch("{ticketId}/assign")]
+    public async Task<IActionResult> AssignTicketManual([FromBody] AssignTicketManualRequest model)
     {
-        Ticket ticket = await _ticketRepository.FoundOrThrow(o => o.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
-        var team = await _teamRepository.FoundOrThrow(o => o.Id.Equals(teamId), new NotFoundException("Team not found"));
-        ticket.TeamId = teamId;
-        return Ok("Assign team succesfully");
+        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(model.TicketId), new NotFoundException("Ticket not found"));
+        if (model.TechnicianId != null)
+        {
+            var isMemberOfTeam = await _teamMemberRepository.FirstOrDefaultAsync(x =>
+                    x.MemberId.Equals(model.TechnicianId) &&
+                    x.TeamId.Equals(model.TeamId)) ?? throw new BadRequestException("This technician is not in this team");
+        }
+
+        var entity = Mapper.Map(model, new Assignment());
+        await _assignmentRepository.CreateAsync(entity);
+        return Ok("Assign Successfully");
     }
 
     [Authorize]
-    [HttpPatch("{ticketId}/assign-technician")]
-    public async Task<IActionResult> AssignTechnicianToTicketManual(int ticketId, int technicianId)
+    [HttpPatch("{ticketId}/update")]
+    public async Task<IActionResult> UpdateTicketAssignmentManual(int assignmentId, [FromBody] UpdateTicketAssignmentManualRequest req)
     {
-        try
+        var target = await _assignmentRepository.FoundOrThrow(x => x.Id.Equals(assignmentId), new NotFoundException("Assignment not found"));
+        if (target.TechnicianId != null)
         {
-            // Get the ticket
-            Ticket ticket = await _ticketRepository.FoundOrThrow(
-                o => o.Id.Equals(ticketId),
-                new NotFoundException("Ticket not found")
-            );
-
-            bool success = await _assignmentService.AssignTechnicianToTicket(ticketId, technicianId);
-            if (!success)
-            {
-                return BadRequest("Technician assignment failed.");
-            }
-
-            return Ok("Technician assigned successfully.");
+            var isMemberOfTeam = await _teamMemberRepository.FirstOrDefaultAsync(x =>
+                    x.MemberId.Equals(target.TechnicianId) &&
+                    x.TeamId.Equals(target.TeamId)) ?? throw new BadRequestException("This technician is not in this team");
         }
-        catch (NotFoundException)
-        {
-            return NotFound("Ticket not found.");
-        }
-        catch (Exception)
-        {
-            // Log the exception for debugging purposes
-            // You might also want to return a more informative error message
-            return StatusCode(500, "An error occurred while processing the request.");
-        }
-    }
-
-    [Authorize]
-    [HttpPatch("{ticketId}/update-technician")]
-    public async Task<IActionResult> UpdateTechnicianAssignedToTicket(int ticketId, int newTechnicianId)
-    {
-        try
-        {
-            // Get the ticket
-            Ticket ticket = await _ticketRepository.FoundOrThrow(
-                o => o.Id.Equals(ticketId),
-                new NotFoundException("Ticket not found")
-            );
-
-            bool success;
-
-            // Update the technician assigned to the ticket without a team using the service
-            success = await _assignmentService.UpdateTechnicianAssignment(ticketId, newTechnicianId);
-
-            if (success)
-            {
-                return Ok("Technician assignment updated successfully.");
-            }
-            else
-            {
-                return BadRequest("Failed to update technician assignment.");
-            }
-        }
-        catch (NotFoundException)
-        {
-            return NotFound("Ticket not found.");
-        }
-        catch (Exception)
-        {
-            // Log the exception for debugging purposes
-            // You might also want to return a more informative error message
-            return StatusCode(500, "An error occurred while processing the request.");
-        }
+        var entity = Mapper.Map(req, target);
+        return Ok();
     }
 
     [Authorize]
