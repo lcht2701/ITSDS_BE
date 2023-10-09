@@ -19,8 +19,6 @@ namespace Domain.Models.Tickets
 
         public string? Attachments { get; set; }
 
-        public string? Solution { get; set; }
-
         [JsonIgnore]
         public virtual Ticket? Ticket { get; set; }
     }
