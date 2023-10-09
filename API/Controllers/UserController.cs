@@ -24,10 +24,16 @@ public class UserController : BaseController
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpGet]
-    public async Task<IActionResult> GetUsers()
+    public async Task<IActionResult> GetUsers(int page = 1, int pageSize = 3)
     {
-        var result = await _userRepository.ToListAsync();
-        return Ok(result);
+        var user = await _userRepository.ToListAsync();
+        var totalCount = user.Count;
+        var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
+        var usersPerPage = user
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+        return Ok(usersPerPage);
     }
 
     [Authorize]
