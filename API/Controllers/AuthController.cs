@@ -65,7 +65,7 @@ public class AuthController : BaseController
             throw new UnauthorizedException("Your account has been suspended");
         }
 
-        if (IsAdmin)
+        if (user.Role != Role.Admin)
         {
             throw new UnauthorizedException("You are not allowed to enter");
         }

@@ -32,14 +32,6 @@ public class TicketController : BaseController
         return Ok(result);
     }
 
-    [Authorize(Roles = Roles.COMPANYMEMBERS)]
-    [HttpGet("my-requests")]
-    public async Task<IActionResult> GetMyRequestedTickets()
-    {
-        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(CurrentUserID));
-        return Ok(result);
-    }
-
     [Authorize]
     [HttpGet("user/{userId}")]
     public async Task<IActionResult> GetTicketsByUser(int userId)
@@ -52,6 +44,18 @@ public class TicketController : BaseController
         return Ok(result);
     }
 
+    [Authorize]
+    [HttpGet("team/{teamId}")]
+    public async Task<IActionResult> GetTicketsByTeam(int teamId)
+    {
+        var result = await _ticketRepository.WhereAsync(x => x.TeamId.Equals(teamId));
+        if (result.Count == 0)
+        {
+            throw new NotFoundException("No tickets was found for this team");
+        }
+        return Ok(result);
+    }
+
     [Authorize(Roles = Roles.TICKETPARTICIPANTS)]
     [HttpGet("{ticketId}")]
     public async Task<IActionResult> GetTicketById(int ticketId)
@@ -60,22 +64,49 @@ public class TicketController : BaseController
         return Ok(result);
     }
 
-    [Authorize(Roles = $"{Roles.CUSTOMERADMIN},{Roles.CUSTOMER}")]
-    [HttpPost("new-ticket")]
-    public async Task<IActionResult> CreateTicket([FromBody] CreateTicketRequest model)
+    [Authorize(Roles = Roles.CUSTOMER)]
+    [HttpPost("customer/new")]
+    public async Task<IActionResult> CreateTicketByCustomer([FromBody] CreateTicketCustomerRequest model)
     {
         Ticket entity = Mapper.Map(model, new Ticket());
         //Logic
+        entity.TicketStatus = TicketStatus.Open;
         entity.RequesterId = CurrentUserID;
+        //Create
+        await _ticketRepository.CreateAsync(entity);
+        return Ok("Create Successfully");
+    }
+
+    [Authorize(Roles = Roles.CUSTOMER)]
+    [HttpPut("customer/{ticketId}")]
+    public async Task<IActionResult> UpdateTicketByCustomer(int ticketId, [FromBody] UpdateTicketCustomerRequest model)
+    {
+        var target = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
+        if (target.TicketStatus == TicketStatus.Open)
+        {
+            throw new BadRequestException("Ticket can not be updated when it is being executed");
+        }
+        var entity = Mapper.Map(model, new Ticket());
+        await _ticketRepository.UpdateAsync(entity);
+        return Accepted(entity);
+    }
+
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpPost("manager/new")]
+    public async Task<IActionResult> CreateTicketByManager([FromBody] CreateTicketManagerRequest model)
+    {
+        Ticket entity = Mapper.Map(model, new Ticket());
+        //Logic
         entity.TicketStatus = TicketStatus.Open;
         //Create
         await _ticketRepository.CreateAsync(entity);
         return Ok("Create Successfully");
     }
 
-    [Authorize(Roles = $"{Roles.CUSTOMERADMIN},{Roles.CUSTOMER}")]
-    [HttpPut("{ticketId}")]
-    public async Task<IActionResult> UpdateTicketInformation(int ticketId, [FromBody]UpdateTicketRequest model)
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpPut("manager/{ticketId}")]
+    public async Task<IActionResult> UpdateTicketByManager(int ticketId, [FromBody] UpdateTicketManagerRequest model)
     {
         var target = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
         if (target.TicketStatus == TicketStatus.Open)
@@ -88,9 +119,9 @@ public class TicketController : BaseController
     }
 
     //Chưa làm Author
-    [Authorize]
-    [HttpDelete("{ticketId}")]
-    public async Task<IActionResult> DeleteTicket(int ticketId, [FromBody] UpdateTicketRequest model)
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpDelete("manager/{ticketId}")]
+    public async Task<IActionResult> DeleteTicket(int ticketId)
     {
         var target = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
         await _ticketRepository.DeleteAsync(target);

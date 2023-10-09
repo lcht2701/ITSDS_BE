@@ -26,15 +26,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 builder.Services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>));
-builder.Services.Configure<CloudinarySettings>(configuration.GetSection(nameof(CloudinarySettings)));
 builder.Services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
-//builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
 builder.Services.AddSingleton<FirebaseStorageService>();
 
-builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>())
-                .AddJsonOptions(opt => opt.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter()));
+builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>());
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.Configure<FormOptions>(options =>

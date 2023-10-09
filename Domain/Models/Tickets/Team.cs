@@ -24,12 +24,13 @@ public partial class Team : BaseEntity
 
     public bool? IsActive { get; set; }
 
-    public int? OwnerId { get; set; }
+    public int? ManagerId { get; set; }
 
     [JsonIgnore]
-    public virtual User? Owner { get; set; }
-    [JsonIgnore]
-    public virtual ICollection<Assignment>? Assignments { get; set; }
+    public virtual User? Manager { get; set; }
+
     [JsonIgnore]
     public virtual ICollection<Contract>? Contracts { get; set; }
+    [JsonIgnore]
+    public virtual ICollection<Assignment>? Assignments { get; set; }
 }

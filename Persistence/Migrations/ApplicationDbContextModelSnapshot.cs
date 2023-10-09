@@ -411,7 +411,9 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TechnicianId");
 
-                    b.HasIndex("TicketId");
+                    b.HasIndex("TicketId")
+                        .IsUnique()
+                        .HasFilter("[TicketId] IS NOT NULL");
 
                     b.ToTable("Assignments");
                 });
@@ -542,20 +544,20 @@ namespace Persistence.Migrations
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ManagerId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("OwnerId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DeletedAt");
 
-                    b.HasIndex("OwnerId");
+                    b.HasIndex("ManagerId");
 
                     b.ToTable("Teams");
                 });
@@ -960,8 +962,8 @@ namespace Persistence.Migrations
                         .HasForeignKey("TechnicianId");
 
                     b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
-                        .WithMany("Assignments")
-                        .HasForeignKey("TicketId");
+                        .WithOne("Assignment")
+                        .HasForeignKey("Domain.Models.Tickets.Assignment", "TicketId");
 
                     b.Navigation("Team");
 
@@ -990,11 +992,11 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Team", b =>
                 {
-                    b.HasOne("Domain.Models.User", "Owner")
+                    b.HasOne("Domain.Models.User", "Manager")
                         .WithMany()
-                        .HasForeignKey("OwnerId");
+                        .HasForeignKey("ManagerId");
 
-                    b.Navigation("Owner");
+                    b.Navigation("Manager");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.TeamMember", b =>
@@ -1119,7 +1121,7 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Ticket", b =>
                 {
-                    b.Navigation("Assignments");
+                    b.Navigation("Assignment");
 
                     b.Navigation("Histories");
 

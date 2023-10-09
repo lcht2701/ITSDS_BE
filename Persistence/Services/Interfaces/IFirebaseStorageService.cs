@@ -5,6 +5,6 @@ namespace Persistence.Services.Interfaces
 {
     public interface IFirebaseStorageService
     {
-        Task<string> UploadImageFirebaseAsync(MemoryStream stream, string fileName);
+        Task<string> UploadFirebaseAsync(MemoryStream stream, string fileName);
     }
 }

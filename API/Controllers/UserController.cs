@@ -1,7 +1,4 @@
 using API.DTOs.Requests.Users;
-using API.DTOs.Responses.Users;
-using AutoMapper;
-using CloudinaryDotNet.Actions;
 using Domain.Constants;
 using Domain.Exceptions;
 using Domain.Models;
@@ -10,8 +7,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Repositories.Interfaces;
 using Persistence.Services.Interfaces;
-using System.Web;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace API.Controllers;
 
@@ -19,13 +14,11 @@ namespace API.Controllers;
 public class UserController : BaseController
 {
     private readonly IRepositoryBase<User> _userRepository;
-    private readonly IPhotoService _photoService;
     private readonly IFirebaseStorageService _firebaseStorageService;
 
-    public UserController(IRepositoryBase<User> userRepository, IPhotoService photoService, IFirebaseStorageService firebaseStorageService)
+    public UserController(IRepositoryBase<User> userRepository, IFirebaseStorageService firebaseStorageService)
     {
         _userRepository = userRepository;
-        _photoService = photoService;
         _firebaseStorageService = firebaseStorageService;
     }
 
@@ -44,13 +37,20 @@ public class UserController : BaseController
         var result = await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new NotFoundException("User is not found"));
         return Ok(result);
     }
+    
+    [Authorize]
+    [HttpGet("current-user")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var result = await _userRepository.FirstOrDefaultAsync(u => u.Id.Equals(CurrentUserID));
+        return Ok(result);
+    }
 
     //Enable back to test authorization
     //[Authorize(Roles = Roles.ADMIN)]
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest model)
     {
-
         User entity = Mapper.Map(model, new User());
         //Hash password
         var passwordHasher = new PasswordHasher<User>();
@@ -109,20 +109,9 @@ public class UserController : BaseController
         return Ok("Updated Successfully");
     }
 
-    //[Authorize]
-    //[HttpPatch("uploadAvatarCloudinary")]
-    //public async Task<IActionResult> UploadAvatarProfileCloudinary(IFormFile file)
-    //{
-    //    var user = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
-    //    var result = await _photoService.AddPhotoAsync(file);
-    //    user.AvatarUrl = result.Url.ToString();
-    //    await _userRepository.UpdateAsync(user);
-    //    return Ok(user.AvatarUrl);
-    //}
-
     [Authorize]
     [HttpPatch("uploadAvatarFirebase")]
-    public async Task<IActionResult> UploadAvatarProfileFirebase(IFormFile file)
+    public async Task<IActionResult> UploadImageFirebase(IFormFile file)
     {
         var user = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
         if (file == null || file.Length == 0)
@@ -134,11 +123,10 @@ public class UserController : BaseController
         await file.CopyToAsync(stream);
         stream.Position = 0;
 
-        var linkImage = await _firebaseStorageService.UploadImageFirebaseAsync(stream, file.FileName);
+        var linkImage = await _firebaseStorageService.UploadFirebaseAsync(stream, file.FileName);
         user.AvatarUrl = linkImage;
         await _userRepository.UpdateAsync(user);
         return Ok(linkImage);
-      
     }
 
 }

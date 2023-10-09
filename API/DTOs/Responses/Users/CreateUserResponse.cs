@@ -19,6 +19,6 @@ namespace API.DTOs.Responses.Users
 
         public Gender Gender { get; set; }
 
-        public DateOnly DateOfBirth { get; set; }
+        public DateTime DateOfBirth { get; set; }
     }
 }
