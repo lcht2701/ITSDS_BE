@@ -3,6 +3,7 @@ using API.DTOs.Requests.Contracts;
 using API.DTOs.Requests.Teams;
 using Domain.Constants;
 using Domain.Exceptions;
+using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,18 +15,20 @@ namespace API.Controllers
     [Route("/v1/itsds/category")]
     public class CategoryController : BaseController
     {
-        private readonly IRepositoryBase<Category> _categoryrepository;
+        private readonly IRepositoryBase<Category> _categoryRepository;
+        private readonly IRepositoryBase<User> _userrepository;
 
-        public CategoryController(IRepositoryBase<Category> categoryrepository)
+        public CategoryController(IRepositoryBase<Category> categoryRepository, IRepositoryBase<User> userrepository)
         {
-            _categoryrepository = categoryrepository;
+            _categoryRepository = categoryRepository;
+            _userrepository = userrepository;
         }
 
-        [Authorize(Roles = Roles.MANAGER)]
+        [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER}")]
         [HttpGet]
-        public async Task<IActionResult> GetCategories()
+        public async Task<IActionResult> GetAllCategory()
         {
-            var result = await _categoryrepository.ToListAsync();
+            var result = await _categoryRepository.ToListAsync();
             return Ok(result);
         }
 
@@ -33,7 +36,7 @@ namespace API.Controllers
         [HttpGet("{categoryId}")]
         public async Task<IActionResult> GetCategoryById(int categoryId)
         {
-            var result = await _categoryrepository.FoundOrThrow(x => x.Id.Equals(categoryId), new NotFoundException("Category not found"));
+            var result = await _categoryRepository.FoundOrThrow(x => x.Id.Equals(categoryId), new NotFoundException("Category not found"));
             return Ok(result);
         }
 
@@ -41,8 +44,16 @@ namespace API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoriesRequest model)
         {
+            if (model.AssignedTechnicalId != null)
+            {
+                User user = await _userrepository.FoundOrThrow(x => x.Id.Equals(model.AssignedTechnicalId), new NotFoundException("User not found"));
+                if (user.Role != Role.Technician)
+                {
+                    throw new BadRequestException("Cannot assign this user.");
+                }
+            }
             var entity = Mapper.Map(model, new Category());
-            await _categoryrepository.CreateAsync(entity);
+            await _categoryRepository.CreateAsync(entity);
             return Ok();
         }
 
@@ -50,9 +61,17 @@ namespace API.Controllers
         [HttpPut("{categoryId}")]
         public async Task<IActionResult> UpdateCategory(int categoryId, [FromBody] UpdateCategoriesRequest req)
         {
-            var target = await _categoryrepository.FoundOrThrow(c => c.Id.Equals(categoryId), new NotFoundException("Category not found"));
+            if (req.AssignedTechnicalId != null)
+            {
+                User user = await _userrepository.FoundOrThrow(x => x.Id.Equals(req.AssignedTechnicalId), new NotFoundException("User not found"));
+                if (user.Role != Role.Technician)
+                {
+                    throw new BadRequestException("Cannot assign this user.");
+                }
+            }
+            var target = await _categoryRepository.FoundOrThrow(c => c.Id.Equals(categoryId), new NotFoundException("Category not found"));
             Category entity = Mapper.Map(req, target);
-            await _categoryrepository.UpdateAsync(entity);
+            await _categoryRepository.UpdateAsync(entity);
             return Accepted("Updated Successfully");
         }
 
@@ -60,9 +79,9 @@ namespace API.Controllers
         [HttpDelete("{categoryId}")]
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {
-            var target = await _categoryrepository.FoundOrThrow(c => c.Id.Equals(categoryId), new NotFoundException("Category not found"));
+            var target = await _categoryRepository.FoundOrThrow(c => c.Id.Equals(categoryId), new NotFoundException("Category not found"));
             //Soft Delete
-            await _categoryrepository.DeleteAsync(target);
+            await _categoryRepository.DeleteAsync(target);
             return Ok("Deleted Successfully");
         }
     }
