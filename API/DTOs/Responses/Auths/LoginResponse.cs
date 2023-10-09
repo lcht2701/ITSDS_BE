@@ -7,6 +7,8 @@ namespace API.DTOs.Responses.Auths;
 
 public class LoginResponse : IMapFrom<User>
 {
+    public string Id { get; set; }
+    
     public string FirstName { get; set; }
 
     public string LastName { get; set; }
@@ -29,4 +31,3 @@ public class LoginResponse : IMapFrom<User>
 
     public string AccessToken { get; set; }
 }
-
