@@ -13,6 +13,6 @@ namespace API.DTOs.Requests.Categories
         [Required]
         public string Description { get; set; }
 
-        public int AssignedTechnicalId { get; set; }
+        public int? AssignedTechnicalId { get; set; }
     }
 }
