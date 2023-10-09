@@ -37,6 +37,14 @@ public class UserController : BaseController
         var result = await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new NotFoundException("User is not found"));
         return Ok(result);
     }
+    
+    [Authorize]
+    [HttpGet("current-user")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var result = await _userRepository.FirstOrDefaultAsync(u => u.Id.Equals(CurrentUserID));
+        return Ok(result);
+    }
 
     //Enable back to test authorization
     //[Authorize(Roles = Roles.ADMIN)]
