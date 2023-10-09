@@ -12,6 +12,7 @@ namespace Domain.Models.Tickets
         public Category()
         {
             Tickets = new HashSet<Ticket>();
+            TicketSolutions = new HashSet<TicketSolution>();
         }
 
         public string? Name { get; set; }
@@ -24,5 +25,7 @@ namespace Domain.Models.Tickets
         public virtual User? AssignedTechnical { get; set; }
         [JsonIgnore]
         public virtual ICollection<Ticket>? Tickets { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<TicketSolution>? TicketSolutions { get; set; }
     }
 }
