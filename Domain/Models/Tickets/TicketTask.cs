@@ -1,4 +1,4 @@
-﻿using Domain.Constants;
+﻿using Domain.Constants.Enums;
 using System.Text.Json.Serialization;
 
 namespace Domain.Models.Tickets;

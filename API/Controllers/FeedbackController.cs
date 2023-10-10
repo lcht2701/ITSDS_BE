@@ -3,6 +3,7 @@ using API.DTOs.Requests.Contracts;
 using API.DTOs.Requests.Feedbacks;
 using API.DTOs.Requests.Teams;
 using Domain.Constants;
+using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;

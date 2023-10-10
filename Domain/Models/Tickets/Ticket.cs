@@ -1,4 +1,4 @@
-﻿using Domain.Constants;
+﻿using Domain.Constants.Enums;
 using Domain.Models.Contracts;
 using System.Text.Json.Serialization;
 

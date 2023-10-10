@@ -1,4 +1,4 @@
-﻿using Domain.Constants;
+﻿using Domain.Constants.Enums;
 using Domain.Models.Tickets;
 using System;
 using System.Collections.Generic;

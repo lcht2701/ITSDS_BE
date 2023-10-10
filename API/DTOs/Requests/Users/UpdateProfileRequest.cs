@@ -1,5 +1,5 @@
 ﻿using API.Mappings;
-using Domain.Constants;
+using Domain.Constants.Enums;
 using Domain.Models;
 using System.ComponentModel.DataAnnotations;
 
