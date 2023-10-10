@@ -21,8 +21,6 @@ namespace API.DTOs.Requests.Tickets
 
         public int? CategoryId { get; set; }
 
-        public int? TeamId { get; set; }
-
         public TicketStatus? TicketStatus { get; set; }
 
         public Priority? Priority { get; set; }
