@@ -44,18 +44,6 @@ public class TicketController : BaseController
         return Ok(result);
     }
 
-    [Authorize]
-    [HttpGet("team/{teamId}")]
-    public async Task<IActionResult> GetTicketsByTeam(int teamId)
-    {
-        var result = await _ticketRepository.WhereAsync(x => x.TeamId.Equals(teamId));
-        if (result.Count == 0)
-        {
-            throw new NotFoundException("No tickets was found for this team");
-        }
-        return Ok(result);
-    }
-
     [Authorize(Roles = Roles.TICKETPARTICIPANTS)]
     [HttpGet("{ticketId}")]
     public async Task<IActionResult> GetTicketById(int ticketId)

@@ -25,7 +25,6 @@ namespace Persistence.Context
         public virtual DbSet<History> Histories { get; set; }
         public virtual DbSet<Category> Categories { get; set; }
         public virtual DbSet<TicketTask> TicketTasks { get; set; }
-        public virtual DbSet<TicketAnalyst> TicketAnalysts { get; set; }
         public virtual DbSet<TicketSolution> TicketSolutions { get; set; }
         public virtual DbSet<Feedback> Feedbacks { get; set; }
         //Contract

@@ -19,6 +19,8 @@ namespace API.DTOs.Requests.Tickets
 
         public int? ServiceId { get; set; }
 
+        public int? CategoryId { get; set; }
+
         public int? TeamId { get; set; }
 
         public TicketStatus? TicketStatus { get; set; }
@@ -26,10 +28,10 @@ namespace API.DTOs.Requests.Tickets
         public Priority? Priority { get; set; }
 
         public Impact? Impact { get; set; }
+        
+        public string? ImpactDetail { get; set; }
 
         public Urgency? Urgency { get; set; }
-
-        public int? CategoryId { get; set; }
 
         public string? AttachmentUrl { get; set; }
     }
