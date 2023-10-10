@@ -35,20 +35,5 @@ namespace Persistence.Services.Implements
                 return false;
             }
         }
-
-        public async Task<bool> UpdateTaskStatusTo(int taskId, TicketTaskStatus newStatus)
-        {
-            try
-            {
-                var target = await _taskRepository.FirstOrDefaultAsync(x => x.Id.Equals(taskId));
-                target.TaskStatus = newStatus;
-                await _taskRepository.UpdateAsync(target);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
     }
 }

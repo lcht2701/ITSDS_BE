@@ -10,6 +10,5 @@ namespace Persistence.Services.Interfaces
     public interface IStatusTrackingService
     {
         Task<bool> UpdateTicketStatusTo(int ticketId, TicketStatus newStatus);
-        Task<bool> UpdateTaskStatusTo(int taskId, TicketTaskStatus newStatus);
     }
 }

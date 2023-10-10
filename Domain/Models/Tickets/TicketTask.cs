@@ -19,8 +19,6 @@ public partial class TicketTask : BaseEntity
 
     public Priority? Priority { get; set; }
 
-    public TicketTaskStatus? TaskStatus { get; set; }
-
     public DateTime? ScheduledStartTime { get; set; }
 
     public DateTime? ScheduledEndTime { get; set; }
