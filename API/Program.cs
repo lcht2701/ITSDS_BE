@@ -29,6 +29,7 @@ builder.Services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>));
 builder.Services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
+builder.Services.AddScoped<IStatusTrackingService, StatusTrackingService>();
 builder.Services.AddSingleton<FirebaseStorageService>();
 
 builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>());

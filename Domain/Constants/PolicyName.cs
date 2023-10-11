@@ -1,4 +1,6 @@
-﻿namespace Domain.Constants;
+﻿using Domain.Constants.Enums;
+
+namespace Domain.Constants;
 public static class Roles
 {
     public const string ADMIN = nameof(Role.Admin);

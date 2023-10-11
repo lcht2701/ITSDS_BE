@@ -1,4 +1,4 @@
-﻿using Domain.Constants;
+﻿using Domain.Constants.Enums;
 using System.Text.Json.Serialization;
 
 namespace Domain.Models.Tickets;
@@ -18,8 +18,6 @@ public partial class TicketTask : BaseEntity
     public int? TeamId { get; set; }
 
     public Priority? Priority { get; set; }
-
-    public TicketTaskStatus? TaskStatus { get; set; }
 
     public DateTime? ScheduledStartTime { get; set; }
 

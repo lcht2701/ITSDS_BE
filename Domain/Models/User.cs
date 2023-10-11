@@ -1,4 +1,4 @@
-﻿using Domain.Constants;
+﻿using Domain.Constants.Enums;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Identity;

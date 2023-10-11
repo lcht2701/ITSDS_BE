@@ -1,5 +1,5 @@
 ﻿using API.Mappings;
-using Domain.Constants;
+using Domain.Constants.Enums;
 using Domain.Models.Tickets;
 using System.ComponentModel.DataAnnotations;
 
@@ -20,8 +20,6 @@ namespace API.DTOs.Requests.Tickets
         public int? ServiceId { get; set; }
 
         public int? CategoryId { get; set; }
-
-        public int? TeamId { get; set; }
 
         public TicketStatus? TicketStatus { get; set; }
 

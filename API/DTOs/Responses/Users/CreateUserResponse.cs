@@ -1,5 +1,5 @@
 ﻿using API.Mappings;
-using Domain.Constants;
+using Domain.Constants.Enums;
 using Domain.Models;
 using System.ComponentModel.DataAnnotations;
 
@@ -17,8 +17,8 @@ namespace API.DTOs.Responses.Users
 
         public string LastName { get; set; }
 
-        public Gender Gender { get; set; }
+        public string? Gender { get; set; }
 
-        public DateTime DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
     }
 }
