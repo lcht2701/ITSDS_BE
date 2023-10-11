@@ -4,14 +4,12 @@ namespace Domain.Constants.Enums;
 
 public enum Urgency
 {
-    [Description("Not Specified")]
-    NotSpecified,
-    [Description("Urgent")]
-    Urgent,
-    [Description("High")]
-    High,
+    [Description("Low")]
+    Low,
     [Description("Middle")]
     Middle,
-    [Description("Low")]
-    Low
+    [Description("High")]
+    High,
+    [Description("Urgent")]
+    Urgent,
 }

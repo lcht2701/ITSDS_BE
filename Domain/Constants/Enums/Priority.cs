@@ -4,14 +4,12 @@ namespace Domain.Constants.Enums;
 
 public enum Priority
 {
-    [Description("Critical")]
-    Critical,
-    [Description("High")]
-    High,
-    [Description("Medium")]
-    Medium,
-    [Description("Normal")]
-    Normal,
     [Description("Low")]
     Low,
+    [Description("Medium")]
+    Medium,
+    [Description("High")]
+    High,
+    [Description("Critical")]
+    Critical,
 }
