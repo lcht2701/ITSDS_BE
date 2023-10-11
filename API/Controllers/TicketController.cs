@@ -16,22 +16,17 @@ namespace API.Controllers;
 public class TicketController : BaseController
 {
     private readonly IRepositoryBase<Ticket> _ticketRepository;
-    private readonly IRepositoryBase<User> _userRepository;
-    private readonly IRepositoryBase<Team> _teamRepository;
 
-    public TicketController(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<User> userRepository,
-        IRepositoryBase<Team> teamRepository)
+    public TicketController(IRepositoryBase<Ticket> ticketRepository)
     {
         _ticketRepository = ticketRepository;
-        _userRepository = userRepository;
-        _teamRepository = teamRepository;
     }
 
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetTickets()
     {
-        var result = await _ticketRepository.GetAsync(navigationProperties: new string[] { "Category", "Mode" });
+        var result = await _ticketRepository.GetAsync(navigationProperties: new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
         var response = new List<GetTicketResponse>();
         foreach (var ticket in result)
         {
@@ -58,7 +53,7 @@ public class TicketController : BaseController
     [HttpGet("user/{userId}")]
     public async Task<IActionResult> GetTicketsByUser(int userId)
     {
-        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId));
+        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId), new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
         var response = new List<GetTicketResponse>();
         foreach (var ticket in result)
         {
@@ -82,8 +77,11 @@ public class TicketController : BaseController
     public async Task<IActionResult> GetTicketById(int ticketId)
     {
         var result =
-            await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
-
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId), , new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+        if (result == null)
+        {
+            return Ok("Ticket Not Found.");
+        }
         var entity = Mapper.Map(result, new GetTicketResponse());
         entity.ScheduledStartTime = (result.ScheduledStartTime == DateTime.MinValue) ? null : result.ScheduledStartTime;
         entity.ScheduledEndTime = (result.ScheduledEndTime == DateTime.MinValue) ? null : result.ScheduledEndTime;
