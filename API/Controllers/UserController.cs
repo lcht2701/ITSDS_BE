@@ -66,23 +66,6 @@ public class UserController : BaseController
         return Ok(entity);
     }
 
-    [Authorize]
-    [HttpGet("current-user")]
-    public async Task<IActionResult> GetCurrentUser()
-    {
-        var result = await _userRepository.FirstOrDefaultAsync(u => u.Id.Equals(CurrentUserID));
-        var entity = Mapper.Map(result, new GetUserResponse());
-        entity.Role = EnumExtensions.GetEnumDescription(result.Role!);
-        entity.Gender = EnumExtensions.GetEnumDescription(result.Gender!);
-
-        entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
-        entity.CreatedAt = (entity.CreatedAt != DateTime.MinValue) ? entity.CreatedAt : null;
-        entity.ModifiedAt = (entity.ModifiedAt != DateTime.MinValue) ? entity.ModifiedAt : null;
-        entity.DeletedAt = (entity.DeletedAt != DateTime.MinValue) ? entity.DeletedAt : null;
-
-        return Ok(entity);
-    }
-
     //Enable back to test authorization
     //[Authorize(Roles = Roles.ADMIN)]
     [HttpPost]
@@ -174,5 +157,22 @@ public class UserController : BaseController
         user.AvatarUrl = linkImage;
         await _userRepository.UpdateAsync(user);
         return Ok(linkImage);
+    }
+    
+    [Authorize]
+    [HttpGet("current-user")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var result = await _userRepository.FirstOrDefaultAsync(u => u.Id.Equals(CurrentUserID));
+        var entity = Mapper.Map(result, new GetUserResponse());
+        entity.Role = EnumExtensions.GetEnumDescription(result.Role!);
+        entity.Gender = EnumExtensions.GetEnumDescription(result.Gender!);
+
+        entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
+        entity.CreatedAt = (entity.CreatedAt != DateTime.MinValue) ? entity.CreatedAt : null;
+        entity.ModifiedAt = (entity.ModifiedAt != DateTime.MinValue) ? entity.ModifiedAt : null;
+        entity.DeletedAt = (entity.DeletedAt != DateTime.MinValue) ? entity.DeletedAt : null;
+
+        return Ok(entity);
     }
 }

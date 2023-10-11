@@ -6,8 +6,8 @@ public enum Impact
 {
     [Description("Low")]
     Low,
-    [Description("Middle")]
-    Middle,
+    [Description("Medium")]
+    Medium,
     [Description("High")]
     High,
 }

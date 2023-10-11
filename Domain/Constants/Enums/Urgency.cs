@@ -6,8 +6,8 @@ public enum Urgency
 {
     [Description("Low")]
     Low,
-    [Description("Middle")]
-    Middle,
+    [Description("Medium")]
+    Medium,
     [Description("High")]
     High,
     [Description("Urgent")]
