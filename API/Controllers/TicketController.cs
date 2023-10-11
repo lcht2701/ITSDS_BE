@@ -77,7 +77,7 @@ public class TicketController : BaseController
     public async Task<IActionResult> GetTicketById(int ticketId)
     {
         var result =
-            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId), , new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId), new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
         if (result == null)
         {
             return Ok("Ticket Not Found.");
