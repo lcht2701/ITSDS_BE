@@ -41,14 +41,13 @@ public class TicketController : BaseController
             entity.Priority = EnumExtensions.GetEnumDescription(ticket.Priority!);
             entity.Urgency = EnumExtensions.GetEnumDescription(ticket.Urgency!);
 
-            entity.ScheduledStartTime = (ticket.ScheduledStartTime == DateTime.MinValue)
-                ? (DateTime?)null
-                : ticket.ScheduledStartTime;
-            entity.ScheduledEndTime = (ticket.ScheduledEndTime == DateTime.MinValue)
-                ? (DateTime?)null
-                : ticket.ScheduledEndTime;
-            entity.DueTime = (ticket.DueTime == DateTime.MinValue) ? (DateTime?)null : ticket.DueTime;
-            entity.CompletedTime = (ticket.CompletedTime == DateTime.MinValue) ? (DateTime?)null : ticket.CompletedTime;
+            entity.ScheduledStartTime = (ticket.ScheduledStartTime == DateTime.MinValue) ? null : ticket.ScheduledStartTime;
+            entity.ScheduledEndTime = (ticket.ScheduledEndTime == DateTime.MinValue) ? null : ticket.ScheduledEndTime;
+            entity.DueTime = (ticket.DueTime == DateTime.MinValue) ? null : ticket.DueTime;
+            entity.CompletedTime = (ticket.CompletedTime == DateTime.MinValue) ? null : ticket.CompletedTime;
+            entity.CreatedAt = (ticket.CreatedAt == DateTime.MinValue) ? null : ticket.CreatedAt;
+            entity.ModifiedAt = (ticket.ModifiedAt == DateTime.MinValue) ? null : ticket.ModifiedAt;
+            entity.DeletedAt = (ticket.DeletedAt == DateTime.MinValue) ? null : ticket.DeletedAt;
             response.Add(entity);
         }
 
@@ -69,19 +68,13 @@ public class TicketController : BaseController
         foreach (var ticket in result)
         {
             var entity = Mapper.Map(ticket, new GetTicketResponse());
-            entity.TicketStatus = EnumExtensions.GetEnumDescription(ticket.TicketStatus!);
-            entity.Impact = EnumExtensions.GetEnumDescription(ticket.Impact!);
-            entity.Priority = EnumExtensions.GetEnumDescription(ticket.Priority!);
-            entity.Urgency = EnumExtensions.GetEnumDescription(ticket.Urgency!);
-
-            entity.ScheduledStartTime = (ticket.ScheduledStartTime == DateTime.MinValue)
-                ? (DateTime?)null
-                : ticket.ScheduledStartTime;
-            entity.ScheduledEndTime = (ticket.ScheduledEndTime == DateTime.MinValue)
-                ? (DateTime?)null
-                : ticket.ScheduledEndTime;
-            entity.DueTime = (ticket.DueTime == DateTime.MinValue) ? (DateTime?)null : ticket.DueTime;
-            entity.CompletedTime = (ticket.CompletedTime == DateTime.MinValue) ? (DateTime?)null : ticket.CompletedTime;
+            entity.ScheduledStartTime = (ticket.ScheduledStartTime == DateTime.MinValue) ? null : ticket.ScheduledStartTime;
+            entity.ScheduledEndTime = (ticket.ScheduledEndTime == DateTime.MinValue) ? null : ticket.ScheduledEndTime;
+            entity.DueTime = (ticket.DueTime == DateTime.MinValue) ? null : ticket.DueTime;
+            entity.CompletedTime = (ticket.CompletedTime == DateTime.MinValue) ? null : ticket.CompletedTime;
+            entity.CreatedAt = (ticket.CreatedAt == DateTime.MinValue) ? null : ticket.CreatedAt;
+            entity.ModifiedAt = (ticket.ModifiedAt == DateTime.MinValue) ? null : ticket.ModifiedAt;
+            entity.DeletedAt = (ticket.DeletedAt == DateTime.MinValue) ? null : ticket.DeletedAt;
             response.Add(entity);
         }
 
@@ -97,18 +90,13 @@ public class TicketController : BaseController
             await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
 
         var entity = Mapper.Map(result, new GetTicketResponse());
-        entity.TicketStatus = EnumExtensions.GetEnumDescription(result.TicketStatus!);
-        entity.Impact = EnumExtensions.GetEnumDescription(result.Impact!);
-        entity.Priority = EnumExtensions.GetEnumDescription(result.Priority!);
-        entity.Urgency = EnumExtensions.GetEnumDescription(result.Urgency!);
-
-        entity.ScheduledStartTime = (result.ScheduledStartTime == DateTime.MinValue)
-            ? (DateTime?)null
-            : result.ScheduledStartTime;
-        entity.ScheduledEndTime =
-            (result.ScheduledEndTime == DateTime.MinValue) ? (DateTime?)null : result.ScheduledEndTime;
-        entity.DueTime = (result.DueTime == DateTime.MinValue) ? (DateTime?)null : result.DueTime;
-        entity.CompletedTime = (result.CompletedTime == DateTime.MinValue) ? (DateTime?)null : result.CompletedTime;
+        entity.ScheduledStartTime = (result.ScheduledStartTime == DateTime.MinValue) ? null : result.ScheduledStartTime;
+        entity.ScheduledEndTime = (result.ScheduledEndTime == DateTime.MinValue) ? null : result.ScheduledEndTime;
+        entity.DueTime = (result.DueTime == DateTime.MinValue) ? null : result.DueTime;
+        entity.CompletedTime = (result.CompletedTime == DateTime.MinValue) ? null : result.CompletedTime;
+        entity.CreatedAt = (result.CreatedAt == DateTime.MinValue) ? null : result.CreatedAt;
+        entity.ModifiedAt = (result.ModifiedAt == DateTime.MinValue) ? null : result.ModifiedAt;
+        entity.DeletedAt = (result.DeletedAt == DateTime.MinValue) ? null : result.DeletedAt;
 
         return Ok(entity);
     }

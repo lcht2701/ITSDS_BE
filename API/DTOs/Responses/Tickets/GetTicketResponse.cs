@@ -23,4 +23,7 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public DateTime? ScheduledEndTime { get; set; }
     public DateTime? DueTime { get; set; }
     public DateTime? CompletedTime { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? ModifiedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
 }
