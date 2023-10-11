@@ -12,8 +12,7 @@ public class Feedback : BaseEntity
     
     public bool? IsPublic { get; set; }
     
-    [JsonIgnore]
     public virtual TicketSolution? TicketSolution { get; set; }
-    [JsonIgnore]
+
     public virtual User? User { get; set; }
 }

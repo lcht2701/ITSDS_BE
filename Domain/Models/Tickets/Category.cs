@@ -21,8 +21,8 @@ namespace Domain.Models.Tickets
 
         public int? AssignedTechnicalId { get; set; }
 
-        [JsonIgnore]
         public virtual User? AssignedTechnical { get; set; }
+
         [JsonIgnore]
         public virtual ICollection<Ticket>? Tickets { get; set; }
         [JsonIgnore]

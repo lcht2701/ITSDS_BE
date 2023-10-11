@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel;
 using API.Mappings;
+using Domain.Models;
+using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 
 namespace API.DTOs.Responses.Tickets;
@@ -26,4 +28,9 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public DateTime? CreatedAt { get; set; }
     public DateTime? ModifiedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
+    public virtual User? Requester { get; set; }
+    public virtual Assignment? Assignment { get; set; }
+    public virtual Service? Service { get; set; }
+    public virtual Category? Category { get; set; }
+    public virtual Mode? Mode { get; set; }
 }

@@ -43,16 +43,16 @@ public partial class Ticket : BaseEntity
 
     public string? AttachmentUrl { get; set; }
 
-    [JsonIgnore]
     public virtual User? Requester { get; set; }
-    [JsonIgnore]
+
     public virtual Assignment? Assignment { get; set; }  
-    [JsonIgnore]
+
     public virtual Service? Service { get; set; }
-    [JsonIgnore]
+
     public virtual Category? Category { get; set; }
-    [JsonIgnore]
+
     public virtual Mode? Mode { get; set; }
+
     [JsonIgnore]
     public virtual ICollection<TicketTask>? TicketTasks { get; set; }
     [JsonIgnore]
