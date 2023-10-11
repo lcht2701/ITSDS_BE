@@ -31,7 +31,7 @@ public class TicketController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetTickets()
     {
-        var result = await _ticketRepository.ToListAsync();
+        var result = await _ticketRepository.GetAsync(navigationProperties: new string[] { "Category", "Mode" });
         var response = new List<GetTicketResponse>();
         foreach (var ticket in result)
         {
@@ -59,11 +59,6 @@ public class TicketController : BaseController
     public async Task<IActionResult> GetTicketsByUser(int userId)
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId));
-        if (result.Count == 0)
-        {
-            throw new NotFoundException("No tickets was found for this user");
-        }
-
         var response = new List<GetTicketResponse>();
         foreach (var ticket in result)
         {
