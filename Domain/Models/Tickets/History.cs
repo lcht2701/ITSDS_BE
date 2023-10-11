@@ -18,7 +18,6 @@ namespace Domain.Models.Tickets
 
         public int? TicketId { get; set; }
 
-        [JsonIgnore]
         public virtual Ticket? Ticket { get; set; }
 
     }

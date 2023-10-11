@@ -15,9 +15,8 @@ namespace Domain.Models.Tickets
 
         public string? Expertises { get; set; }
 
-        [JsonIgnore]
         public virtual User? Member { get; set; }
-        [JsonIgnore]
+
         public virtual Team? Team { get; set; }
     }
 }

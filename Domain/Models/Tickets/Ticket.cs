@@ -44,9 +44,13 @@ public partial class Ticket : BaseEntity
     public string? AttachmentUrl { get; set; }
 
     public virtual User? Requester { get; set; }
+
     public virtual Assignment? Assignment { get; set; }  
+
     public virtual Service? Service { get; set; }
+
     public virtual Category? Category { get; set; }
+
     public virtual Mode? Mode { get; set; }
 
     [JsonIgnore]

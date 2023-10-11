@@ -36,10 +36,10 @@ public partial class TicketTask : BaseEntity
     public int? TimeSpent { get; set; }
 
     public DateTime? DateCompleted { get; set; }
-    [JsonIgnore]
+
     public virtual User? Technician { get; set; }
-    [JsonIgnore]
+
     public virtual Team? Team { get; set; }
-    [JsonIgnore]
+
     public virtual Ticket? Ticket { get; set; }
 }
