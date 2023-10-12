@@ -4,7 +4,9 @@ using Domain.Exceptions;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using System.Linq;
 
 namespace API.Controllers;
 
@@ -20,17 +22,31 @@ public class TeamController : BaseController
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet]
-    public async Task<IActionResult> GetTeams(int page = 1, int pageSize = 3)
+    public async Task<IActionResult> GetTeams(
+    [FromQuery] string? filterKey,
+    [FromQuery] string? filterValue,
+    [FromQuery] string? sortKey,
+    [FromQuery] string? sortOrder,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5)
     {
         var teams = await _teamRepository.ToListAsync();
-        var totalCount = teams.Count;
-        var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
-        var teamsPerPage = teams
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
+
+        if (!string.IsNullOrWhiteSpace(filterKey) && !string.IsNullOrWhiteSpace(filterValue))
+        {
+            teams = teams.Filter(filterKey, filterValue).ToList();
+        }
+
+
+        if (!string.IsNullOrWhiteSpace(sortKey) && !string.IsNullOrWhiteSpace(sortOrder))
+        {
+            teams = teams.Sort(sortKey, sortOrder).ToList();
+        }
+
+        var teamsPerPage = teams.Paginate(page, pageSize);
         return Ok(teamsPerPage);
     }
+
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet("my-teams")]
