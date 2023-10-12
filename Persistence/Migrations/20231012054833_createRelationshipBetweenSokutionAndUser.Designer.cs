@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231012054833_createRelationshipBetweenSokutionAndUser")]
+    partial class createRelationshipBetweenSokutionAndUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,7 +45,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
-                    b.ToTable("Configurations", (string)null);
+                    b.ToTable("Configurations");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Company", b =>
@@ -99,7 +101,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
-                    b.ToTable("Companies", (string)null);
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.CompanyMember", b =>
@@ -136,7 +138,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("CompanyMembers", (string)null);
+                    b.ToTable("CompanyMembers");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Contract", b =>
@@ -188,7 +190,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("Contracts", (string)null);
+                    b.ToTable("Contracts");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.ContractDetail", b =>
@@ -227,7 +229,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("ServicePackId");
 
-                    b.ToTable("ContractDetails", (string)null);
+                    b.ToTable("ContractDetails");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Payment", b =>
@@ -277,7 +279,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
-                    b.ToTable("Payments", (string)null);
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.PaymentTerm", b =>
@@ -306,7 +308,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("PaymentId");
 
-                    b.ToTable("PaymentTerms", (string)null);
+                    b.ToTable("PaymentTerms");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Service", b =>
@@ -344,7 +346,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("ServicePackId");
 
-                    b.ToTable("Services", (string)null);
+                    b.ToTable("Services");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.ServicePack", b =>
@@ -374,7 +376,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
-                    b.ToTable("ServicePacks", (string)null);
+                    b.ToTable("ServicePacks");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Assignment", b =>
@@ -415,7 +417,7 @@ namespace Persistence.Migrations
                         .IsUnique()
                         .HasFilter("[TicketId] IS NOT NULL");
 
-                    b.ToTable("Assignments", (string)null);
+                    b.ToTable("Assignments");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Category", b =>
@@ -450,7 +452,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Feedback", b =>
@@ -493,7 +495,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Feedbacks", (string)null);
+                    b.ToTable("Feedbacks");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.History", b =>
@@ -531,7 +533,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("Histories", (string)null);
+                    b.ToTable("Histories");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Mode", b =>
@@ -561,7 +563,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
-                    b.ToTable("Modes", (string)null);
+                    b.ToTable("Modes");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Team", b =>
@@ -602,7 +604,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("ManagerId");
 
-                    b.ToTable("Teams", (string)null);
+                    b.ToTable("Teams");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.TeamMember", b =>
@@ -639,7 +641,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("TeamMembers", (string)null);
+                    b.ToTable("TeamMembers");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.Ticket", b =>
@@ -719,7 +721,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("Tickets", (string)null);
+                    b.ToTable("Tickets");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.TicketSolution", b =>
@@ -777,7 +779,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("TicketSolutions", (string)null);
+                    b.ToTable("TicketSolutions");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.TicketTask", b =>
@@ -855,7 +857,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("TicketTasks", (string)null);
+                    b.ToTable("TicketTasks");
                 });
 
             modelBuilder.Entity("Domain.Models.User", b =>
@@ -915,7 +917,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Company", b =>

@@ -6,6 +6,7 @@ using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.X509;
 using Persistence.Repositories.Interfaces;
 using Persistence.Services.Interfaces;
 
@@ -31,7 +32,7 @@ public class AssignmentController : BaseController
     public async Task<IActionResult> GetAssignments()
     {
         var entity = await _assignmentRepository.GetAsync(navigationProperties: new string[] { "Ticket", "Team", "Technician" });
-        return Ok(entity);
+        return entity != null ? Ok(entity) : Ok("No assignments.");
     }
 
     [Authorize]
@@ -39,7 +40,7 @@ public class AssignmentController : BaseController
     public async Task<IActionResult> GetAssignmentsByTechnician(int technicianId)
     {
         var entity = await _assignmentRepository.WhereAsync(x => x.TechnicianId.Equals(technicianId), new string[] { "Ticket", "Team", "Technician" });
-        return Ok(entity);
+        return entity != null ? Ok(entity) : Ok("No assignments of this technician.");
     }
 
     [Authorize]
@@ -47,7 +48,7 @@ public class AssignmentController : BaseController
     public async Task<IActionResult> GetAssignmentsByTeam(int teamId)
     {
         var entity = await _assignmentRepository.WhereAsync(x => x.TeamId.Equals(teamId), new string[] { "Ticket", "Team", "Technician" });
-        return Ok(entity);
+        return entity != null ? Ok(entity) : Ok("No assignments of this team.");
     }
 
     [Authorize]
@@ -55,11 +56,7 @@ public class AssignmentController : BaseController
     public async Task<IActionResult> GetAssignmentById(int id)
     {
         var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Ticket", "Team", "Technician" });
-        if (entity == null)
-        {
-            return Ok("Assignment not found.");
-        }
-        return Ok(entity);
+        return entity != null ? Ok(entity) : throw new BadRequestException("Assignment is not found");
     }
 
     [Authorize]
@@ -68,13 +65,18 @@ public class AssignmentController : BaseController
     {
         if (req.TeamId != null && req.TechnicianId != null)
         {
-            var isMemberOfTeam = await _teamMemberRepository.FirstOrDefaultAsync(x =>
-                    x.MemberId.Equals(req.TechnicianId) &&
-                    x.TeamId.Equals(req.TeamId)) ?? throw new BadRequestException("This technician is not in this team");
+            var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(req.TechnicianId, req.TeamId);
+            if (!isMemberOfTeam)
+            {
+                throw new BadRequestException("This technician is not in this team");
+            }
+            else
+            {
+                var entity = Mapper.Map(req, new Assignment());
+                await _assignmentRepository.CreateAsync(entity);
+            }
         }
 
-        var entity = Mapper.Map(req, new Assignment());
-        await _assignmentRepository.CreateAsync(entity);
         return Ok("Assign Successfully");
     }
 
@@ -82,21 +84,20 @@ public class AssignmentController : BaseController
     [HttpPatch("{ticketId}/update")]
     public async Task<IActionResult> UpdateTicketAssignmentManual(int assignmentId, [FromBody] UpdateTicketAssignmentManualRequest req)
     {
-        var target = await _assignmentRepository.FirstOrDefaultAsync(x => x.Id.Equals(assignmentId));
-        if (target == null)
+        var target = await _assignmentRepository.FoundOrThrow(x => x.Id.Equals(assignmentId), new BadRequestException("Ticket Not Found"));
+
+        if (req.TeamId != null && req.TechnicianId != null)
         {
-            throw new BadRequestException("Ticket Not Found");
-        }
-        else
-        {
-            if (req.TeamId != null && req.TechnicianId != null)
+            var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(req.TechnicianId, req.TeamId);
+            if (!isMemberOfTeam)
             {
-                var isMemberOfTeam = await _teamMemberRepository.FirstOrDefaultAsync(x =>
-                        x.MemberId.Equals(target.TechnicianId) &&
-                        x.TeamId.Equals(target.TeamId)) ?? throw new BadRequestException("This technician is not in this team");
+                throw new BadRequestException("This technician is not in this team");
             }
+
+            var entity = Mapper.Map(req, target);
+            await _assignmentRepository.CreateAsync(entity);
         }
-        var entity = Mapper.Map(req, target);
+
         return Ok("Update Successfully");
     }
 
@@ -104,9 +105,17 @@ public class AssignmentController : BaseController
     [HttpDelete("{id}")]
     public async Task<IActionResult> RemoveAssignment(int id)
     {
-        var entity = await _assignmentRepository.FoundOrThrow(x => x.Id.Equals(id), new NotFoundException("Assignment not found."));
+        var entity = await _assignmentRepository.FoundOrThrow(x => x.Id.Equals(id), new BadRequestException("Assignment not found."));
         await _assignmentRepository.DeleteAsync(entity);
         return Ok("Remove successfully.");
+    }
+
+    private async Task<bool> IsTechnicianMemberOfTeamAsync(int? technicianId, int? teamId)
+    {
+        var check = await _teamMemberRepository.FirstOrDefaultAsync(x =>
+            x.MemberId.Equals(technicianId) && x.TeamId.Equals(teamId));
+
+        return check != null;
     }
 
 }

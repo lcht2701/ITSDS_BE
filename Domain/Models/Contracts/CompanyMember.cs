@@ -15,9 +15,8 @@ namespace Domain.Models.Contracts
 
         public string? MemberPosition { get; set; }
 
-        [JsonIgnore]
         public virtual User? Member { get; set; }
-        [JsonIgnore]
+
         public virtual Company? Company { get; set; }
 
     }

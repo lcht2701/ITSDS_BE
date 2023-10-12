@@ -57,7 +57,7 @@ public class TeamMemberController : BaseController
     [HttpPut("update")]
     public async Task<IActionResult> UpdateTeamMember([FromBody] UpdateTeamMemberRequest model, int teamId, int memberId)
     {
-        var user = await _teamMemberRepository.FoundOrThrow(x => x.TeamId.Equals(teamId) && x.MemberId.Equals(memberId), new NotFoundException("Member is not in this team."));
+        var user = await _teamMemberRepository.FoundOrThrow(x => x.TeamId.Equals(teamId) && x.MemberId.Equals(memberId), new BadRequestException("Member is not in this team."));
         TeamMember entity = Mapper.Map(model, user);
         await _teamMemberRepository.CreateAsync(entity);
         return Ok("Successfully");

@@ -25,20 +25,21 @@ namespace API.Controllers
             _userrepository = userrepository;
         }
 
-        [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER}")]
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllCategory()
         {
             var result = await _categoryRepository.ToListAsync();
-            return Ok(result);
+            var sortedList = result.OrderBy(x => x.Name);
+            return result != null ? Ok(sortedList) : Ok("No Categories");
         }
 
         [Authorize(Roles = Roles.MANAGER)]
         [HttpGet("{categoryId}")]
         public async Task<IActionResult> GetCategoryById(int categoryId)
         {
-            var result = await _categoryRepository.FoundOrThrow(x => x.Id.Equals(categoryId), new NotFoundException("Category not found"));
-            return Ok(result);
+            var result = await _categoryRepository.FirstOrDefaultAsync(x => x.Id.Equals(categoryId), new string[] { "AssignedTechnical" });
+            return result != null ? Ok(result) : throw new BadRequestException("Category not found.");
         }
 
         [Authorize(Roles = Roles.MANAGER)]
@@ -47,7 +48,7 @@ namespace API.Controllers
         {
             if (model.AssignedTechnicalId != null)
             {
-                User user = await _userrepository.FoundOrThrow(x => x.Id.Equals(model.AssignedTechnicalId), new NotFoundException("User not found"));
+                User user = await _userrepository.FoundOrThrow(x => x.Id.Equals(model.AssignedTechnicalId), new BadRequestException("User not found"));
                 if (user.Role != Role.Technician)
                 {
                     throw new BadRequestException("Cannot assign this user.");
@@ -64,13 +65,13 @@ namespace API.Controllers
         {
             if (req.AssignedTechnicalId != null)
             {
-                User user = await _userrepository.FoundOrThrow(x => x.Id.Equals(req.AssignedTechnicalId), new NotFoundException("User not found"));
+                User user = await _userrepository.FoundOrThrow(x => x.Id.Equals(req.AssignedTechnicalId), new BadRequestException("User not found"));
                 if (user.Role != Role.Technician)
                 {
                     throw new BadRequestException("Cannot assign this user.");
                 }
             }
-            var target = await _categoryRepository.FoundOrThrow(c => c.Id.Equals(categoryId), new NotFoundException("Category not found"));
+            var target = await _categoryRepository.FoundOrThrow(c => c.Id.Equals(categoryId), new BadRequestException("Category not found"));
             Category entity = Mapper.Map(req, target);
             await _categoryRepository.UpdateAsync(entity);
             return Accepted("Updated Successfully");
@@ -80,7 +81,7 @@ namespace API.Controllers
         [HttpDelete("{categoryId}")]
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {
-            var target = await _categoryRepository.FoundOrThrow(c => c.Id.Equals(categoryId), new NotFoundException("Category not found"));
+            var target = await _categoryRepository.FoundOrThrow(c => c.Id.Equals(categoryId), new BadRequestException("Category not found"));
             //Soft Delete
             await _categoryRepository.DeleteAsync(target);
             return Ok("Deleted Successfully");

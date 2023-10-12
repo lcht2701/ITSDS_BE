@@ -18,11 +18,10 @@ namespace Domain.Models.Contracts
 
         public int? AdditionalServiceId { get; set; }
 
-        [JsonIgnore]
         public virtual Contract? Contract { get; set; }
-        [JsonIgnore]
+
         public virtual ServicePack? ServicePack { get; set; }
-        [JsonIgnore]
+
         public virtual Service? AdditionalService { get; set; }
 
     }
