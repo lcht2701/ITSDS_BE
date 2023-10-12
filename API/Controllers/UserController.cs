@@ -26,7 +26,13 @@ public class UserController : BaseController
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpGet]
-    public async Task<IActionResult> GetUsers(int page = 1, int pageSize = 3)
+    public async Task<IActionResult> GetUsers(
+    [FromQuery] string? filterKey,
+    [FromQuery] string? filterValue,
+    [FromQuery] string? sortKey,
+    [FromQuery] string? sortOrder,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5)
     {
 
         var result = await _userRepository.ToListAsync();
@@ -45,16 +51,19 @@ public class UserController : BaseController
             response.Add(entity);
         }
 
-        return Ok(response);
+        if (!string.IsNullOrWhiteSpace(filterKey) && !string.IsNullOrWhiteSpace(filterValue))
+        {
+            response = response.Filter(filterKey, filterValue).ToList();
+        }
 
-        //var user = await _userRepository.ToListAsync();
-        //var totalCount = user.Count;
-        //var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
-        //var usersPerPage = user
-         //   .Skip((page - 1) * pageSize)
-         //   .Take(pageSize)
-         //   .ToList();
-      //  return Ok(usersPerPage);
+
+        if (!string.IsNullOrWhiteSpace(sortKey) && !string.IsNullOrWhiteSpace(sortOrder))
+        {
+            response = response.Sort(sortKey, sortOrder).ToList();
+        }
+
+        var usersPerPage = response.Paginate(page, pageSize);
+        return Ok(usersPerPage);
 
     }
 

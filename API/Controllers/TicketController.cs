@@ -7,6 +7,7 @@ using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Utilities.IO;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 
@@ -24,7 +25,13 @@ public class TicketController : BaseController
 
     [Authorize]
     [HttpGet]
-    public async Task<IActionResult> GetTickets()
+    public async Task<IActionResult> GetTickets(
+    [FromQuery] string? filterKey,
+    [FromQuery] string? filterValue,
+    [FromQuery] string? sortKey,
+    [FromQuery] string? sortOrder,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5)
     {
         var result = await _ticketRepository.GetAsync(navigationProperties: new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
         var response = new List<GetTicketResponse>();
@@ -45,9 +52,19 @@ public class TicketController : BaseController
             entity.DeletedAt = (ticket.DeletedAt == DateTime.MinValue) ? null : ticket.DeletedAt;
             response.Add(entity);
         }
+        if (!string.IsNullOrWhiteSpace(filterKey) && !string.IsNullOrWhiteSpace(filterValue))
+        {
+            response = response.Filter(filterKey, filterValue).ToList();
+        }
 
-        var sortedList = response.OrderByDescending(x => x.CreatedAt);
-        return Ok(sortedList);
+
+        if (!string.IsNullOrWhiteSpace(sortKey) && !string.IsNullOrWhiteSpace(sortOrder))
+        {
+            response = response.Sort(sortKey, sortOrder).ToList();
+        }
+
+        var ticketPerPage = response.Paginate(page, pageSize);
+        return Ok(ticketPerPage);
     }
 
     [Authorize]
