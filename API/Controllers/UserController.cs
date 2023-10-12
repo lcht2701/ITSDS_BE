@@ -63,7 +63,7 @@ public class UserController : BaseController
     public async Task<IActionResult> GetUserById(int id)
     {
         var result =
-            await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new NotFoundException("User is not found"));
+            await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new BadRequestException("User is not found"));
 
         var entity = Mapper.Map(result, new GetUserResponse());
         entity.Role = EnumExtensions.GetEnumDescription(result.Role!);
@@ -96,7 +96,7 @@ public class UserController : BaseController
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest req)
     {
-        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("User not found"));
+        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("User not found"));
         User entity = Mapper.Map(req, target);
         await _userRepository.UpdateAsync(entity);
         return Ok("Updated Successfully");
@@ -106,7 +106,7 @@ public class UserController : BaseController
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(int id)
     {
-        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("User not found"));
+        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("User not found"));
         //Soft Delete
         await _userRepository.DeleteAsync(target);
         return Ok("Deleted Successfully");
