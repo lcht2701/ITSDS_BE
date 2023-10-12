@@ -25,7 +25,6 @@ namespace Domain.Models.Contracts
 
         public int? ContractId { get; set; }
 
-        [JsonIgnore]
         public virtual Contract? Contract { get; set; }
         [JsonIgnore]
         public virtual ICollection<PaymentTerm>? PaymentTerms { get; set; }

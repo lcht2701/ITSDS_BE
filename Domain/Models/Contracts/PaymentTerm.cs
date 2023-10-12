@@ -15,7 +15,6 @@ namespace Domain.Models.Contracts
         }
         public int? PaymentId { get; set; }
 
-        [JsonIgnore]
         public virtual Payment? Payment { get; set; }
     }
 }

@@ -26,11 +26,11 @@ namespace API.Controllers
             _userRepository = userRepository;
         }
 
-        [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetFeedbacksOfSolution(int solutionId)
         {
-            var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUserID));
+            var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUserID), new string[] { "User", "TicketSolution" });
             IList<Feedback>? result;
             if (user.Role == Role.Customer)
             {
@@ -40,28 +40,25 @@ namespace API.Controllers
             }
             else
             {
-                result = await _feedbackRepository.WhereAsync(x => x.SolutionId.Equals(solutionId));
+                result = await _feedbackRepository.WhereAsync(x => x.SolutionId.Equals(solutionId), new string[] { "User", "TicketSolution" });
             }
-            if (result.Count == 0)
-            {
-                return Ok("No Feedbacks");
-            }
-            return Ok(result);
+
+            return result.Count != 0 ? Ok(result) : Ok("No Feedbacks");
         }
 
         [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
         [HttpGet("{feedbackId}")]
         public async Task<IActionResult> GetFeedbackById(int feedbackId)
         {
-            var result = await _feedbackRepository.FoundOrThrow(x => x.Id.Equals(feedbackId), new NotFoundException("Feedback not found"));
-            return Ok(result);
+            var result = await _feedbackRepository.FirstOrDefaultAsync(x => x.Id.Equals(feedbackId), new string[] { "User", "TicketSolution" });
+            return result != null ? Ok(result) : throw new BadRequestException("Feedback not found");
         }
 
         [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
         [HttpPost]
         public async Task<IActionResult> CreateFeedback(int solutionId, [FromBody] CreateFeedbackRequest model)
         {
-            var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUserID));
+            var user = await _userRepository.FoundOrThrow(x => x.Id.Equals(CurrentUserID), new BadRequestException("User not found"));
             var entity = Mapper.Map(model, new Feedback());
             entity.SolutionId = solutionId;
             entity.UserId = CurrentUserID;
@@ -77,8 +74,8 @@ namespace API.Controllers
         [HttpPut("{feedbackId}")]
         public async Task<IActionResult> UpdateFeedback(int feedbackId, [FromBody] UpdateFeedbackRequest req)
         {
-            var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUserID));
-            var target = await _feedbackRepository.FoundOrThrow(c => c.Id.Equals(feedbackId), new NotFoundException("Feedback not found"));
+            var user = await _userRepository.FoundOrThrow(x => x.Id.Equals(CurrentUserID), new BadRequestException("User not found"));
+            var target = await _feedbackRepository.FoundOrThrow(c => c.Id.Equals(feedbackId), new BadRequestException("Feedback not found"));
             Feedback entity = Mapper.Map(req, target);
             if (user.Role == Role.Customer)
             {
@@ -92,7 +89,7 @@ namespace API.Controllers
         [HttpDelete("{feedbackId}")]
         public async Task<IActionResult> DeleteFeedback(int feedbackId)
         {
-            var target = await _feedbackRepository.FoundOrThrow(c => c.Id.Equals(feedbackId), new NotFoundException("Feedback not found"));
+            var target = await _feedbackRepository.FoundOrThrow(c => c.Id.Equals(feedbackId), new BadRequestException("Feedback not found"));
             //Soft Delete
             await _feedbackRepository.DeleteAsync(target);
             return Ok("Deleted Successfully");

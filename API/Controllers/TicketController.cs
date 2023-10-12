@@ -46,7 +46,8 @@ public class TicketController : BaseController
             response.Add(entity);
         }
 
-        return Ok(response);
+        var sortedList = response.OrderByDescending(x => x.CreatedAt);
+        return Ok(sortedList);
     }
 
     [Authorize]
@@ -68,7 +69,8 @@ public class TicketController : BaseController
             response.Add(entity);
         }
 
-        return Ok(response);
+        var sortedList = response.OrderByDescending(x => x.CreatedAt);
+        return Ok(sortedList);
     }
     
     [Authorize]

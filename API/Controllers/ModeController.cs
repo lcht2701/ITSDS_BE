@@ -20,23 +20,24 @@ namespace API.Controllers
             _moderepository = moderepository;
         }
 
-        [Authorize(Roles = Roles.ADMIN)]
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetModes()
         {
             var result = await _moderepository.ToListAsync();
-            return Ok(result);
+            var sortedList = result.OrderBy(x => x.Name);
+            return Ok(sortedList);
         }
 
-        [Authorize(Roles = Roles.ADMIN)]
+        [Authorize(Roles = Roles.MANAGER)]
         [HttpGet("{modeId}")]
         public async Task<IActionResult> GetModeById(int modeId)
         {
-            var result = await _moderepository.FoundOrThrow(x => x.Id.Equals(modeId), new NotFoundException("Mode not found"));
+            var result = await _moderepository.FoundOrThrow(x => x.Id.Equals(modeId), new BadRequestException("Mode not found"));
             return Ok(result);
         }
 
-        [Authorize(Roles = Roles.ADMIN)]
+        [Authorize(Roles = Roles.MANAGER)]
         [HttpPost]
         public async Task<IActionResult> CreateMode([FromBody] CreateModeRequest model)
         {
@@ -45,21 +46,21 @@ namespace API.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = Roles.ADMIN)]
+        [Authorize(Roles = Roles.MANAGER)]
         [HttpPut("{modeId}")]
         public async Task<IActionResult> UpdateCategory(int modeId, [FromBody] UpdateModeRequest req)
         {
-            var target = await _moderepository.FoundOrThrow(c => c.Id.Equals(modeId), new NotFoundException("Mode not found"));
+            var target = await _moderepository.FoundOrThrow(c => c.Id.Equals(modeId), new BadRequestException("Mode not found"));
             Mode entity = Mapper.Map(req, target);
             await _moderepository.UpdateAsync(entity);
             return Accepted("Updated Successfully");
         }
 
-        [Authorize(Roles = Roles.ADMIN)]
+        [Authorize(Roles = Roles.MANAGER)]
         [HttpDelete("{modeId}")]
         public async Task<IActionResult> DeleteMode(int modeId)
         {
-            var target = await _moderepository.FoundOrThrow(c => c.Id.Equals(modeId), new NotFoundException("Mode not found"));
+            var target = await _moderepository.FoundOrThrow(c => c.Id.Equals(modeId), new BadRequestException("Mode not found"));
             //Soft Delete
             await _moderepository.DeleteAsync(target);
             return Ok("Deleted Successfully");
