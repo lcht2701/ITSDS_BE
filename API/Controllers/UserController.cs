@@ -158,7 +158,7 @@ public class UserController : BaseController
         await _userRepository.UpdateAsync(user);
         return Ok(linkImage);
     }
-    
+
     [Authorize]
     [HttpGet("current-user")]
     public async Task<IActionResult> GetCurrentUser()

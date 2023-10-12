@@ -32,13 +32,14 @@ namespace API.Controllers
             if (user.Role == Role.Customer)
             {
                 result = (List<TicketSolution>?)await _solutionRepository.WhereAsync(
-                    x => x.IsPublic == true && 
-                    x.IsApproved == true && 
-                    x.ExpiredDate <= DateTime.UtcNow);
+                    x => x.IsPublic == true &&
+                    x.IsApproved == true &&
+                    x.ExpiredDate <= DateTime.UtcNow,
+                    new string[] { "Category", "Owner" });
             }
             else
             {
-            result = await _solutionRepository.ToListAsync();
+                result = (List<TicketSolution>?)await _solutionRepository.GetAsync(navigationProperties: new string[] { "Category", "Owner" });
             }
             return Ok(result);
         }
@@ -46,7 +47,7 @@ namespace API.Controllers
         [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
         [HttpPost("new-solution")]
         public async Task<IActionResult> CreateSolution([FromBody] CreateTicketSolutionRequest model)
-        { 
+        {
             var entity = Mapper.Map(model, new TicketSolution());
             await _solutionRepository.CreateAsync(entity);
             return Ok();
