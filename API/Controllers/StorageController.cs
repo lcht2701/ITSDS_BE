@@ -16,7 +16,7 @@ public class StorageController : BaseController
     }
 
     [Authorize]
-    [HttpGet("Upload")]
+    [HttpPost("Upload")]
     public async Task<IActionResult> UploadFirebase(IFormFile file)
     {
         if (file == null || file.Length == 0)
