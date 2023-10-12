@@ -1,4 +1,4 @@
-﻿using Domain.Constants;
+﻿using Domain.Constants.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +18,6 @@ namespace Domain.Models.Tickets
 
         public int? TicketId { get; set; }
 
-        [JsonIgnore]
         public virtual Ticket? Ticket { get; set; }
 
     }

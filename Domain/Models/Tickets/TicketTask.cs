@@ -1,4 +1,4 @@
-﻿using Domain.Constants;
+﻿using Domain.Constants.Enums;
 using System.Text.Json.Serialization;
 
 namespace Domain.Models.Tickets;
@@ -19,8 +19,6 @@ public partial class TicketTask : BaseEntity
 
     public Priority? Priority { get; set; }
 
-    public TicketTaskStatus? TaskStatus { get; set; }
-
     public DateTime? ScheduledStartTime { get; set; }
 
     public DateTime? ScheduledEndTime { get; set; }
@@ -39,8 +37,9 @@ public partial class TicketTask : BaseEntity
 
     public DateTime? DateCompleted { get; set; }
 
-    [JsonIgnore]
+    public virtual User? Technician { get; set; }
+
     public virtual Team? Team { get; set; }
-    [JsonIgnore]
+
     public virtual Ticket? Ticket { get; set; }
 }

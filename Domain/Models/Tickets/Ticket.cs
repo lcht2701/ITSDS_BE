@@ -1,4 +1,4 @@
-﻿using Domain.Constants;
+﻿using Domain.Constants.Enums;
 using Domain.Models.Contracts;
 using System.Text.Json.Serialization;
 
@@ -8,7 +8,6 @@ public partial class Ticket : BaseEntity
 {
     public Ticket()
     {
-        TicketAnalysts = new HashSet<TicketAnalyst>();
         TicketTasks = new HashSet<TicketTask>();
         Histories = new HashSet<History>();
     }
@@ -21,9 +20,7 @@ public partial class Ticket : BaseEntity
     public int? ModeId { get; set; }
 
     public int? ServiceId { get; set; }
-
-    public int? TeamId { get; set; }
-
+    
     public int? CategoryId { get; set; }
 
     public TicketStatus? TicketStatus { get; set; }
@@ -40,24 +37,22 @@ public partial class Ticket : BaseEntity
 
     public Impact? Impact { get; set; }
     
+    public string? ImpactDetail { get; set; }
+    
     public Urgency? Urgency { get; set; }
 
     public string? AttachmentUrl { get; set; }
 
-    [JsonIgnore]
-    public virtual User? Requester { get; set; }  
-    [JsonIgnore]
+    public virtual User? Requester { get; set; }
+
     public virtual Assignment? Assignment { get; set; }  
-    [JsonIgnore]
-    public virtual Team? Team { get; set; }    
-    [JsonIgnore]
+
     public virtual Service? Service { get; set; }
-    [JsonIgnore]
+
     public virtual Category? Category { get; set; }
-    [JsonIgnore]
+
     public virtual Mode? Mode { get; set; }
-    [JsonIgnore]
-    public virtual ICollection<TicketAnalyst>? TicketAnalysts { get; set; }
+
     [JsonIgnore]
     public virtual ICollection<TicketTask>? TicketTasks { get; set; }
     [JsonIgnore]

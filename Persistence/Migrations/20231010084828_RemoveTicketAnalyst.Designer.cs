@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231010084828_RemoveTicketAnalyst")]
+    partial class RemoveTicketAnalyst
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -827,6 +829,9 @@ namespace Persistence.Migrations
 
                     b.Property<DateTime?>("ScheduledStartTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("TaskStatus")
+                        .HasColumnType("int");
 
                     b.Property<int?>("TeamId")
                         .HasColumnType("int");

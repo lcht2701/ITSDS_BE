@@ -33,9 +33,9 @@ namespace Domain.Models.Tickets
         public bool? IsApproved { get; set; }
         
         public bool? IsPublic { get; set; }
-        
-        [JsonIgnore]
+       
         public virtual Category Category { get; set; }  
+
         [JsonIgnore]
         public virtual ICollection<Feedback>? Feedbacks { get; set; }  
     }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231009163734_RemoveTeamFromTicket")]
+    partial class RemoveTeamFromTicket
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -674,9 +676,6 @@ namespace Persistence.Migrations
                     b.Property<int?>("Impact")
                         .HasColumnType("int");
 
-                    b.Property<string>("ImpactDetail")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int?>("ModeId")
                         .HasColumnType("int");
 
@@ -720,6 +719,47 @@ namespace Persistence.Migrations
                     b.HasIndex("ServiceId");
 
                     b.ToTable("Tickets");
+                });
+
+            modelBuilder.Entity("Domain.Models.Tickets.TicketAnalyst", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("Attachments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Impact")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RootCause")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Symptoms")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("TicketId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("TicketAnalysts");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.TicketSolution", b =>
@@ -828,6 +868,9 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("ScheduledStartTime")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("TaskStatus")
+                        .HasColumnType("int");
+
                     b.Property<int?>("TeamId")
                         .HasColumnType("int");
 
@@ -848,8 +891,6 @@ namespace Persistence.Migrations
                     b.HasIndex("DeletedAt");
 
                     b.HasIndex("TeamId");
-
-                    b.HasIndex("TechnicianId");
 
                     b.HasIndex("TicketId");
 
@@ -1108,6 +1149,15 @@ namespace Persistence.Migrations
                     b.Navigation("Service");
                 });
 
+            modelBuilder.Entity("Domain.Models.Tickets.TicketAnalyst", b =>
+                {
+                    b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
+                        .WithMany("TicketAnalysts")
+                        .HasForeignKey("TicketId");
+
+                    b.Navigation("Ticket");
+                });
+
             modelBuilder.Entity("Domain.Models.Tickets.TicketSolution", b =>
                 {
                     b.HasOne("Domain.Models.Tickets.Category", "Category")
@@ -1123,17 +1173,11 @@ namespace Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("TeamId");
 
-                    b.HasOne("Domain.Models.User", "Technician")
-                        .WithMany()
-                        .HasForeignKey("TechnicianId");
-
                     b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
                         .WithMany("TicketTasks")
                         .HasForeignKey("TicketId");
 
                     b.Navigation("Team");
-
-                    b.Navigation("Technician");
 
                     b.Navigation("Ticket");
                 });
@@ -1193,6 +1237,8 @@ namespace Persistence.Migrations
                     b.Navigation("Assignment");
 
                     b.Navigation("Histories");
+
+                    b.Navigation("TicketAnalysts");
 
                     b.Navigation("TicketTasks");
                 });

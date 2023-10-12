@@ -15,10 +15,9 @@ public partial class Assignment : BaseEntity
 
     public int? TeamId { get; set; }
 
-    [JsonIgnore]
     public virtual User? Technician { get; set; }
-    [JsonIgnore]
+
     public virtual Team? Team { get; set; }
-    [JsonIgnore]
+
     public virtual Ticket? Ticket { get; set; }
 }

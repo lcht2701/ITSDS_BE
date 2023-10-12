@@ -11,6 +11,7 @@ using System.Security.Claims;
 using System.Text;
 using API.DTOs.Requests.Auths;
 using API.DTOs.Responses.Auths;
+using Domain.Constants.Enums;
 
 namespace API.Controllers;
 
@@ -85,10 +86,10 @@ public class AuthController : BaseController
     }
 
     [Authorize]
-    [HttpPatch("{id}/change-password")]
-    public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordRequest req)
+    [HttpPatch("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
     {
-        var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new NotFoundException("User is not found"));
+        var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
 
         var passwordHasher = new PasswordHasher<User>();
         var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, req.CurrentPassword) == PasswordVerificationResult.Success;
