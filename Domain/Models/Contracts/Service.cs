@@ -15,6 +15,7 @@ namespace Domain.Models.Contracts
             Tickets = new HashSet<Ticket>();
             ContractDetails = new HashSet<ContractDetail>();
         }
+
         public string? Description { get; set; }
 
         public string? Type { get; set; }
@@ -23,8 +24,7 @@ namespace Domain.Models.Contracts
 
         public int? ServicePackId { get; set; }
 
-        [JsonIgnore]
-        public virtual ServicePack? ServicePacks { get; set; }
+        public virtual ServicePack? ServicePack { get; set; }
         [JsonIgnore]
         public virtual ICollection<Ticket>? Tickets { get; set; }
         [JsonIgnore]

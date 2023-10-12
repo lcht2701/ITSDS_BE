@@ -20,11 +20,12 @@ namespace API.Controllers
             _servicePackRepository = servicePackRepository;
         }
 
-        [Authorize(Roles = Roles.MANAGER)]
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetServicePack()
         {
             var result = await _servicePackRepository.ToListAsync();
+            var sortedList = result.OrderBy(x => x.Description);
             return Ok(result);
         }
 
@@ -32,8 +33,8 @@ namespace API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetServicePackById(int id)
         {
-            var result = await _servicePackRepository.FoundOrThrow(u => u.Id.Equals(id), new NotFoundException("Service Pack is not found"));
-            return Ok(result);
+            var result = await _servicePackRepository.FirstOrDefaultAsync(u => u.Id.Equals(id));
+            return result != null ? Ok(result) : throw new BadRequestException("Service Pack is not found");
         }
 
         [Authorize(Roles = Roles.MANAGER)]
@@ -49,7 +50,7 @@ namespace API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateServicePack(int id, [FromBody] UpdateServicePackRequest req)
         {
-            var target = await _servicePackRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("Service Pack not found"));
+            var target = await _servicePackRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service Pack not found"));
             ServicePack entity = Mapper.Map(req, target);
             await _servicePackRepository.UpdateAsync(entity);
             return Accepted("Updated Successfully");
@@ -59,7 +60,7 @@ namespace API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteServicePack(int id)
         {
-            var target = await _servicePackRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("Service Pack not found"));
+            var target = await _servicePackRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service Pack not found"));
             //Soft Delete
             await _servicePackRepository.DeleteAsync(target);
             return Ok("Deleted Successfully");

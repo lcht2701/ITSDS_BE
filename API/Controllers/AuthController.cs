@@ -30,11 +30,7 @@ public class AuthController : BaseController
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest model)
     {
-        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username.Equals(model.Username));
-        if (user == null)
-        {
-            throw new NotFoundException("User is not found");
-        }
+        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username.Equals(model.Username)) ?? throw new BadRequestException("User is not found");
         var passwordHasher = new PasswordHasher<User>();
         var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, model.Password) == PasswordVerificationResult.Success;
         if (!isMatchPassword)
@@ -55,12 +51,7 @@ public class AuthController : BaseController
     [HttpPost("login-admin")]
     public async Task<IActionResult> LoginAdmin([FromBody] LoginRequest model)
     {
-        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username.Equals(model.Username));
-        if (user == null)
-        {
-            throw new NotFoundException("User is not found");
-        }
-
+        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username.Equals(model.Username)) ?? throw new BadRequestException("User is not found");
         if (user.IsActive == false)
         {
             throw new UnauthorizedException("Your account has been suspended");

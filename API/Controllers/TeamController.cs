@@ -37,18 +37,14 @@ public class TeamController : BaseController
     public async Task<IActionResult> GetTeamsByManager()
     {
         var result = await _teamRepository.WhereAsync(x => x.ManagerId.Equals(CurrentUserID));
-        if (result.Count == 0 )
-        {
-            throw new BadRequestException("You are currently not owning any team");
-        }
-        return Ok(result);
+        return result.Count == 0 ? Ok(result) : Ok("You are currently not managing any team");
     }
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet("{teamId}")]
     public async Task<IActionResult> GetTeamById(int teamId)
     {
-        var result = await _teamRepository.FoundOrThrow(x => x.Id.Equals(teamId), new NotFoundException("Team not found"));
+        var result = await _teamRepository.FoundOrThrow(x => x.Id.Equals(teamId), new BadRequestException("Team not found"));
         return Ok(result);
     }
 
@@ -66,7 +62,7 @@ public class TeamController : BaseController
     [HttpPut("{teamId}")]
     public async Task<IActionResult> UpdateTeam(int teamId, [FromBody] UpdateTeamRequest req)
     {
-        var target = await _teamRepository.FoundOrThrow(c => c.Id.Equals(teamId), new NotFoundException("Team not found"));
+        var target = await _teamRepository.FoundOrThrow(c => c.Id.Equals(teamId), new BadRequestException("Team not found"));
         Team entity = Mapper.Map(req, target);
         await _teamRepository.UpdateAsync(entity);
         return Accepted("Updated Successfully");
@@ -76,7 +72,7 @@ public class TeamController : BaseController
     [HttpDelete("{teamId}")]
     public async Task<IActionResult> DeleteTeam(int teamId)
     {
-        var target = await _teamRepository.FoundOrThrow(c => c.Id.Equals(teamId), new NotFoundException("Team not found"));
+        var target = await _teamRepository.FoundOrThrow(c => c.Id.Equals(teamId), new BadRequestException("Team not found"));
         //Soft Delete
         await _teamRepository.DeleteAsync(target);
         return Ok("Deleted Successfully");

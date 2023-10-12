@@ -28,7 +28,6 @@ namespace Domain.Models.Contracts
 
         public int? CustomerAdminId { get; set; }
 
-        [JsonIgnore]
         public virtual User? CustomerAdmin { get; set; }
         [JsonIgnore]
         public virtual ICollection<Contract>? Contracts { get; set; }

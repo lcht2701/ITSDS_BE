@@ -6,6 +6,7 @@ using Domain.Models.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Repositories.Interfaces;
+using System.Linq;
 
 namespace API.Controllers
 {
@@ -19,20 +20,21 @@ namespace API.Controllers
             _serviceRepository = serviceRepository;
         }
 
-        [Authorize(Roles = Roles.MANAGER)]
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetServices()
         {
             var result = await _serviceRepository.ToListAsync();
-            return Ok(result);
+            var sortedList = result.OrderBy(x => x.Description);
+            return Ok(sortedList);
         }
 
         [Authorize(Roles = Roles.MANAGER)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetServiceById(int id)
         {
-            var result = await _serviceRepository.FoundOrThrow(u => u.Id.Equals(id), new NotFoundException("Service is not found"));
-            return Ok(result);
+            var result = await _serviceRepository.FirstOrDefaultAsync(u => u.Id.Equals(id), new string[] { "ServicePack" });
+            return result != null ? Ok(result) : throw new BadRequestException("Service not found");
         }
 
         [Authorize(Roles = Roles.MANAGER)]
@@ -48,7 +50,7 @@ namespace API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateService(int id, [FromBody] UpdateServiceRequest req)
         {
-            var target = await _serviceRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("Service not found"));
+            var target = await _serviceRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service not found"));
             Service entity = Mapper.Map(req, target);
             await _serviceRepository.UpdateAsync(entity);
             return Accepted("Updated Successfully");
@@ -58,7 +60,7 @@ namespace API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteService(int id)
         {
-            var target = await _serviceRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("Service not found"));
+            var target = await _serviceRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service not found"));
             //Soft Delete
             await _serviceRepository.DeleteAsync(target);
             return Ok("Deleted Successfully");

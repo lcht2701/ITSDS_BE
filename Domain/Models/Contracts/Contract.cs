@@ -33,10 +33,10 @@ namespace Domain.Models.Contracts
 
         public int? CompanyId { get; set; }
 
-        [JsonIgnore]
         public virtual Team? Team { get; set; }
-        [JsonIgnore]
+
         public virtual Company? Company { get; set; }
+
         [JsonIgnore]
         public virtual ICollection<Payment>? Payments { get; set; }
         [JsonIgnore]
