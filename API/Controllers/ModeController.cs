@@ -28,7 +28,7 @@ namespace API.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
+        [Authorize(Roles = Roles.ADMIN)]
         [HttpGet("{modeId}")]
         public async Task<IActionResult> GetModeById(int modeId)
         {
@@ -45,7 +45,7 @@ namespace API.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
+        [Authorize(Roles = Roles.ADMIN)]
         [HttpPut("{modeId}")]
         public async Task<IActionResult> UpdateCategory(int modeId, [FromBody] UpdateModeRequest req)
         {
