@@ -70,8 +70,7 @@ public class TicketController : BaseController
 
         return Ok(response);
     }
-
-    // [Authorize(Roles = Roles.TICKETPARTICIPANTS)]
+    
     [Authorize]
     [HttpGet("{ticketId}")]
     public async Task<IActionResult> GetTicketById(int ticketId)

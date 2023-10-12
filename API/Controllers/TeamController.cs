@@ -20,10 +20,16 @@ public class TeamController : BaseController
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet]
-    public async Task<IActionResult> GetTeams()
+    public async Task<IActionResult> GetTeams(int page = 1, int pageSize = 3)
     {
-        var result = await _teamRepository.ToListAsync();
-        return Ok(result);
+        var teams = await _teamRepository.ToListAsync();
+        var totalCount = teams.Count;
+        var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
+        var teamsPerPage = teams
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+        return Ok(teamsPerPage);
     }
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
