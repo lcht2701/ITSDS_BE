@@ -26,14 +26,15 @@ public class TicketController : BaseController
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetTickets(
-    [FromQuery] string? filterKey,
-    [FromQuery] string? filterValue,
-    [FromQuery] string? sortKey,
-    [FromQuery] string? sortOrder,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 5)
+        [FromQuery] string? filterKey,
+        [FromQuery] string? filterValue,
+        [FromQuery] string? sortKey,
+        [FromQuery] string? sortOrder,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
     {
-        var result = await _ticketRepository.GetAsync(navigationProperties: new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+        var result = await _ticketRepository.GetAsync(navigationProperties: new string[]
+            { "Requester", "Assignment", "Service", "Category", "Mode" });
         var response = new List<GetTicketResponse>();
         foreach (var ticket in result)
         {
@@ -43,7 +44,8 @@ public class TicketController : BaseController
             entity.Priority = EnumExtensions.GetEnumDescription(ticket.Priority!);
             entity.Urgency = EnumExtensions.GetEnumDescription(ticket.Urgency!);
 
-            entity.ScheduledStartTime = (ticket.ScheduledStartTime == DateTime.MinValue) ? null : ticket.ScheduledStartTime;
+            entity.ScheduledStartTime =
+                (ticket.ScheduledStartTime == DateTime.MinValue) ? null : ticket.ScheduledStartTime;
             entity.ScheduledEndTime = (ticket.ScheduledEndTime == DateTime.MinValue) ? null : ticket.ScheduledEndTime;
             entity.DueTime = (ticket.DueTime == DateTime.MinValue) ? null : ticket.DueTime;
             entity.CompletedTime = (ticket.CompletedTime == DateTime.MinValue) ? null : ticket.CompletedTime;
@@ -52,6 +54,7 @@ public class TicketController : BaseController
             entity.DeletedAt = (ticket.DeletedAt == DateTime.MinValue) ? null : ticket.DeletedAt;
             response.Add(entity);
         }
+
         if (!string.IsNullOrWhiteSpace(filterKey) && !string.IsNullOrWhiteSpace(filterValue))
         {
             response = response.Filter(filterKey, filterValue).ToList();
@@ -69,14 +72,16 @@ public class TicketController : BaseController
 
     [Authorize]
     [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetTicketsByUser(int userId)
+    public async Task<IActionResult> GetTicketsOfUser(int userId)
     {
-        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId), new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
+            new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
         var response = new List<GetTicketResponse>();
         foreach (var ticket in result)
         {
             var entity = Mapper.Map(ticket, new GetTicketResponse());
-            entity.ScheduledStartTime = (ticket.ScheduledStartTime == DateTime.MinValue) ? null : ticket.ScheduledStartTime;
+            entity.ScheduledStartTime =
+                (ticket.ScheduledStartTime == DateTime.MinValue) ? null : ticket.ScheduledStartTime;
             entity.ScheduledEndTime = (ticket.ScheduledEndTime == DateTime.MinValue) ? null : ticket.ScheduledEndTime;
             entity.DueTime = (ticket.DueTime == DateTime.MinValue) ? null : ticket.DueTime;
             entity.CompletedTime = (ticket.CompletedTime == DateTime.MinValue) ? null : ticket.CompletedTime;
@@ -89,17 +94,69 @@ public class TicketController : BaseController
         var sortedList = response.OrderByDescending(x => x.CreatedAt);
         return Ok(sortedList);
     }
-    
+
+    [Authorize]
+    [HttpGet("user/{userId}/available")]
+    public async Task<IActionResult> GetAvailableTicketsOfUser(int userId)
+    {
+        var result = await _ticketRepository.WhereAsync(x =>
+            x.RequesterId.Equals(userId) &&
+            !IsTicketDone(x.Id),
+        new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+        var response = new List<GetTicketResponse>();
+        foreach (var ticket in result)
+        {
+            var entity = Mapper.Map(ticket, new GetTicketResponse());
+            entity.ScheduledStartTime =
+                (ticket.ScheduledStartTime == DateTime.MinValue) ? null : ticket.ScheduledStartTime;
+            entity.ScheduledEndTime = (ticket.ScheduledEndTime == DateTime.MinValue) ? null : ticket.ScheduledEndTime;
+            entity.DueTime = (ticket.DueTime == DateTime.MinValue) ? null : ticket.DueTime;
+            entity.CompletedTime = (ticket.CompletedTime == DateTime.MinValue) ? null : ticket.CompletedTime;
+            entity.CreatedAt = (ticket.CreatedAt == DateTime.MinValue) ? null : ticket.CreatedAt;
+            entity.ModifiedAt = (ticket.ModifiedAt == DateTime.MinValue) ? null : ticket.ModifiedAt;
+            entity.DeletedAt = (ticket.DeletedAt == DateTime.MinValue) ? null : ticket.DeletedAt;
+            response.Add(entity);
+        }
+
+        var sortedList = response.OrderByDescending(x => x.CreatedAt);
+        return Ok(sortedList);
+    }
+
+    [Authorize]
+    [HttpGet("user/{userId}/history")]
+    public async Task<IActionResult> GetTicketHistoriesOfUser(int userId)
+    {
+        var result = await _ticketRepository.WhereAsync(x =>
+                x.RequesterId.Equals(userId) &&
+                IsTicketDone(x.Id),
+            new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+        var response = new List<GetTicketResponse>();
+        foreach (var ticket in result)
+        {
+            var entity = Mapper.Map(ticket, new GetTicketResponse());
+            entity.ScheduledStartTime =
+                (ticket.ScheduledStartTime == DateTime.MinValue) ? null : ticket.ScheduledStartTime;
+            entity.ScheduledEndTime = (ticket.ScheduledEndTime == DateTime.MinValue) ? null : ticket.ScheduledEndTime;
+            entity.DueTime = (ticket.DueTime == DateTime.MinValue) ? null : ticket.DueTime;
+            entity.CompletedTime = (ticket.CompletedTime == DateTime.MinValue) ? null : ticket.CompletedTime;
+            entity.CreatedAt = (ticket.CreatedAt == DateTime.MinValue) ? null : ticket.CreatedAt;
+            entity.ModifiedAt = (ticket.ModifiedAt == DateTime.MinValue) ? null : ticket.ModifiedAt;
+            entity.DeletedAt = (ticket.DeletedAt == DateTime.MinValue) ? null : ticket.DeletedAt;
+            response.Add(entity);
+        }
+
+        var sortedList = response.OrderByDescending(x => x.CompletedTime);
+        return Ok(sortedList);
+    }
+
     [Authorize]
     [HttpGet("{ticketId}")]
     public async Task<IActionResult> GetTicketById(int ticketId)
     {
         var result =
-            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId), new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
-        if (result == null)
-        {
-            return Ok("Ticket Not Found.");
-        }
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId),
+                new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+
         var entity = Mapper.Map(result, new GetTicketResponse());
         entity.ScheduledStartTime = (result.ScheduledStartTime == DateTime.MinValue) ? null : result.ScheduledStartTime;
         entity.ScheduledEndTime = (result.ScheduledEndTime == DateTime.MinValue) ? null : result.ScheduledEndTime;
@@ -179,5 +236,12 @@ public class TicketController : BaseController
             await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
         await _ticketRepository.DeleteAsync(target);
         return Accepted(target);
+    }
+
+
+    private bool IsTicketDone(int ticketId)
+    {
+        var ticket = _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
+        return ticket.Result.TicketStatus is TicketStatus.Closed or TicketStatus.Cancelled;
     }
 }
