@@ -61,8 +61,9 @@ public class AssignmentController : BaseController
 
     [Authorize]
     [HttpPatch("{ticketId}/assign")]
-    public async Task<IActionResult> AssignTicketManual([FromBody] AssignTicketManualRequest req)
+    public async Task<IActionResult> AssignTicketManual(int ticketId, [FromBody] AssignTicketManualRequest req)
     {
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
         if (req.TeamId != null && req.TechnicianId != null)
         {
             var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(req.TechnicianId, req.TeamId);
@@ -74,6 +75,7 @@ public class AssignmentController : BaseController
             {
                 var entity = Mapper.Map(req, new Assignment());
                 await _assignmentRepository.CreateAsync(entity);
+                ticket.AssignmentId = entity.Id;
             }
         }
 
@@ -82,9 +84,10 @@ public class AssignmentController : BaseController
 
     [Authorize]
     [HttpPatch("{ticketId}/update")]
-    public async Task<IActionResult> UpdateTicketAssignmentManual(int assignmentId, [FromBody] UpdateTicketAssignmentManualRequest req)
+    public async Task<IActionResult> UpdateTicketAssignmentManual(int ticketId, [FromBody] UpdateTicketAssignmentManualRequest req)
     {
-        var target = await _assignmentRepository.FoundOrThrow(x => x.Id.Equals(assignmentId), new BadRequestException("Ticket Not Found"));
+        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new BadRequestException("Ticket Not Found"));
+        var target = await _assignmentRepository.FoundOrThrow(x => x.Id.Equals(ticket.AssignmentId), new BadRequestException("Ticket has not been assigned"));
 
         if (req.TeamId != null && req.TechnicianId != null)
         {
@@ -93,9 +96,11 @@ public class AssignmentController : BaseController
             {
                 throw new BadRequestException("This technician is not in this team");
             }
-
-            var entity = Mapper.Map(req, target);
-            await _assignmentRepository.CreateAsync(entity);
+            else
+            {
+                var entity = Mapper.Map(req, target);
+                await _assignmentRepository.UpdateAsync(entity);
+            }
         }
 
         return Ok("Update Successfully");
@@ -103,9 +108,10 @@ public class AssignmentController : BaseController
 
     [Authorize]
     [HttpDelete("{id}")]
-    public async Task<IActionResult> RemoveAssignment(int id)
+    public async Task<IActionResult> RemoveAssignment(int ticketId)
     {
-        var entity = await _assignmentRepository.FoundOrThrow(x => x.Id.Equals(id), new BadRequestException("Assignment not found."));
+        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new BadRequestException("Ticket Not Found"));
+        var entity = await _assignmentRepository.FoundOrThrow(x => x.Id.Equals(ticket.AssignmentId), new BadRequestException("Ticket has not been assigned"));
         await _assignmentRepository.DeleteAsync(entity);
         return Ok("Remove successfully.");
     }
