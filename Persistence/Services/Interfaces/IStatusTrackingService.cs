@@ -1,4 +1,5 @@
 ﻿using Domain.Constants.Enums;
+using Domain.Models.Tickets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace Persistence.Services.Interfaces
 {
     public interface IStatusTrackingService
     {
-        Task<bool> UpdateTicketStatusTo(int ticketId, TicketStatus newStatus);
+        bool isTicketDone(Ticket ticket);
+        Task<bool> UpdateTicketStatusTo(Ticket ticket, TicketStatus newStatus);
     }
 }

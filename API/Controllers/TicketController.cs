@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Utilities.IO;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using Persistence.Services.Interfaces;
 
 namespace API.Controllers;
 
@@ -17,10 +18,12 @@ namespace API.Controllers;
 public class TicketController : BaseController
 {
     private readonly IRepositoryBase<Ticket> _ticketRepository;
+    private readonly IStatusTrackingService _statusTrackingService;
 
-    public TicketController(IRepositoryBase<Ticket> ticketRepository)
+    public TicketController(IRepositoryBase<Ticket> ticketRepository, IStatusTrackingService statusTrackingService)
     {
         _ticketRepository = ticketRepository;
+        _statusTrackingService = statusTrackingService;
     }
 
     [Authorize]
@@ -101,8 +104,8 @@ public class TicketController : BaseController
     {
         var result = await _ticketRepository.WhereAsync(x =>
             x.RequesterId.Equals(userId) &&
-            !IsTicketDone(x.Id),
-        new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+            _statusTrackingService.isTicketDone(x).Equals(false),
+            new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
         var response = new List<GetTicketResponse>();
         foreach (var ticket in result)
         {
@@ -127,8 +130,8 @@ public class TicketController : BaseController
     public async Task<IActionResult> GetTicketHistoriesOfUser(int userId)
     {
         var result = await _ticketRepository.WhereAsync(x =>
-                x.RequesterId.Equals(userId) &&
-                IsTicketDone(x.Id),
+            x.RequesterId.Equals(userId) &&
+            _statusTrackingService.isTicketDone(x).Equals(true),
             new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
         var response = new List<GetTicketResponse>();
         foreach (var ticket in result)
@@ -238,10 +241,4 @@ public class TicketController : BaseController
         return Accepted(target);
     }
 
-
-    private bool IsTicketDone(int ticketId)
-    {
-        var ticket = _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
-        return ticket.Result.TicketStatus is TicketStatus.Closed or TicketStatus.Cancelled;
-    }
 }
