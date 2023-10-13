@@ -8,13 +8,12 @@ using System.Threading.Tasks;
 
 namespace Persistence.Helpers;
 
-public static class EnumExtensions
+public static class DataResponse
 {
-    public static string GetEnumDescription(Enum value)
+    public static string GetEnumDescription(Enum? value)
     {
         if (value == null)
         {
-            // Handle a null Enum value gracefully (e.g., throw an exception, return a default description).
             return "Not Assigned";
         }
 
@@ -38,4 +37,8 @@ public static class EnumExtensions
         }
     }
 
+    public static DateTime? CleanNullableDateTime(DateTime? dateTime)
+    {
+        return dateTime == DateTime.MinValue ? null : dateTime;
+    }
 }

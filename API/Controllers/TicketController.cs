@@ -39,18 +39,18 @@ public class TicketController : BaseController
         var response = result.Select(ticket =>
         {
             var entity = Mapper.Map(ticket, new GetTicketResponse());
-            entity.TicketStatus = EnumExtensions.GetEnumDescription(ticket.TicketStatus!);
-            entity.Impact = EnumExtensions.GetEnumDescription(ticket.Impact!);
-            entity.Priority = EnumExtensions.GetEnumDescription(ticket.Priority!);
-            entity.Urgency = EnumExtensions.GetEnumDescription(ticket.Urgency!);
+            entity.TicketStatus = DataResponse.GetEnumDescription(ticket.TicketStatus);
+            entity.Impact = DataResponse.GetEnumDescription(ticket.Impact);
+            entity.Priority = DataResponse.GetEnumDescription(ticket.Priority);
+            entity.Urgency = DataResponse.GetEnumDescription(ticket.Urgency);
 
-            entity.ScheduledStartTime = ticket.ScheduledStartTime == DateTime.MinValue ? null : ticket.ScheduledStartTime;
-            entity.ScheduledEndTime = ticket.ScheduledEndTime == DateTime.MinValue ? null : ticket.ScheduledEndTime;
-            entity.DueTime = ticket.DueTime == DateTime.MinValue ? null : ticket.DueTime;
-            entity.CompletedTime = ticket.CompletedTime == DateTime.MinValue ? null : ticket.CompletedTime;
-            entity.CreatedAt = ticket.CreatedAt == DateTime.MinValue ? null : ticket.CreatedAt;
-            entity.ModifiedAt = ticket.ModifiedAt == DateTime.MinValue ? null : ticket.ModifiedAt;
-            entity.DeletedAt = ticket.DeletedAt == DateTime.MinValue ? null : ticket.DeletedAt;
+            entity.ScheduledStartTime = DataResponse.CleanNullableDateTime(entity.ScheduledStartTime);
+            entity.ScheduledEndTime = DataResponse.CleanNullableDateTime(entity.ScheduledEndTime);
+            entity.DueTime = DataResponse.CleanNullableDateTime(entity.DueTime);
+            entity.CompletedTime = DataResponse.CleanNullableDateTime(entity.CompletedTime);
+            entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
+            entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
+            entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
 
             return entity;
         }).ToList();
@@ -79,18 +79,18 @@ public class TicketController : BaseController
         var response = result.Select(ticket =>
         {
             var entity = Mapper.Map(ticket, new GetTicketResponse());
-            entity.TicketStatus = EnumExtensions.GetEnumDescription(ticket.TicketStatus!);
-            entity.Impact = EnumExtensions.GetEnumDescription(ticket.Impact!);
-            entity.Priority = EnumExtensions.GetEnumDescription(ticket.Priority!);
-            entity.Urgency = EnumExtensions.GetEnumDescription(ticket.Urgency!);
+            entity.TicketStatus = DataResponse.GetEnumDescription(ticket.TicketStatus);
+            entity.Impact = DataResponse.GetEnumDescription(ticket.Impact);
+            entity.Priority = DataResponse.GetEnumDescription(ticket.Priority);
+            entity.Urgency = DataResponse.GetEnumDescription(ticket.Urgency);
 
-            entity.ScheduledStartTime = CleanNullableDateTime(entity.ScheduledStartTime);
-            entity.ScheduledEndTime = CleanNullableDateTime(entity.ScheduledEndTime);
-            entity.DueTime = CleanNullableDateTime(entity.DueTime);
-            entity.CompletedTime = CleanNullableDateTime(entity.CompletedTime);
-            entity.CreatedAt = CleanNullableDateTime(entity.CreatedAt);
-            entity.ModifiedAt = CleanNullableDateTime(entity.ModifiedAt);
-            entity.DeletedAt = CleanNullableDateTime(entity.DeletedAt);
+            entity.ScheduledStartTime = DataResponse.CleanNullableDateTime(entity.ScheduledStartTime);
+            entity.ScheduledEndTime = DataResponse.CleanNullableDateTime(entity.ScheduledEndTime);
+            entity.DueTime = DataResponse.CleanNullableDateTime(entity.DueTime);
+            entity.CompletedTime = DataResponse.CleanNullableDateTime(entity.CompletedTime);
+            entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
+            entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
+            entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
 
             return entity;
         }).ToList();
@@ -116,18 +116,18 @@ public class TicketController : BaseController
         var response = result.Select(ticket =>
         {
             var entity = Mapper.Map<GetTicketResponse>(ticket);
-            entity.TicketStatus = EnumExtensions.GetEnumDescription(ticket.TicketStatus!);
-            entity.Impact = EnumExtensions.GetEnumDescription(ticket.Impact!);
-            entity.Priority = EnumExtensions.GetEnumDescription(ticket.Priority!);
-            entity.Urgency = EnumExtensions.GetEnumDescription(ticket.Urgency!);
+            entity.TicketStatus = DataResponse.GetEnumDescription(ticket.TicketStatus);
+            entity.Impact = DataResponse.GetEnumDescription(ticket.Impact);
+            entity.Priority = DataResponse.GetEnumDescription(ticket.Priority);
+            entity.Urgency = DataResponse.GetEnumDescription(ticket.Urgency);
 
-            entity.ScheduledStartTime = CleanNullableDateTime(entity.ScheduledStartTime);
-            entity.ScheduledEndTime = CleanNullableDateTime(entity.ScheduledEndTime);
-            entity.DueTime = CleanNullableDateTime(entity.DueTime);
-            entity.CompletedTime = CleanNullableDateTime(entity.CompletedTime);
-            entity.CreatedAt = CleanNullableDateTime(entity.CreatedAt);
-            entity.ModifiedAt = CleanNullableDateTime(entity.ModifiedAt);
-            entity.DeletedAt = CleanNullableDateTime(entity.DeletedAt);
+            entity.ScheduledStartTime = DataResponse.CleanNullableDateTime(entity.ScheduledStartTime);
+            entity.ScheduledEndTime = DataResponse.CleanNullableDateTime(entity.ScheduledEndTime);
+            entity.DueTime = DataResponse.CleanNullableDateTime(entity.DueTime);
+            entity.CompletedTime = DataResponse.CleanNullableDateTime(entity.CompletedTime);
+            entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
+            entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
+            entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
 
             return entity;
         })
@@ -148,18 +148,18 @@ public class TicketController : BaseController
         var response = result.Select(ticket =>
         {
             var entity = Mapper.Map<GetTicketResponse>(ticket);
-            entity.TicketStatus = EnumExtensions.GetEnumDescription(ticket.TicketStatus!);
-            entity.Impact = EnumExtensions.GetEnumDescription(ticket.Impact!);
-            entity.Priority = EnumExtensions.GetEnumDescription(ticket.Priority!);
-            entity.Urgency = EnumExtensions.GetEnumDescription(ticket.Urgency!);
+            entity.TicketStatus = DataResponse.GetEnumDescription(ticket.TicketStatus);
+            entity.Impact = DataResponse.GetEnumDescription(ticket.Impact);
+            entity.Priority = DataResponse.GetEnumDescription(ticket.Priority);
+            entity.Urgency = DataResponse.GetEnumDescription(ticket.Urgency);
 
-            entity.ScheduledStartTime = CleanNullableDateTime(entity.ScheduledStartTime);
-            entity.ScheduledEndTime = CleanNullableDateTime(entity.ScheduledEndTime);
-            entity.DueTime = CleanNullableDateTime(entity.DueTime);
-            entity.CompletedTime = CleanNullableDateTime(entity.CompletedTime);
-            entity.CreatedAt = CleanNullableDateTime(entity.CreatedAt);
-            entity.ModifiedAt = CleanNullableDateTime(entity.ModifiedAt);
-            entity.DeletedAt = CleanNullableDateTime(entity.DeletedAt);
+            entity.ScheduledStartTime = DataResponse.CleanNullableDateTime(entity.ScheduledStartTime);
+            entity.ScheduledEndTime = DataResponse.CleanNullableDateTime(entity.ScheduledEndTime);
+            entity.DueTime = DataResponse.CleanNullableDateTime(entity.DueTime);
+            entity.CompletedTime = DataResponse.CleanNullableDateTime(entity.CompletedTime);
+            entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
+            entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
+            entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
 
             return entity;
         })
@@ -173,18 +173,22 @@ public class TicketController : BaseController
     [HttpGet("{ticketId}")]
     public async Task<IActionResult> GetTicketById(int ticketId)
     {
-        var result =
+        var ticket =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId),
                 new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
 
-        var entity = Mapper.Map(result, new GetTicketResponse());
-        entity.ScheduledStartTime = CleanNullableDateTime(entity.ScheduledStartTime);
-        entity.ScheduledEndTime = CleanNullableDateTime(entity.ScheduledEndTime);
-        entity.DueTime = CleanNullableDateTime(entity.DueTime);
-        entity.CompletedTime = CleanNullableDateTime(entity.CompletedTime);
-        entity.CreatedAt = CleanNullableDateTime(entity.CreatedAt);
-        entity.ModifiedAt = CleanNullableDateTime(entity.ModifiedAt);
-        entity.DeletedAt = CleanNullableDateTime(entity.DeletedAt);
+        var entity = Mapper.Map<GetTicketResponse>(ticket);
+        entity.TicketStatus = DataResponse.GetEnumDescription(ticket.TicketStatus);
+        entity.Impact = DataResponse.GetEnumDescription(ticket.Impact);
+        entity.Priority = DataResponse.GetEnumDescription(ticket.Priority);
+        entity.Urgency = DataResponse.GetEnumDescription(ticket.Urgency);
+        entity.ScheduledStartTime = DataResponse.CleanNullableDateTime(entity.ScheduledStartTime);
+        entity.ScheduledEndTime = DataResponse.CleanNullableDateTime(entity.ScheduledEndTime);
+        entity.DueTime = DataResponse.CleanNullableDateTime(entity.DueTime);
+        entity.CompletedTime = DataResponse.CleanNullableDateTime(entity.CompletedTime);
+        entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
+        entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
+        entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
 
         return Ok(entity);
     }
@@ -252,15 +256,9 @@ public class TicketController : BaseController
     [HttpDelete("manager/{ticketId}")]
     public async Task<IActionResult> DeleteTicket(int ticketId)
     {
-        var target =
-            await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
+        var target = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
         await _ticketRepository.DeleteAsync(target);
         return Accepted(target);
-    }
-
-    private DateTime? CleanNullableDateTime(DateTime? dateTime)
-    {
-        return dateTime == DateTime.MinValue ? null : dateTime;
     }
 
 }

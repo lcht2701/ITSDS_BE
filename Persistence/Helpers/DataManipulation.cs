@@ -3,7 +3,7 @@ using X.PagedList;
 
 namespace Persistence.Helpers
 {
-    public static class DataManipulationExtension
+    public static class DataManipulation
     {
         public static IQueryable<T> Filter<T>(this IQueryable<T> query, string filter)
         {

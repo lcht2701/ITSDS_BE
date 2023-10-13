@@ -38,8 +38,8 @@ public class UserController : BaseController
         foreach (var user in result)
         {
             var entity = Mapper.Map(user, new GetUserResponse());
-            entity.Role = EnumExtensions.GetEnumDescription(user.Role!);
-            entity.Gender = EnumExtensions.GetEnumDescription(user.Gender!);
+            entity.Role = DataResponse.GetEnumDescription(user.Role!);
+            entity.Gender = DataResponse.GetEnumDescription(user.Gender!);
 
             entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
             entity.CreatedAt = (entity.CreatedAt != DateTime.MinValue) ? entity.CreatedAt : null;
@@ -68,8 +68,8 @@ public class UserController : BaseController
             await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new BadRequestException("User is not found"));
 
         var entity = Mapper.Map(result, new GetUserResponse());
-        entity.Role = EnumExtensions.GetEnumDescription(result.Role!);
-        entity.Gender = EnumExtensions.GetEnumDescription(result.Gender!);
+        entity.Role = DataResponse.GetEnumDescription(result.Role!);
+        entity.Gender = DataResponse.GetEnumDescription(result.Gender!);
 
         entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
         entity.CreatedAt = (entity.CreatedAt != DateTime.MinValue) ? entity.CreatedAt : null;
@@ -121,8 +121,8 @@ public class UserController : BaseController
         var result = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID),
             new NotFoundException("User is not found"));
         var entity = Mapper.Map(result, new GetUserProfileResponse());
-        entity.Role = EnumExtensions.GetEnumDescription(result.Role!);
-        entity.Gender = EnumExtensions.GetEnumDescription(result.Gender!);
+        entity.Role = DataResponse.GetEnumDescription(result.Role!);
+        entity.Gender = DataResponse.GetEnumDescription(result.Gender!);
 
         entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
 
@@ -178,8 +178,8 @@ public class UserController : BaseController
     {
         var result = await _userRepository.FirstOrDefaultAsync(u => u.Id.Equals(CurrentUserID));
         var entity = Mapper.Map(result, new GetUserResponse());
-        entity.Role = EnumExtensions.GetEnumDescription(result.Role!);
-        entity.Gender = EnumExtensions.GetEnumDescription(result.Gender!);
+        entity.Role = DataResponse.GetEnumDescription(result.Role!);
+        entity.Gender = DataResponse.GetEnumDescription(result.Gender!);
 
         entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
         entity.CreatedAt = (entity.CreatedAt != DateTime.MinValue) ? entity.CreatedAt : null;
