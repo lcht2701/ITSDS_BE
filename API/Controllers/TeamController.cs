@@ -23,28 +23,21 @@ public class TeamController : BaseController
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet]
     public async Task<IActionResult> GetTeams(
-    [FromQuery] string? filterKey,
-    [FromQuery] string? filterValue,
-    [FromQuery] string? sortKey,
-    [FromQuery] string? sortOrder,
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 5)
     {
         var teams = await _teamRepository.ToListAsync();
 
-        if (!string.IsNullOrWhiteSpace(filterKey) && !string.IsNullOrWhiteSpace(filterValue))
+        if (!string.IsNullOrWhiteSpace(filter))
         {
-            teams = teams.Filter(filterKey, filterValue).ToList();
+            teams = teams.AsQueryable().Filter(filter).ToList();
         }
 
+        var pagedResponse = teams.AsQueryable().GetPagedData(page, pageSize, sort);
 
-        if (!string.IsNullOrWhiteSpace(sortKey) && !string.IsNullOrWhiteSpace(sortOrder))
-        {
-            teams = teams.Sort(sortKey, sortOrder).ToList();
-        }
-
-        var teamsPerPage = teams.Paginate(page, pageSize);
-        return Ok(teamsPerPage);
+        return Ok(pagedResponse);
     }
 
 

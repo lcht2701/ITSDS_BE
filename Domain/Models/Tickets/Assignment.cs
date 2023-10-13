@@ -9,8 +9,6 @@ namespace Domain.Models.Tickets;
 
 public partial class Assignment : BaseEntity
 {
-    public int? TicketId { get; set; }
-
     public int? TechnicianId { get; set; }
 
     public int? TeamId { get; set; }

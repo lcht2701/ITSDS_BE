@@ -27,10 +27,8 @@ public class UserController : BaseController
     [Authorize(Roles = Roles.ADMIN)]
     [HttpGet]
     public async Task<IActionResult> GetUsers(
-    [FromQuery] string? filterKey,
-    [FromQuery] string? filterValue,
-    [FromQuery] string? sortKey,
-    [FromQuery] string? sortOrder,
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 5)
     {
@@ -51,19 +49,14 @@ public class UserController : BaseController
             response.Add(entity);
         }
 
-        if (!string.IsNullOrWhiteSpace(filterKey) && !string.IsNullOrWhiteSpace(filterValue))
+        if (!string.IsNullOrWhiteSpace(filter))
         {
-            response = response.Filter(filterKey, filterValue).ToList();
+            response = response.AsQueryable().Filter(filter).ToList();
         }
 
+        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, sort);
 
-        if (!string.IsNullOrWhiteSpace(sortKey) && !string.IsNullOrWhiteSpace(sortOrder))
-        {
-            response = response.Sort(sortKey, sortOrder).ToList();
-        }
-
-        var usersPerPage = response.Paginate(page, pageSize);
-        return Ok(usersPerPage);
+        return Ok(pagedResponse);
 
     }
 
