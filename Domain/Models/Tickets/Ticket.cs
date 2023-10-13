@@ -23,6 +23,8 @@ public partial class Ticket : BaseEntity
     
     public int? CategoryId { get; set; }
 
+    public int? AssignmentId { get; set; }
+
     public TicketStatus? TicketStatus { get; set; }
 
     public Priority? Priority { get; set; }
