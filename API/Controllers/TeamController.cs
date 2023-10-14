@@ -29,14 +29,7 @@ public class TeamController : BaseController
     [FromQuery] int pageSize = 5)
     {
         var teams = await _teamRepository.ToListAsync();
-
-        if (!string.IsNullOrWhiteSpace(filter))
-        {
-            teams = teams.AsQueryable().Filter(filter).ToList();
-        }
-
-        var pagedResponse = teams.AsQueryable().GetPagedData(page, pageSize, sort);
-
+        var pagedResponse = teams.AsQueryable().GetPagedData(page, pageSize, filter, sort);
         return Ok(pagedResponse);
     }
 

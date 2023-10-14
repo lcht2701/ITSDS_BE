@@ -55,12 +55,7 @@ public class TicketController : BaseController
             return entity;
         }).ToList();
 
-        if (!string.IsNullOrWhiteSpace(filter))
-        {
-            response = response.AsQueryable().Filter(filter).ToList();
-        }
-
-        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, sort);
+        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
 
         return Ok(pagedResponse);
     }
@@ -95,12 +90,7 @@ public class TicketController : BaseController
             return entity;
         }).ToList();
 
-        if (!string.IsNullOrWhiteSpace(filter))
-        {
-            response = response.AsQueryable().Filter(filter).ToList();
-        }
-
-        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, sort);
+        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
 
         return Ok(pagedResponse);
     }
