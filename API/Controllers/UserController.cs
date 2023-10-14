@@ -38,13 +38,13 @@ public class UserController : BaseController
         foreach (var user in result)
         {
             var entity = Mapper.Map(user, new GetUserResponse());
-            entity.Role = DataResponse.GetEnumDescription(user.Role!);
-            entity.Gender = DataResponse.GetEnumDescription(user.Gender!);
+            entity.Role = DataResponse.GetEnumDescription(user.Role);
+            entity.Gender = DataResponse.GetEnumDescription(user.Gender);
 
-            entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
-            entity.CreatedAt = (entity.CreatedAt != DateTime.MinValue) ? entity.CreatedAt : null;
-            entity.ModifiedAt = (entity.ModifiedAt != DateTime.MinValue) ? entity.ModifiedAt : null;
-            entity.DeletedAt = (entity.DeletedAt != DateTime.MinValue) ? entity.DeletedAt : null;
+            entity.DateOfBirth = DataResponse.CleanNullableDateTime(entity.DateOfBirth);
+            entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
+            entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
+            entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
 
             response.Add(entity);
         }
@@ -71,10 +71,10 @@ public class UserController : BaseController
         entity.Role = DataResponse.GetEnumDescription(result.Role!);
         entity.Gender = DataResponse.GetEnumDescription(result.Gender!);
 
-        entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
-        entity.CreatedAt = (entity.CreatedAt != DateTime.MinValue) ? entity.CreatedAt : null;
-        entity.ModifiedAt = (entity.ModifiedAt != DateTime.MinValue) ? entity.ModifiedAt : null;
-        entity.DeletedAt = (entity.DeletedAt != DateTime.MinValue) ? entity.DeletedAt : null;
+        entity.DateOfBirth = DataResponse.CleanNullableDateTime(entity.DateOfBirth);
+        entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
+        entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
+        entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
 
         return Ok(entity);
     }
@@ -121,10 +121,10 @@ public class UserController : BaseController
         var result = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID),
             new NotFoundException("User is not found"));
         var entity = Mapper.Map(result, new GetUserProfileResponse());
-        entity.Role = DataResponse.GetEnumDescription(result.Role!);
-        entity.Gender = DataResponse.GetEnumDescription(result.Gender!);
+        entity.Role = DataResponse.GetEnumDescription(result.Role);
+        entity.Gender = DataResponse.GetEnumDescription(result.Gender);
 
-        entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
+        entity.DateOfBirth = DataResponse.CleanNullableDateTime(entity.DateOfBirth);
 
         return Ok(entity);
     }
@@ -178,13 +178,13 @@ public class UserController : BaseController
     {
         var result = await _userRepository.FirstOrDefaultAsync(u => u.Id.Equals(CurrentUserID));
         var entity = Mapper.Map(result, new GetUserResponse());
-        entity.Role = DataResponse.GetEnumDescription(result.Role!);
-        entity.Gender = DataResponse.GetEnumDescription(result.Gender!);
+        entity.Role = DataResponse.GetEnumDescription(result.Role);
+        entity.Gender = DataResponse.GetEnumDescription(result.Gender);
 
-        entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
-        entity.CreatedAt = (entity.CreatedAt != DateTime.MinValue) ? entity.CreatedAt : null;
-        entity.ModifiedAt = (entity.ModifiedAt != DateTime.MinValue) ? entity.ModifiedAt : null;
-        entity.DeletedAt = (entity.DeletedAt != DateTime.MinValue) ? entity.DeletedAt : null;
+        entity.DateOfBirth = DataResponse.CleanNullableDateTime(entity.DateOfBirth);
+        entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
+        entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
+        entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
 
         return Ok(entity);
     }
