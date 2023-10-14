@@ -1,6 +1,9 @@
-﻿namespace API.DTOs.Responses.Users;
+﻿using API.Mappings;
+using Domain.Models;
 
-public class GetUserProfileResponse
+namespace API.DTOs.Responses.Users;
+
+public class GetUserProfileResponse : IMapFrom<User>
 {
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
