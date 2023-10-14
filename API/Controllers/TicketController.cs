@@ -105,12 +105,12 @@ public class TicketController : BaseController
         return Ok(pagedResponse);
     }
 
-    [Authorize]
-    [HttpGet("user/{userId}/history")]
-    public async Task<IActionResult> GetTicketHistoryOfUser(int userId)
+    [Authorize(Roles = Roles.CUSTOMER)]
+    [HttpGet("user/history")]
+    public async Task<IActionResult> GetTicketHistoryOfCurrentUser()
     {
         var result = await _ticketRepository.WhereAsync(x =>
-            x.RequesterId == userId && _statusTrackingService.isTicketDone(x),
+            x.RequesterId == CurrentUserID && _statusTrackingService.isTicketDone(x),
             new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
 
         var response = result.Select(ticket =>
@@ -137,12 +137,12 @@ public class TicketController : BaseController
         return Ok(response);
     }
 
-    [Authorize]
-    [HttpGet("user/{userId}/available")]
-    public async Task<IActionResult> GetAvailableTicketsOfUser(int userId)
+    [Authorize(Roles = Roles.CUSTOMER)]
+    [HttpGet("user/available")]
+    public async Task<IActionResult> GetAvailableTicketsOfCurrentUser()
     {
         var result = await _ticketRepository.WhereAsync(x =>
-            x.RequesterId == userId && !_statusTrackingService.isTicketDone(x),
+            x.RequesterId == CurrentUserID && !_statusTrackingService.isTicketDone(x),
             new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
 
         var response = result.Select(ticket =>
