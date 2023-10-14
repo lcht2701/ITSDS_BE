@@ -82,7 +82,7 @@ namespace API.Controllers
                 entity.IsPublic = true;
             }
             await _feedbackRepository.UpdateAsync(entity);
-            return Accepted("Updated Successfully");
+            return Accepted("Update Successfully");
         }
 
         [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
@@ -92,7 +92,7 @@ namespace API.Controllers
             var target = await _feedbackRepository.FoundOrThrow(c => c.Id.Equals(feedbackId), new BadRequestException("Feedback not found"));
             //Soft Delete
             await _feedbackRepository.DeleteAsync(target);
-            return Ok("Deleted Successfully");
+            return Ok("Delete Successfully");
         }
     }
 }

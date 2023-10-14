@@ -53,7 +53,7 @@ namespace API.Controllers
             var target = await _servicePackRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service Pack not found"));
             ServicePack entity = Mapper.Map(req, target);
             await _servicePackRepository.UpdateAsync(entity);
-            return Accepted("Updated Successfully");
+            return Accepted("Update Successfully");
         }
 
         [Authorize(Roles = Roles.MANAGER)]
@@ -63,7 +63,7 @@ namespace API.Controllers
             var target = await _servicePackRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service Pack not found"));
             //Soft Delete
             await _servicePackRepository.DeleteAsync(target);
-            return Ok("Deleted Successfully");
+            return Ok("Delete Successfully");
         }
     }
 }

@@ -49,12 +49,7 @@ public class UserController : BaseController
             response.Add(entity);
         }
 
-        if (!string.IsNullOrWhiteSpace(filter))
-        {
-            response = response.AsQueryable().Filter(filter).ToList();
-        }
-
-        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, sort);
+        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
 
         return Ok(pagedResponse);
 
@@ -90,7 +85,7 @@ public class UserController : BaseController
         entity.Password = passwordHasher.HashPassword(entity, model.Password);
         entity.IsActive = true;
         await _userRepository.CreateAsync(entity);
-        return Ok("Created Successfully");
+        return Ok("Create Successfully");
     }
 
 
@@ -101,7 +96,7 @@ public class UserController : BaseController
         var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("User not found"));
         User entity = Mapper.Map(req, target);
         await _userRepository.UpdateAsync(entity);
-        return Ok("Updated Successfully");
+        return Ok("Update Successfully");
     }
 
     [Authorize(Roles = Roles.ADMIN)]
@@ -111,7 +106,7 @@ public class UserController : BaseController
         var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("User not found"));
         //Soft Delete
         await _userRepository.DeleteAsync(target);
-        return Ok("Deleted Successfully");
+        return Ok("Delete Successfully");
     }
 
     [Authorize]
@@ -137,7 +132,7 @@ public class UserController : BaseController
             new NotFoundException("User is not found"));
         User entity = Mapper.Map(req, target);
         await _userRepository.UpdateAsync(entity);
-        return Ok("Updated Successfully");
+        return Ok("Update Successfully");
     }
 
     [Authorize]
@@ -148,7 +143,7 @@ public class UserController : BaseController
             new NotFoundException("User is not found"));
         User entity = Mapper.Map(req, target);
         await _userRepository.UpdateAsync(entity);
-        return Ok("Updated Successfully");
+        return Ok("Update Successfully");
     }
 
     [Authorize]

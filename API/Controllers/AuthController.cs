@@ -99,7 +99,7 @@ public class AuthController : BaseController
         user.Password = passwordHasher.HashPassword(user, req.NewPassword);
 
         await _userRepository.UpdateAsync(user);
-        return Ok("Updated Successfully");
+        return Ok("Update Successfully");
     }
 
     //[HttpPost("logout")]
