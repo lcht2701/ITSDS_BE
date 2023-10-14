@@ -5,7 +5,7 @@ namespace Persistence.Helpers
 {
     public static class DataManipulation
     {
-        public static IPagedList<T> GetPagedData<T>(this IQueryable<T> data, int page, int pageSize, string filterOrder, string sortOrder)
+        public static IPagedList<T> GetPagedData<T>(this IQueryable<T> data, int page, int pageSize, string? filterOrder, string? sortOrder)
         {
             //Apply Filter
             data = Filter(data, filterOrder);
@@ -16,7 +16,7 @@ namespace Persistence.Helpers
             return data.ToPagedList(page, pageSize);
         }
 
-        public static IQueryable<T> Filter<T>(this IQueryable<T> query, string filter)
+        public static IQueryable<T> Filter<T>(this IQueryable<T> query, string? filter)
         {
             if (!string.IsNullOrWhiteSpace(filter))
             {
@@ -27,7 +27,7 @@ namespace Persistence.Helpers
         }
 
 
-        private static IQueryable<T> ApplySorting<T>(IQueryable<T> data, string sortOrder)
+        private static IQueryable<T> ApplySorting<T>(IQueryable<T> data, string? sortOrder)
         {
             if (!string.IsNullOrWhiteSpace(sortOrder))
             {
