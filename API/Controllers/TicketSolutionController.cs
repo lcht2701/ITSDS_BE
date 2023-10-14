@@ -52,7 +52,7 @@ namespace API.Controllers
                 return entity;
             }).ToList();
 
-            return Ok(response);
+            return response != null ? Ok(response) : Ok();
         }
 
         [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
@@ -70,7 +70,7 @@ namespace API.Controllers
         {
             var entity = Mapper.Map(model, new TicketSolution());
             await _solutionRepository.CreateAsync(entity);
-            return Ok();
+            return Ok("Create Successfully");
         }
 
         [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
@@ -100,7 +100,7 @@ namespace API.Controllers
             var target = await _solutionRepository.FoundOrThrow(c => c.Id.Equals(solutionId), new BadRequestException("Solution not found"));
             target.IsPublic = !target.IsPublic;
             await _solutionRepository.UpdateAsync(target);
-            return Ok("Delete Successfully");
+            return Ok("Update Successfully");
         }
 
         [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
@@ -110,7 +110,7 @@ namespace API.Controllers
             var target = await _solutionRepository.FoundOrThrow(c => c.Id.Equals(solutionId), new BadRequestException("Solution not found"));
             target.IsApproved = !target.IsApproved;
             await _solutionRepository.UpdateAsync(target);
-            return Ok("Delete Successfully");
+            return Ok("Approve Successfully");
         }
     }
 }
