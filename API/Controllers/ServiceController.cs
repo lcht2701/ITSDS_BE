@@ -53,7 +53,7 @@ namespace API.Controllers
             var target = await _serviceRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service not found"));
             Service entity = Mapper.Map(req, target);
             await _serviceRepository.UpdateAsync(entity);
-            return Accepted("Updated Successfully");
+            return Accepted("Update Successfully");
         }
 
         [Authorize(Roles = Roles.MANAGER)]
@@ -63,7 +63,7 @@ namespace API.Controllers
             var target = await _serviceRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service not found"));
             //Soft Delete
             await _serviceRepository.DeleteAsync(target);
-            return Ok("Deleted Successfully");
+            return Ok("Delete Successfully");
         }
     }
 }

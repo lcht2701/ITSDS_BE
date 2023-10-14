@@ -51,7 +51,7 @@ namespace API.Controllers
             var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("Contract not found"));
             Contract entity = Mapper.Map(req, target);
             await _contractRepository.UpdateAsync(entity);
-            return Accepted("Updated Successfully");
+            return Accepted("Update Successfully");
         }
 
         [Authorize(Roles = Roles.ACCOUNTANT)]
@@ -61,7 +61,7 @@ namespace API.Controllers
             var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("Contract not found"));
             //Soft Delete
             await _contractRepository.DeleteAsync(target);
-            return Ok("Deleted Successfully");
+            return Ok("Delete Successfully");
         }
 
     }

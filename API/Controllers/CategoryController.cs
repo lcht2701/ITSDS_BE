@@ -74,7 +74,7 @@ namespace API.Controllers
             var target = await _categoryRepository.FoundOrThrow(c => c.Id.Equals(categoryId), new BadRequestException("Category not found"));
             Category entity = Mapper.Map(req, target);
             await _categoryRepository.UpdateAsync(entity);
-            return Accepted("Updated Successfully");
+            return Accepted("Update Successfully");
         }
 
         [Authorize(Roles = Roles.MANAGER)]
@@ -84,7 +84,7 @@ namespace API.Controllers
             var target = await _categoryRepository.FoundOrThrow(c => c.Id.Equals(categoryId), new BadRequestException("Category not found"));
             //Soft Delete
             await _categoryRepository.DeleteAsync(target);
-            return Ok("Deleted Successfully");
+            return Ok("Delete Successfully");
         }
     }
 }
