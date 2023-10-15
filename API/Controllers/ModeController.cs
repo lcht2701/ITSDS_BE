@@ -48,7 +48,7 @@ namespace API.Controllers
 
         [Authorize(Roles = Roles.MANAGER)]
         [HttpPut("{modeId}")]
-        public async Task<IActionResult> UpdateCategory(int modeId, [FromBody] UpdateModeRequest req)
+        public async Task<IActionResult> UpdateMode(int modeId, [FromBody] UpdateModeRequest req)
         {
             var target = await _moderepository.FoundOrThrow(c => c.Id.Equals(modeId), new BadRequestException("Mode not found"));
             Mode entity = Mapper.Map(req, target);

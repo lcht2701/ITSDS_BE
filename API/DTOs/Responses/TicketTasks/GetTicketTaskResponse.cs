@@ -15,7 +15,7 @@ namespace API.DTOs.Responses.TicketTasks
         public string? Title { get; set; }
         public string? Description { get; set; }
         public string? Note { get; set; }
-        public string? Priority { get; set; }
+        public Priority? Priority { get; set; }
         public DateTime? ScheduledStartTime { get; set; }
         public DateTime? ScheduledEndTime { get; set; }
         public DateTime? ActualStartTime { get; set; }
@@ -24,7 +24,7 @@ namespace API.DTOs.Responses.TicketTasks
         public DateTime? ModifiedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public int? Progress { get; set; }
-        public string? TaskStatus { get; set; }
+        public TicketTaskStatus? TaskStatus { get; set; }
         public string? AttachmentUrl { get; set; }
         public virtual User? Technician { get; set; }
         public virtual User? CreateBy { get; set; }

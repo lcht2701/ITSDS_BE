@@ -37,17 +37,8 @@ public class TicketTaskController : BaseController
         var response = result.Select(task =>
         {
             var entity = Mapper.Map(task, new GetTicketTaskResponse());
-            entity.TaskStatus = DataResponse.GetEnumDescription(task.TaskStatus);
-            entity.Priority = DataResponse.GetEnumDescription(task.Priority);
 
-            entity.ScheduledStartTime = DataResponse.CleanNullableDateTime(entity.ScheduledStartTime);
-            entity.ScheduledEndTime = DataResponse.CleanNullableDateTime(entity.ScheduledEndTime);
-            entity.ActualStartTime = DataResponse.CleanNullableDateTime(entity.ActualStartTime);
-            entity.ActualEndTime = DataResponse.CleanNullableDateTime(entity.ActualEndTime);
-            entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
-            entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
-            entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
-
+            DataResponse.CleanNullableDateTime(entity);
             return entity;
         }).ToList();
 
