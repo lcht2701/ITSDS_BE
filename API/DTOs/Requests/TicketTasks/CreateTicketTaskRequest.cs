@@ -12,7 +12,7 @@ namespace API.DTOs.Requests.TicketTasks
         public string? Title { get; set; }
         public string? Description { get; set; }
         [Required]
-        [DefaultValue(TicketStatus.Open)]
+        [DefaultValue(TicketTaskStatus.Open)]
         public TicketTaskStatus? TaskStatus { get; set; }
         public int? TechnicianId { get; set; }
         public int? TeamId { get; set; }

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using API.Mappings;
+using Domain.Constants.Enums;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
@@ -15,11 +16,12 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public int? ModeId { get; set; }
     public int? ServiceId { get; set; }
     public int? CategoryId { get; set; }
-    public string? TicketStatus { get; set; }
-    public string? Priority { get; set; }
-    public string? Impact { get; set; }
+    public int? AssignmentId { get; set; }
+    public TicketStatus? TicketStatus { get; set; }
+    public Priority? Priority { get; set; }
+    public Impact? Impact { get; set; }
     public string? ImpactDetail { get; set; }
-    public string? Urgency { get; set; }
+    public Urgency? Urgency { get; set; }
     public string? AttachmentUrl { get; set; }
     public DateTime? ScheduledStartTime { get; set; }
     public DateTime? ScheduledEndTime { get; set; }

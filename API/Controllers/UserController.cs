@@ -38,8 +38,6 @@ public class UserController : BaseController
         foreach (var user in result)
         {
             var entity = Mapper.Map(user, new GetUserResponse());
-            entity.Role = DataResponse.GetEnumDescription(user.Role);
-            entity.Gender = DataResponse.GetEnumDescription(user.Gender);
 
             entity.DateOfBirth = DataResponse.CleanNullableDateTime(entity.DateOfBirth);
             entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
@@ -63,14 +61,8 @@ public class UserController : BaseController
             await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new BadRequestException("User is not found"));
 
         var entity = Mapper.Map(result, new GetUserResponse());
-        entity.Role = DataResponse.GetEnumDescription(result.Role!);
-        entity.Gender = DataResponse.GetEnumDescription(result.Gender!);
 
-        entity.DateOfBirth = DataResponse.CleanNullableDateTime(entity.DateOfBirth);
-        entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
-        entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
-        entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
-
+        DataResponse.CleanNullableDateTime(entity);
         return Ok(entity);
     }
 
@@ -116,11 +108,8 @@ public class UserController : BaseController
         var result = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID),
             new NotFoundException("User is not found"));
         var entity = Mapper.Map(result, new GetUserProfileResponse());
-        entity.Role = DataResponse.GetEnumDescription(result.Role);
-        entity.Gender = DataResponse.GetEnumDescription(result.Gender);
 
-        entity.DateOfBirth = DataResponse.CleanNullableDateTime(entity.DateOfBirth);
-
+        DataResponse.CleanNullableDateTime(entity);
         return Ok(entity);
     }
 
@@ -173,14 +162,8 @@ public class UserController : BaseController
     {
         var result = await _userRepository.FirstOrDefaultAsync(u => u.Id.Equals(CurrentUserID));
         var entity = Mapper.Map(result, new GetUserResponse());
-        entity.Role = DataResponse.GetEnumDescription(result.Role);
-        entity.Gender = DataResponse.GetEnumDescription(result.Gender);
 
-        entity.DateOfBirth = DataResponse.CleanNullableDateTime(entity.DateOfBirth);
-        entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
-        entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
-        entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
-
+        DataResponse.CleanNullableDateTime(entity);
         return Ok(entity);
     }
 }

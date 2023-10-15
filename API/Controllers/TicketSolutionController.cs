@@ -46,9 +46,7 @@ namespace API.Controllers
             var response = result.Select(solution =>
             {
                 var entity = Mapper.Map(solution, new TicketSolution());
-                entity.ReviewDate = DataResponse.CleanNullableDateTime(solution.ReviewDate);
-                entity.ExpiredDate = DataResponse.CleanNullableDateTime(solution.ExpiredDate);
-
+                DataResponse.CleanNullableDateTime(entity);
                 return entity;
             }).ToList();
 
