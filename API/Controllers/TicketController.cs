@@ -77,11 +77,12 @@ public class TicketController : BaseController
     [HttpGet("user/history")]
     public async Task<IActionResult> GetTicketHistoryOfCurrentUser()
     {
-        var result = await _ticketRepository.WhereAsync(x =>
-            x.RequesterId == CurrentUserID && _statusTrackingService.isTicketDone(x),
-            new string[] { "Requester", "Service", "Category", "Mode" });
+        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(CurrentUserID),
+        new string[] { "Requester", "Service", "Category", "Mode" });
 
-        var response = result.Select(ticket =>
+        var filteredResult = result.Where(x => _statusTrackingService.isTicketDone(x));
+
+        var response = filteredResult.Select(ticket =>
         {
             var entity = Mapper.Map<GetTicketResponse>(ticket);
             DataResponse.CleanNullableDateTime(entity);
@@ -91,17 +92,19 @@ public class TicketController : BaseController
         .ToList();
 
         return Ok(response);
+
     }
 
     [Authorize(Roles = Roles.CUSTOMER)]
     [HttpGet("user/available")]
     public async Task<IActionResult> GetAvailableTicketsOfCurrentUser()
     {
-        var result = await _ticketRepository.WhereAsync(x =>
-            x.RequesterId == CurrentUserID && !_statusTrackingService.isTicketDone(x),
-            new string[] { "Requester", "Service", "Category", "Mode" });
+        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(CurrentUserID),
+        new string[] { "Requester", "Service", "Category", "Mode" });
 
-        var response = result.Select(ticket =>
+        var filteredResult = result.Where(x => _statusTrackingService.isTicketDone(x));
+
+        var response = filteredResult.Select(ticket =>
         {
             var entity = Mapper.Map<GetTicketResponse>(ticket);
             DataResponse.CleanNullableDateTime(entity);
