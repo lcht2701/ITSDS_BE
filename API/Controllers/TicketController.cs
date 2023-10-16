@@ -102,7 +102,7 @@ public class TicketController : BaseController
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(CurrentUserID),
         new string[] { "Requester", "Service", "Category", "Mode" });
 
-        var filteredResult = result.Where(x => _statusTrackingService.isTicketDone(x));
+        var filteredResult = result.Where(x => !_statusTrackingService.isTicketDone(x));
 
         var response = filteredResult.Select(ticket =>
         {
