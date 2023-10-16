@@ -23,8 +23,6 @@ public partial class Ticket : BaseEntity
     
     public int? CategoryId { get; set; }
 
-    public int? AssignmentId { get; set; }
-
     public TicketStatus? TicketStatus { get; set; }
 
     public Priority? Priority { get; set; }
@@ -46,8 +44,6 @@ public partial class Ticket : BaseEntity
     public string? AttachmentUrl { get; set; }
 
     public virtual User? Requester { get; set; }
-
-    public virtual Assignment? Assignment { get; set; }  
 
     public virtual Service? Service { get; set; }
 

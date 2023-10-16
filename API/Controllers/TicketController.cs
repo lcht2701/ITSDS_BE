@@ -17,11 +17,13 @@ namespace API.Controllers;
 public class TicketController : BaseController
 {
     private readonly IRepositoryBase<Ticket> _ticketRepository;
+    private readonly IRepositoryBase<Assignment> _assignmentRepository;
     private readonly IStatusTrackingService _statusTrackingService;
 
-    public TicketController(IRepositoryBase<Ticket> ticketRepository, IStatusTrackingService statusTrackingService)
+    public TicketController(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IStatusTrackingService statusTrackingService)
     {
         _ticketRepository = ticketRepository;
+        _assignmentRepository = assignmentRepository;
         _statusTrackingService = statusTrackingService;
     }
 
@@ -34,7 +36,7 @@ public class TicketController : BaseController
     [FromQuery] int pageSize = 5)
     {
         var result = await _ticketRepository.GetAsync(navigationProperties: new string[]
-        { "Requester", "Assignment", "Service", "Category", "Mode" });
+        { "Requester", "Service", "Category", "Mode" });
 
         var response = result.Select(ticket =>
         {
@@ -58,7 +60,7 @@ public class TicketController : BaseController
     [FromQuery] int pageSize = 5)
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
-            new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+            new string[] { "Requester", "Service", "Category", "Mode" });
         var response = result.Select(ticket =>
         {
             var entity = Mapper.Map(ticket, new GetTicketResponse());
@@ -77,7 +79,7 @@ public class TicketController : BaseController
     {
         var result = await _ticketRepository.WhereAsync(x =>
             x.RequesterId == CurrentUserID && _statusTrackingService.isTicketDone(x),
-            new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+            new string[] { "Requester", "Service", "Category", "Mode" });
 
         var response = result.Select(ticket =>
         {
@@ -97,7 +99,7 @@ public class TicketController : BaseController
     {
         var result = await _ticketRepository.WhereAsync(x =>
             x.RequesterId == CurrentUserID && !_statusTrackingService.isTicketDone(x),
-            new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+            new string[] { "Requester", "Service", "Category", "Mode" });
 
         var response = result.Select(ticket =>
         {
@@ -111,13 +113,43 @@ public class TicketController : BaseController
         return Ok(response);
     }
 
+    [Authorize(Roles = Roles.TECHNICIAN)]
+    [HttpGet("assign/{technicianId}")]
+    public async Task<IActionResult> GetAssignedTickets(int technicianId)
+    {
+        var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == technicianId);
+
+        // Check if there are no assignments
+        if (!assignments.Any())
+        {
+            return Ok("You have not been assigned");
+        }
+
+        var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
+        var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id), new string[] { "Requester", "Service", "Category", "Mode" });
+
+        // Map the tickets to response entities
+        var response = result.Select(ticket =>
+        {
+            var entity = Mapper.Map<GetTicketResponse>(ticket);
+            DataResponse.CleanNullableDateTime(entity);
+            return entity;
+        })
+        .OrderByDescending(x => x.CreatedAt)
+        .ToList();
+
+        return Ok(response);
+    }
+
+
+
     [Authorize]
     [HttpGet("{ticketId}")]
     public async Task<IActionResult> GetTicketById(int ticketId)
     {
         var ticket =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId),
-                new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+                new string[] { "Requester", "Service", "Category", "Mode" });
 
         var entity = Mapper.Map<GetTicketResponse>(ticket);
         DataResponse.CleanNullableDateTime(entity);

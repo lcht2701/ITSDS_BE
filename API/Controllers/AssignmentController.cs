@@ -10,7 +10,7 @@ using Persistence.Services.Interfaces;
 
 namespace API.Controllers;
 
-[Route("/v1/itsds/ticket/assign")]
+[Route("/v1/itsds/assign")]
 
 public class AssignmentController : BaseController
 {
@@ -31,7 +31,7 @@ public class AssignmentController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetAssignments()
     {
-        var entity = await _assignmentRepository.GetAsync(navigationProperties: new string[] { "Ticket", "Team", "Technician" });
+        var entity = await _assignmentRepository.GetAsync(navigationProperties: new string[] { "Team", "Technician" });
         return entity != null ? Ok(entity) : Ok("No assignments.");
     }
 
@@ -39,7 +39,7 @@ public class AssignmentController : BaseController
     [HttpGet("technician/{technicianId}")]
     public async Task<IActionResult> GetAssignmentsByTechnician(int technicianId)
     {
-        var entity = await _assignmentRepository.WhereAsync(x => x.TechnicianId.Equals(technicianId), new string[] { "Ticket", "Team", "Technician" });
+        var entity = await _assignmentRepository.WhereAsync(x => x.TechnicianId.Equals(technicianId), new string[] { "Team", "Technician" });
         return entity != null ? Ok(entity) : Ok("No assignments of this technician.");
     }
 
@@ -47,7 +47,7 @@ public class AssignmentController : BaseController
     [HttpGet("team/{teamId}")]
     public async Task<IActionResult> GetAssignmentsByTeam(int teamId)
     {
-        var entity = await _assignmentRepository.WhereAsync(x => x.TeamId.Equals(teamId), new string[] { "Ticket", "Team", "Technician" });
+        var entity = await _assignmentRepository.WhereAsync(x => x.TeamId.Equals(teamId), new string[] { "Team", "Technician" });
         return entity != null ? Ok(entity) : Ok("No assignments of this team.");
     }
 
@@ -55,28 +55,33 @@ public class AssignmentController : BaseController
     [HttpGet("{id}")]
     public async Task<IActionResult> GetAssignmentById(int id)
     {
-        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Ticket", "Team", "Technician" });
+        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Team", "Technician" });
         return entity != null ? Ok(entity) : throw new BadRequestException("Assignment is not found");
     }
 
     [Authorize]
-    [HttpPatch("{ticketId}/assign")]
-    public async Task<IActionResult> AssignTicketManual(int ticketId, [FromBody] AssignTicketManualRequest req)
+    [HttpPost("{ticketId}/assign")]
+    public async Task<IActionResult> AssignTicketManual(int ticketId, int? teamId, int? technicianId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
 
-        if (req.TeamId != null && req.TechnicianId != null)
+        if (teamId != null && technicianId != null)
         {
-            var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(req.TechnicianId, req.TeamId);
+            var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(teamId, technicianId);
             if (isMemberOfTeam == false)
             {
                 throw new BadRequestException("This technician is not in this team");
-            }            
+            }
         }
 
-        var entity = Mapper.Map(req, new Assignment());
+        var entity = new Assignment()
+        {
+            TicketId = ticketId,
+            TeamId = teamId,
+            TechnicianId = technicianId
+        };
+
         await _assignmentRepository.CreateAsync(entity);
-        ticket.AssignmentId = entity.Id;
         await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
 
         return Ok("Assign Successfully");
@@ -84,25 +89,24 @@ public class AssignmentController : BaseController
 
     [Authorize]
     [HttpPatch("{ticketId}/update")]
-    public async Task<IActionResult> UpdateTicketAssignmentManual(int ticketId, [FromBody] UpdateTicketAssignmentManualRequest req)
+    public async Task<IActionResult> UpdateTicketAssignmentManual(int ticketId, int? teamId, int? technicianId)
     {
-        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new BadRequestException("Ticket Not Found"));
+        var target = await _assignmentRepository.FoundOrThrow(x => x.TicketId.Equals(ticketId), new BadRequestException("Ticket Not Found"));
 
-        if (ticket.AssignmentId == null)
+        if (teamId != null && technicianId != null)
         {
-            throw new BadRequestException("Ticket has not been assigned");
-        }
-
-        var target = await _assignmentRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticket.AssignmentId));
-
-        if (req.TeamId != null && req.TechnicianId != null)
-        {
-            var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(req.TechnicianId, req.TeamId);
+            var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(teamId, technicianId);
             if (isMemberOfTeam == false)
             {
                 throw new BadRequestException("This technician is not in this team");
             }
         }
+
+        var req = new Assignment()
+        {
+            TeamId = teamId,
+            TechnicianId = technicianId
+        };
 
         var entity = Mapper.Map(req, target);
         await _assignmentRepository.UpdateAsync(entity);
@@ -111,11 +115,10 @@ public class AssignmentController : BaseController
     }
 
     [Authorize]
-    [HttpDelete("{id}")]
+    [HttpDelete("{ticketId}")]
     public async Task<IActionResult> RemoveAssignment(int ticketId)
     {
-        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new BadRequestException("Ticket Not Found"));
-        var entity = await _assignmentRepository.FoundOrThrow(x => x.Id.Equals(ticket.AssignmentId), new BadRequestException("Ticket has not been assigned"));
+        var entity = await _assignmentRepository.FoundOrThrow(x => x.TicketId.Equals(ticketId), new BadRequestException("Ticket has not been assigned"));
         await _assignmentRepository.DeleteAsync(entity);
         // Cần kiểm tra lại logic
         //await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Open);
