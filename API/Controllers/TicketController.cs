@@ -203,11 +203,6 @@ public class TicketController : BaseController
     {
         var target =
             await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
-        if (target.TicketStatus == TicketStatus.Open)
-        {
-            throw new BadRequestException("Ticket can not be updated when it is being executed");
-        }
-
         var entity = Mapper.Map(model, new Ticket());
         await _ticketRepository.UpdateAsync(entity);
         return Accepted(entity);
