@@ -157,6 +157,26 @@ public class UserController : BaseController
     }
 
     [Authorize]
+    [HttpPatch("uploadAvatarByUrl")]
+    public async Task<IActionResult> UploadAvatarByUrl(string url)
+    {
+        try
+        {
+            var user = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID),
+                new BadRequestException("User is not found"));
+            user.AvatarUrl = url;
+            await _userRepository.UpdateAsync(user);
+
+            return Ok("Avatar URL updated successfully");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal Server Error: {ex.Message}");
+        }
+    }
+
+
+    [Authorize]
     [HttpGet("current-user")]
     public async Task<IActionResult> GetCurrentUser()
     {
