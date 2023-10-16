@@ -12,11 +12,9 @@ namespace Domain.Models.Tickets
     {
         public int? UserId { get; set; }
 
-        public TicketStatus TicketStatus { get; set; }
-
-        public string? Description { get; set; }
-
         public int? TicketId { get; set; }
+
+        public string? Action { get; set; }
 
         public virtual Ticket? Ticket { get; set; }
 

@@ -23,28 +23,14 @@ public class TeamController : BaseController
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet]
     public async Task<IActionResult> GetTeams(
-    [FromQuery] string? filterKey,
-    [FromQuery] string? filterValue,
-    [FromQuery] string? sortKey,
-    [FromQuery] string? sortOrder,
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 5)
     {
         var teams = await _teamRepository.ToListAsync();
-
-        if (!string.IsNullOrWhiteSpace(filterKey) && !string.IsNullOrWhiteSpace(filterValue))
-        {
-            teams = teams.Filter(filterKey, filterValue).ToList();
-        }
-
-
-        if (!string.IsNullOrWhiteSpace(sortKey) && !string.IsNullOrWhiteSpace(sortOrder))
-        {
-            teams = teams.Sort(sortKey, sortOrder).ToList();
-        }
-
-        var teamsPerPage = teams.Paginate(page, pageSize);
-        return Ok(teamsPerPage);
+        var pagedResponse = teams.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+        return Ok(pagedResponse);
     }
 
 
@@ -81,7 +67,7 @@ public class TeamController : BaseController
         var target = await _teamRepository.FoundOrThrow(c => c.Id.Equals(teamId), new BadRequestException("Team not found"));
         Team entity = Mapper.Map(req, target);
         await _teamRepository.UpdateAsync(entity);
-        return Accepted("Updated Successfully");
+        return Accepted("Update Successfully");
     }
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
@@ -91,7 +77,7 @@ public class TeamController : BaseController
         var target = await _teamRepository.FoundOrThrow(c => c.Id.Equals(teamId), new BadRequestException("Team not found"));
         //Soft Delete
         await _teamRepository.DeleteAsync(target);
-        return Ok("Deleted Successfully");
+        return Ok("Delete Successfully");
     }
 
 }

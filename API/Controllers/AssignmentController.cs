@@ -1,12 +1,10 @@
 ﻿using API.DTOs.Requests.Assignments;
-using API.DTOs.Requests.Tickets;
-using Domain.Constants;
+using Domain.Constants.Enums;
 using Domain.Exceptions;
-using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.Pqc.Crypto.Lms;
 using Persistence.Repositories.Interfaces;
 using Persistence.Services.Interfaces;
 
@@ -19,12 +17,14 @@ public class AssignmentController : BaseController
     private readonly IRepositoryBase<Ticket> _ticketRepository;
     private readonly IRepositoryBase<Assignment> _assignmentRepository;
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
+    private readonly IStatusTrackingService _statusTrackingService;
 
-    public AssignmentController(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TeamMember> teamMemberRepository)
+    public AssignmentController(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TeamMember> teamMemberRepository, IStatusTrackingService statusTrackingService)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
         _teamMemberRepository = teamMemberRepository;
+        _statusTrackingService = statusTrackingService;
     }
 
     [Authorize]
@@ -61,52 +61,64 @@ public class AssignmentController : BaseController
 
     [Authorize]
     [HttpPatch("{ticketId}/assign")]
-    public async Task<IActionResult> AssignTicketManual([FromBody] AssignTicketManualRequest req)
+    public async Task<IActionResult> AssignTicketManual(int ticketId, [FromBody] AssignTicketManualRequest req)
     {
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
+
         if (req.TeamId != null && req.TechnicianId != null)
         {
             var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(req.TechnicianId, req.TeamId);
-            if (!isMemberOfTeam)
+            if (isMemberOfTeam == false)
             {
                 throw new BadRequestException("This technician is not in this team");
-            }
-            else
-            {
-                var entity = Mapper.Map(req, new Assignment());
-                await _assignmentRepository.CreateAsync(entity);
-            }
+            }            
         }
+
+        var entity = Mapper.Map(req, new Assignment());
+        await _assignmentRepository.CreateAsync(entity);
+        ticket.AssignmentId = entity.Id;
+        await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
 
         return Ok("Assign Successfully");
     }
 
     [Authorize]
     [HttpPatch("{ticketId}/update")]
-    public async Task<IActionResult> UpdateTicketAssignmentManual(int assignmentId, [FromBody] UpdateTicketAssignmentManualRequest req)
+    public async Task<IActionResult> UpdateTicketAssignmentManual(int ticketId, [FromBody] UpdateTicketAssignmentManualRequest req)
     {
-        var target = await _assignmentRepository.FoundOrThrow(x => x.Id.Equals(assignmentId), new BadRequestException("Ticket Not Found"));
+        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new BadRequestException("Ticket Not Found"));
+
+        if (ticket.AssignmentId == null)
+        {
+            throw new BadRequestException("Ticket has not been assigned");
+        }
+
+        var target = await _assignmentRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticket.AssignmentId));
 
         if (req.TeamId != null && req.TechnicianId != null)
         {
             var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(req.TechnicianId, req.TeamId);
-            if (!isMemberOfTeam)
+            if (isMemberOfTeam == false)
             {
                 throw new BadRequestException("This technician is not in this team");
             }
-
-            var entity = Mapper.Map(req, target);
-            await _assignmentRepository.CreateAsync(entity);
         }
+
+        var entity = Mapper.Map(req, target);
+        await _assignmentRepository.UpdateAsync(entity);
 
         return Ok("Update Successfully");
     }
 
     [Authorize]
     [HttpDelete("{id}")]
-    public async Task<IActionResult> RemoveAssignment(int id)
+    public async Task<IActionResult> RemoveAssignment(int ticketId)
     {
-        var entity = await _assignmentRepository.FoundOrThrow(x => x.Id.Equals(id), new BadRequestException("Assignment not found."));
+        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new BadRequestException("Ticket Not Found"));
+        var entity = await _assignmentRepository.FoundOrThrow(x => x.Id.Equals(ticket.AssignmentId), new BadRequestException("Ticket has not been assigned"));
         await _assignmentRepository.DeleteAsync(entity);
+        // Cần kiểm tra lại logic
+        //await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Open);
         return Ok("Remove successfully.");
     }
 
@@ -115,7 +127,7 @@ public class AssignmentController : BaseController
         var check = await _teamMemberRepository.FirstOrDefaultAsync(x =>
             x.MemberId.Equals(technicianId) && x.TeamId.Equals(teamId));
 
-        return check != null;
+        return check is not null;
     }
 
 }

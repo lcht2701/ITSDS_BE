@@ -48,12 +48,12 @@ namespace API.Controllers
 
         [Authorize(Roles = Roles.MANAGER)]
         [HttpPut("{modeId}")]
-        public async Task<IActionResult> UpdateCategory(int modeId, [FromBody] UpdateModeRequest req)
+        public async Task<IActionResult> UpdateMode(int modeId, [FromBody] UpdateModeRequest req)
         {
             var target = await _moderepository.FoundOrThrow(c => c.Id.Equals(modeId), new BadRequestException("Mode not found"));
             Mode entity = Mapper.Map(req, target);
             await _moderepository.UpdateAsync(entity);
-            return Accepted("Updated Successfully");
+            return Accepted("Update Successfully");
         }
 
         [Authorize(Roles = Roles.MANAGER)]
@@ -63,7 +63,7 @@ namespace API.Controllers
             var target = await _moderepository.FoundOrThrow(c => c.Id.Equals(modeId), new BadRequestException("Mode not found"));
             //Soft Delete
             await _moderepository.DeleteAsync(target);
-            return Ok("Deleted Successfully");
+            return Ok("Delete Successfully");
         }
     }
 }

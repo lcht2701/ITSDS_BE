@@ -27,10 +27,8 @@ public class UserController : BaseController
     [Authorize(Roles = Roles.ADMIN)]
     [HttpGet]
     public async Task<IActionResult> GetUsers(
-    [FromQuery] string? filterKey,
-    [FromQuery] string? filterValue,
-    [FromQuery] string? sortKey,
-    [FromQuery] string? sortOrder,
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 5)
     {
@@ -40,30 +38,18 @@ public class UserController : BaseController
         foreach (var user in result)
         {
             var entity = Mapper.Map(user, new GetUserResponse());
-            entity.Role = EnumExtensions.GetEnumDescription(user.Role!);
-            entity.Gender = EnumExtensions.GetEnumDescription(user.Gender!);
 
-            entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
-            entity.CreatedAt = (entity.CreatedAt != DateTime.MinValue) ? entity.CreatedAt : null;
-            entity.ModifiedAt = (entity.ModifiedAt != DateTime.MinValue) ? entity.ModifiedAt : null;
-            entity.DeletedAt = (entity.DeletedAt != DateTime.MinValue) ? entity.DeletedAt : null;
+            entity.DateOfBirth = DataResponse.CleanNullableDateTime(entity.DateOfBirth);
+            entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
+            entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
+            entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
 
             response.Add(entity);
         }
 
-        if (!string.IsNullOrWhiteSpace(filterKey) && !string.IsNullOrWhiteSpace(filterValue))
-        {
-            response = response.Filter(filterKey, filterValue).ToList();
-        }
+        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
 
-
-        if (!string.IsNullOrWhiteSpace(sortKey) && !string.IsNullOrWhiteSpace(sortOrder))
-        {
-            response = response.Sort(sortKey, sortOrder).ToList();
-        }
-
-        var usersPerPage = response.Paginate(page, pageSize);
-        return Ok(usersPerPage);
+        return Ok(pagedResponse);
 
     }
 
@@ -75,14 +61,8 @@ public class UserController : BaseController
             await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new BadRequestException("User is not found"));
 
         var entity = Mapper.Map(result, new GetUserResponse());
-        entity.Role = EnumExtensions.GetEnumDescription(result.Role!);
-        entity.Gender = EnumExtensions.GetEnumDescription(result.Gender!);
 
-        entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
-        entity.CreatedAt = (entity.CreatedAt != DateTime.MinValue) ? entity.CreatedAt : null;
-        entity.ModifiedAt = (entity.ModifiedAt != DateTime.MinValue) ? entity.ModifiedAt : null;
-        entity.DeletedAt = (entity.DeletedAt != DateTime.MinValue) ? entity.DeletedAt : null;
-
+        DataResponse.CleanNullableDateTime(entity);
         return Ok(entity);
     }
 
@@ -97,7 +77,7 @@ public class UserController : BaseController
         entity.Password = passwordHasher.HashPassword(entity, model.Password);
         entity.IsActive = true;
         await _userRepository.CreateAsync(entity);
-        return Ok("Created Successfully");
+        return Ok("Create Successfully");
     }
 
 
@@ -108,7 +88,7 @@ public class UserController : BaseController
         var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("User not found"));
         User entity = Mapper.Map(req, target);
         await _userRepository.UpdateAsync(entity);
-        return Ok("Updated Successfully");
+        return Ok("Update Successfully");
     }
 
     [Authorize(Roles = Roles.ADMIN)]
@@ -118,7 +98,7 @@ public class UserController : BaseController
         var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("User not found"));
         //Soft Delete
         await _userRepository.DeleteAsync(target);
-        return Ok("Deleted Successfully");
+        return Ok("Delete Successfully");
     }
 
     [Authorize]
@@ -128,11 +108,8 @@ public class UserController : BaseController
         var result = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID),
             new NotFoundException("User is not found"));
         var entity = Mapper.Map(result, new GetUserProfileResponse());
-        entity.Role = EnumExtensions.GetEnumDescription(result.Role!);
-        entity.Gender = EnumExtensions.GetEnumDescription(result.Gender!);
 
-        entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
-
+        DataResponse.CleanNullableDateTime(entity);
         return Ok(entity);
     }
 
@@ -144,7 +121,7 @@ public class UserController : BaseController
             new NotFoundException("User is not found"));
         User entity = Mapper.Map(req, target);
         await _userRepository.UpdateAsync(entity);
-        return Ok("Updated Successfully");
+        return Ok("Update Successfully");
     }
 
     [Authorize]
@@ -155,7 +132,7 @@ public class UserController : BaseController
             new NotFoundException("User is not found"));
         User entity = Mapper.Map(req, target);
         await _userRepository.UpdateAsync(entity);
-        return Ok("Updated Successfully");
+        return Ok("Update Successfully");
     }
 
     [Authorize]
@@ -185,14 +162,8 @@ public class UserController : BaseController
     {
         var result = await _userRepository.FirstOrDefaultAsync(u => u.Id.Equals(CurrentUserID));
         var entity = Mapper.Map(result, new GetUserResponse());
-        entity.Role = EnumExtensions.GetEnumDescription(result.Role!);
-        entity.Gender = EnumExtensions.GetEnumDescription(result.Gender!);
 
-        entity.DateOfBirth = (entity.DateOfBirth != DateTime.MinValue) ? entity.DateOfBirth : null;
-        entity.CreatedAt = (entity.CreatedAt != DateTime.MinValue) ? entity.CreatedAt : null;
-        entity.ModifiedAt = (entity.ModifiedAt != DateTime.MinValue) ? entity.ModifiedAt : null;
-        entity.DeletedAt = (entity.DeletedAt != DateTime.MinValue) ? entity.DeletedAt : null;
-
+        DataResponse.CleanNullableDateTime(entity);
         return Ok(entity);
     }
 }

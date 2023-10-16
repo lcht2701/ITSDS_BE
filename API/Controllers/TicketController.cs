@@ -3,13 +3,13 @@ using API.DTOs.Responses.Tickets;
 using Domain.Constants;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
-using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Utilities.IO;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using Persistence.Services.Interfaces;
+using X.PagedList;
 
 namespace API.Controllers;
 
@@ -17,98 +17,110 @@ namespace API.Controllers;
 public class TicketController : BaseController
 {
     private readonly IRepositoryBase<Ticket> _ticketRepository;
+    private readonly IStatusTrackingService _statusTrackingService;
 
-    public TicketController(IRepositoryBase<Ticket> ticketRepository)
+    public TicketController(IRepositoryBase<Ticket> ticketRepository, IStatusTrackingService statusTrackingService)
     {
         _ticketRepository = ticketRepository;
+        _statusTrackingService = statusTrackingService;
     }
 
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetTickets(
-    [FromQuery] string? filterKey,
-    [FromQuery] string? filterValue,
-    [FromQuery] string? sortKey,
-    [FromQuery] string? sortOrder,
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 5)
     {
-        var result = await _ticketRepository.GetAsync(navigationProperties: new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
-        var response = new List<GetTicketResponse>();
-        foreach (var ticket in result)
+        var result = await _ticketRepository.GetAsync(navigationProperties: new string[]
+        { "Requester", "Assignment", "Service", "Category", "Mode" });
+
+        var response = result.Select(ticket =>
         {
             var entity = Mapper.Map(ticket, new GetTicketResponse());
-            entity.TicketStatus = EnumExtensions.GetEnumDescription(ticket.TicketStatus!);
-            entity.Impact = EnumExtensions.GetEnumDescription(ticket.Impact!);
-            entity.Priority = EnumExtensions.GetEnumDescription(ticket.Priority!);
-            entity.Urgency = EnumExtensions.GetEnumDescription(ticket.Urgency!);
+            DataResponse.CleanNullableDateTime(entity);
+            return entity;
+        }).ToList();
 
-            entity.ScheduledStartTime = (ticket.ScheduledStartTime == DateTime.MinValue) ? null : ticket.ScheduledStartTime;
-            entity.ScheduledEndTime = (ticket.ScheduledEndTime == DateTime.MinValue) ? null : ticket.ScheduledEndTime;
-            entity.DueTime = (ticket.DueTime == DateTime.MinValue) ? null : ticket.DueTime;
-            entity.CompletedTime = (ticket.CompletedTime == DateTime.MinValue) ? null : ticket.CompletedTime;
-            entity.CreatedAt = (ticket.CreatedAt == DateTime.MinValue) ? null : ticket.CreatedAt;
-            entity.ModifiedAt = (ticket.ModifiedAt == DateTime.MinValue) ? null : ticket.ModifiedAt;
-            entity.DeletedAt = (ticket.DeletedAt == DateTime.MinValue) ? null : ticket.DeletedAt;
-            response.Add(entity);
-        }
-        if (!string.IsNullOrWhiteSpace(filterKey) && !string.IsNullOrWhiteSpace(filterValue))
-        {
-            response = response.Filter(filterKey, filterValue).ToList();
-        }
+        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
 
-
-        if (!string.IsNullOrWhiteSpace(sortKey) && !string.IsNullOrWhiteSpace(sortOrder))
-        {
-            response = response.Sort(sortKey, sortOrder).ToList();
-        }
-
-        var ticketPerPage = response.Paginate(page, pageSize);
-        return Ok(ticketPerPage);
+        return Ok(pagedResponse);
     }
+
 
     [Authorize]
     [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetTicketsByUser(int userId)
+    public async Task<IActionResult> GetTicketsOfUser(int userId,
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5)
     {
-        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId), new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
-        var response = new List<GetTicketResponse>();
-        foreach (var ticket in result)
+        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
+            new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+        var response = result.Select(ticket =>
         {
             var entity = Mapper.Map(ticket, new GetTicketResponse());
-            entity.ScheduledStartTime = (ticket.ScheduledStartTime == DateTime.MinValue) ? null : ticket.ScheduledStartTime;
-            entity.ScheduledEndTime = (ticket.ScheduledEndTime == DateTime.MinValue) ? null : ticket.ScheduledEndTime;
-            entity.DueTime = (ticket.DueTime == DateTime.MinValue) ? null : ticket.DueTime;
-            entity.CompletedTime = (ticket.CompletedTime == DateTime.MinValue) ? null : ticket.CompletedTime;
-            entity.CreatedAt = (ticket.CreatedAt == DateTime.MinValue) ? null : ticket.CreatedAt;
-            entity.ModifiedAt = (ticket.ModifiedAt == DateTime.MinValue) ? null : ticket.ModifiedAt;
-            entity.DeletedAt = (ticket.DeletedAt == DateTime.MinValue) ? null : ticket.DeletedAt;
-            response.Add(entity);
-        }
+            DataResponse.CleanNullableDateTime(entity);
+            return entity;
+        }).ToList();
 
-        var sortedList = response.OrderByDescending(x => x.CreatedAt);
-        return Ok(sortedList);
+        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+
+        return Ok(pagedResponse);
     }
-    
+
+    [Authorize(Roles = Roles.CUSTOMER)]
+    [HttpGet("user/history")]
+    public async Task<IActionResult> GetTicketHistoryOfCurrentUser()
+    {
+        var result = await _ticketRepository.WhereAsync(x =>
+            x.RequesterId == CurrentUserID && _statusTrackingService.isTicketDone(x),
+            new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+
+        var response = result.Select(ticket =>
+        {
+            var entity = Mapper.Map<GetTicketResponse>(ticket);
+            DataResponse.CleanNullableDateTime(entity);
+            return entity;
+        })
+        .OrderByDescending(x => x.CompletedTime)
+        .ToList();
+
+        return Ok(response);
+    }
+
+    [Authorize(Roles = Roles.CUSTOMER)]
+    [HttpGet("user/available")]
+    public async Task<IActionResult> GetAvailableTicketsOfCurrentUser()
+    {
+        var result = await _ticketRepository.WhereAsync(x =>
+            x.RequesterId == CurrentUserID && !_statusTrackingService.isTicketDone(x),
+            new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
+
+        var response = result.Select(ticket =>
+        {
+            var entity = Mapper.Map<GetTicketResponse>(ticket);
+            DataResponse.CleanNullableDateTime(entity);
+            return entity;
+        })
+        .OrderByDescending(x => x.CreatedAt)
+        .ToList();
+
+        return Ok(response);
+    }
+
     [Authorize]
     [HttpGet("{ticketId}")]
     public async Task<IActionResult> GetTicketById(int ticketId)
     {
-        var result =
-            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId), new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
-        if (result == null)
-        {
-            return Ok("Ticket Not Found.");
-        }
-        var entity = Mapper.Map(result, new GetTicketResponse());
-        entity.ScheduledStartTime = (result.ScheduledStartTime == DateTime.MinValue) ? null : result.ScheduledStartTime;
-        entity.ScheduledEndTime = (result.ScheduledEndTime == DateTime.MinValue) ? null : result.ScheduledEndTime;
-        entity.DueTime = (result.DueTime == DateTime.MinValue) ? null : result.DueTime;
-        entity.CompletedTime = (result.CompletedTime == DateTime.MinValue) ? null : result.CompletedTime;
-        entity.CreatedAt = (result.CreatedAt == DateTime.MinValue) ? null : result.CreatedAt;
-        entity.ModifiedAt = (result.ModifiedAt == DateTime.MinValue) ? null : result.ModifiedAt;
-        entity.DeletedAt = (result.DeletedAt == DateTime.MinValue) ? null : result.DeletedAt;
+        var ticket =
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId),
+                new string[] { "Requester", "Assignment", "Service", "Category", "Mode" });
 
+        var entity = Mapper.Map<GetTicketResponse>(ticket);
+        DataResponse.CleanNullableDateTime(entity);
         return Ok(entity);
     }
 
@@ -175,9 +187,9 @@ public class TicketController : BaseController
     [HttpDelete("manager/{ticketId}")]
     public async Task<IActionResult> DeleteTicket(int ticketId)
     {
-        var target =
-            await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
+        var target = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
         await _ticketRepository.DeleteAsync(target);
         return Accepted(target);
     }
+
 }

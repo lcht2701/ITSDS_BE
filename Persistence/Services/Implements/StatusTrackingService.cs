@@ -21,11 +21,15 @@ namespace Persistence.Services.Implements
             _taskRepository = taskRepository;
         }
 
-        public async Task<bool> UpdateTicketStatusTo(int ticketId, TicketStatus newStatus)
+        public bool isTicketDone(Ticket ticket)
+        {
+            return ticket.TicketStatus is TicketStatus.Closed or TicketStatus.Cancelled;
+        }
+
+        public async Task<bool> UpdateTicketStatusTo(Ticket ticket, TicketStatus newStatus)
         {
             try
             {
-                var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
                 ticket.TicketStatus = newStatus;
                 await _ticketRepository.UpdateAsync(ticket);
                 return true;
