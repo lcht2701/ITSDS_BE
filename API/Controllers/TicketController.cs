@@ -114,12 +114,11 @@ public class TicketController : BaseController
     }
 
     [Authorize(Roles = Roles.TECHNICIAN)]
-    [HttpGet("assign/{technicianId}")]
-    public async Task<IActionResult> GetAssignedTickets(int technicianId)
+    [HttpGet("assign")]
+    public async Task<IActionResult> GetAssignedTickets()
     {
-        var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == technicianId);
+        var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == CurrentUserID);
 
-        // Check if there are no assignments
         if (!assignments.Any())
         {
             return Ok("You have not been assigned");
