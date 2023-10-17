@@ -1,10 +1,8 @@
-﻿using API.DTOs.Requests.Assignments;
-using Domain.Constants.Enums;
+﻿using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Pqc.Crypto.Lms;
 using Persistence.Repositories.Interfaces;
 using Persistence.Services.Interfaces;
 
@@ -63,29 +61,43 @@ public class AssignmentController : BaseController
     [HttpPost("{ticketId}/assign")]
     public async Task<IActionResult> AssignTicketManual(int ticketId, int? teamId, int? technicianId)
     {
-        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId);
 
-        if (teamId != null && technicianId != null)
+        if (ticket == null)
         {
-            var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(teamId, technicianId);
-            if (isMemberOfTeam == false)
+            return NotFound("Ticket not found");
+        }
+
+        var existingAssignment = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticketId);
+
+        if (existingAssignment != null)
+        {
+            return BadRequest("Ticket is already assigned");
+        }
+
+        if (teamId.HasValue && technicianId.HasValue)
+        {
+            var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(teamId.Value, technicianId.Value);
+
+            if (!isMemberOfTeam)
             {
-                throw new BadRequestException("This technician is not in this team");
+                return BadRequest("This technician is not in this team");
             }
         }
 
-        var entity = new Assignment()
+        var assignment = new Assignment
         {
             TicketId = ticketId,
             TeamId = teamId,
             TechnicianId = technicianId
         };
 
-        await _assignmentRepository.CreateAsync(entity);
+        await _assignmentRepository.CreateAsync(assignment);
         await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
 
         return Ok("Assign Successfully");
     }
+
 
     [Authorize]
     [HttpPatch("{ticketId}/update")]
