@@ -75,21 +75,21 @@ public class AssignmentController : BaseController
             return BadRequest("Ticket is already assigned");
         }
 
-        if (teamId.HasValue && technicianId.HasValue)
+        if (teamId == null || technicianId == null)
         {
-            var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(teamId.Value, technicianId.Value);
+            return BadRequest("Both teamId and technicianId must be provided to make the assignment.");
+        }
 
-            if (!isMemberOfTeam)
-            {
-                return BadRequest("This technician is not in this team");
-            }
+        if (!await IsTechnicianMemberOfTeamAsync(technicianId.Value, teamId.Value))
+        {
+            return BadRequest("This technician is not in this team");
         }
 
         var assignment = new Assignment
         {
             TicketId = ticketId,
-            TeamId = teamId,
-            TechnicianId = technicianId
+            TeamId = teamId.Value,
+            TechnicianId = technicianId.Value
         };
 
         await _assignmentRepository.CreateAsync(assignment);
@@ -99,25 +99,27 @@ public class AssignmentController : BaseController
     }
 
 
+
     [Authorize]
     [HttpPatch("{ticketId}/update")]
     public async Task<IActionResult> UpdateTicketAssignmentManual(int ticketId, int? teamId, int? technicianId)
     {
         var target = await _assignmentRepository.FoundOrThrow(x => x.TicketId.Equals(ticketId), new BadRequestException("Ticket Not Found"));
 
-        if (teamId != null && technicianId != null)
+        if (teamId == null || technicianId == null)
         {
-            var isMemberOfTeam = await IsTechnicianMemberOfTeamAsync(teamId, technicianId);
-            if (isMemberOfTeam == false)
-            {
-                throw new BadRequestException("This technician is not in this team");
-            }
+            return BadRequest("Both teamId and technicianId must be provided to update the assignment.");
+        }
+
+        if (!await IsTechnicianMemberOfTeamAsync(technicianId.Value, teamId.Value))
+        {
+            return BadRequest("This technician is not in this team");
         }
 
         var req = new Assignment()
         {
-            TeamId = teamId,
-            TechnicianId = technicianId
+            TeamId = teamId.Value,
+            TechnicianId = technicianId.Value
         };
 
         var entity = Mapper.Map(req, target);
@@ -126,9 +128,10 @@ public class AssignmentController : BaseController
         return Ok("Update Successfully");
     }
 
+
     [Authorize]
     [HttpDelete("{ticketId}")]
-    public async Task<IActionResult> RemoveAssignment(int ticketId)
+    public async Task<IActionResult> RemoveAssignmentByTicketId(int ticketId)
     {
         var entity = await _assignmentRepository.FoundOrThrow(x => x.TicketId.Equals(ticketId), new BadRequestException("Ticket has not been assigned"));
         await _assignmentRepository.DeleteAsync(entity);
