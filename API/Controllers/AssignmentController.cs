@@ -1,4 +1,7 @@
-﻿using Domain.Constants.Enums;
+﻿using API.DTOs.Requests.Assignments;
+using API.DTOs.Requests.Tickets;
+using Domain.Constants.Cases;
+using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
@@ -16,13 +19,15 @@ public class AssignmentController : BaseController
     private readonly IRepositoryBase<Assignment> _assignmentRepository;
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IStatusTrackingService _statusTrackingService;
+    private readonly IAssignmentService _assignmentService;
 
-    public AssignmentController(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TeamMember> teamMemberRepository, IStatusTrackingService statusTrackingService)
+    public AssignmentController(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TeamMember> teamMemberRepository, IStatusTrackingService statusTrackingService, IAssignmentService assignmentService)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
         _teamMemberRepository = teamMemberRepository;
         _statusTrackingService = statusTrackingService;
+        _assignmentService = assignmentService;
     }
 
     [Authorize]
@@ -59,75 +64,111 @@ public class AssignmentController : BaseController
 
     [Authorize]
     [HttpPost("{ticketId}/assign")]
-    public async Task<IActionResult> AssignTicketManual(int ticketId, int? teamId, int? technicianId)
+    public async Task<IActionResult> AssignTicket(int ticketId, [FromBody] AssignTicketManualRequest req)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId);
-
         if (ticket == null)
         {
-            return NotFound("Ticket not found");
+            return NotFound("Ticket not found.");
         }
 
         var existingAssignment = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticketId);
 
         if (existingAssignment != null)
         {
-            return BadRequest("Ticket is already assigned");
+            return BadRequest("This ticket is already assigned.");
         }
 
-        if (teamId == null || technicianId == null)
+        switch (GetAssignmentCase(req.TechnicianId, req.TeamId))
         {
-            return BadRequest("Both teamId and technicianId must be provided to make the assignment.");
+            case AssignmentCase.NullNull:
+                return Ok("Both TeamId and TechnicianId must be specified.");
+            case AssignmentCase.NotNullNull:
+                var assignment = new Assignment()
+                {
+                    TicketId = ticketId,
+                    TechnicianId = req.TechnicianId
+                };
+                await _assignmentRepository.CreateAsync(assignment);
+                await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
+                return Ok("Assigned successfully");
+            case AssignmentCase.NullNotNull:
+                req.TechnicianId = await _assignmentService.FindTechnicianWithLeastAssignments(req.TeamId);
+
+                assignment = new Assignment()
+                {
+                    TicketId = ticketId,
+                    TeamId = req.TeamId,
+                    TechnicianId = req.TechnicianId
+                };
+
+                await _assignmentRepository.CreateAsync(assignment);
+                await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
+                return Ok("Assign Successfully");
+            case AssignmentCase.NotNullNotNull:
+
+                if (await IsTechnicianMemberOfTeamAsync(req.TechnicianId, req.TeamId) == null)
+                {
+                    return BadRequest("This technician is not a member of the specified team.");
+                }
+
+                assignment = new Assignment()
+                {
+                    TicketId = ticketId,
+                    TeamId = req.TeamId,
+                    TechnicianId = req.TechnicianId
+                };
+
+                await _assignmentRepository.CreateAsync(assignment);
+                await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
+                return Ok("Assigned successfully");
         }
-
-        if (!await IsTechnicianMemberOfTeamAsync(technicianId.Value, teamId.Value))
-        {
-            return BadRequest("This technician is not in this team");
-        }
-
-        var assignment = new Assignment
-        {
-            TicketId = ticketId,
-            TeamId = teamId.Value,
-            TechnicianId = technicianId.Value
-        };
-
-        await _assignmentRepository.CreateAsync(assignment);
-        await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
-
-        return Ok("Assign Successfully");
+        return BadRequest("Invalid request.");
     }
 
-
-
+    //Cần update lại
     [Authorize]
     [HttpPatch("{ticketId}/update")]
-    public async Task<IActionResult> UpdateTicketAssignmentManual(int ticketId, int? teamId, int? technicianId)
+    public async Task<IActionResult> UpdateTicketAssignmentManual(int ticketId, [FromBody] UpdateTicketAssignmentManualRequest req)
     {
-        var target = await _assignmentRepository.FoundOrThrow(x => x.TicketId.Equals(ticketId), new BadRequestException("Ticket Not Found"));
+        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id == ticketId, new BadRequestException("Assignment Not Found"));
+        var target = await _assignmentRepository.FoundOrThrow(x => x.TicketId.Equals(ticket.Id), new BadRequestException("Assignment Not Found"));
 
-        if (teamId == null || technicianId == null)
+        switch (GetAssignmentCase(req.TechnicianId, req.TeamId))
         {
-            return BadRequest("Both teamId and technicianId must be provided to update the assignment.");
+            case AssignmentCase.NullNull:
+                await _assignmentRepository.DeleteAsync(target);
+                return Ok("Update Successfully");
+
+            case AssignmentCase.NotNullNull:
+                var entity = Mapper.Map(req, target);
+                entity.TeamId = null;
+                await _assignmentRepository.UpdateAsync(entity);
+                return Ok("Update successfully");
+
+            case AssignmentCase.NullNotNull:
+                req.TechnicianId = await _assignmentService.FindTechnicianWithLeastAssignments(req.TeamId);
+
+                entity = Mapper.Map(req, target);
+                entity.TechnicianId = null;
+
+                await _assignmentRepository.UpdateAsync(entity);
+                return Ok("Update Successfully");
+
+            case AssignmentCase.NotNullNotNull:
+                if (await IsTechnicianMemberOfTeamAsync(req.TechnicianId, req.TeamId) == null)
+                {
+                    return BadRequest("This technician is not a member of the specified team.");
+                }
+
+                entity = Mapper.Map(req, target);
+                await _assignmentRepository.UpdateAsync(entity);
+                return Ok("Update Successfully");
+
+            default:
+                return BadRequest("Invalid request.");
         }
-
-        if (!await IsTechnicianMemberOfTeamAsync(technicianId.Value, teamId.Value))
-        {
-            return BadRequest("This technician is not in this team");
-        }
-
-        var req = new Assignment()
-        {
-            TeamId = teamId.Value,
-            TechnicianId = technicianId.Value
-        };
-
-        var entity = Mapper.Map(req, target);
-        await _assignmentRepository.UpdateAsync(entity);
-
-        return Ok("Update Successfully");
     }
-
 
     [Authorize]
     [HttpDelete("{ticketId}")]
@@ -140,14 +181,33 @@ public class AssignmentController : BaseController
         return Ok("Remove successfully.");
     }
 
-    private async Task<bool> IsTechnicianMemberOfTeamAsync(int? technicianId, int? teamId)
+    private async Task<TeamMember> IsTechnicianMemberOfTeamAsync(int? technicianId, int? teamId)
     {
         var check = await _teamMemberRepository.FirstOrDefaultAsync(x =>
             x.MemberId.Equals(technicianId) && x.TeamId.Equals(teamId));
 
-        return check is not null;
+        return check;
     }
 
+    private AssignmentCase GetAssignmentCase(int? technicianId, int? teamId)
+    {
+        if (technicianId == null && teamId == null)
+        {
+            return AssignmentCase.NullNull;
+        }
+        else if (technicianId != null && teamId == null)
+        {
+            return AssignmentCase.NotNullNull;
+        }
+        else if (technicianId == null && teamId != null)
+        {
+            return AssignmentCase.NullNotNull;
+        }
+        else
+        {
+            return AssignmentCase.NotNullNotNull;
+        }
+    }
 }
 
 

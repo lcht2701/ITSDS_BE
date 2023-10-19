@@ -26,7 +26,7 @@ public class TeamMemberController : BaseController
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpGet("{teamId}")]
-    public async Task<IActionResult> GetTeamMembers(int teamId)
+    public async Task<IActionResult> GetTeamMembersByTeam(int teamId)
     {
         var teamMembers = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId));
         var userIds = teamMembers.Select(tm => tm.MemberId).ToList();
