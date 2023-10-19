@@ -20,30 +20,65 @@ public class AssignmentService : IAssignmentService
 
     public async Task<int> FindTechnicianWithLeastAssignments(int? teamId)
     {
-        var assignments = await _assignmentRepo.WhereAsync(x => x.TeamId.Equals(teamId));
-        var technicianIds = assignments.Select(x => x.TechnicianId).Distinct().ToList();
-
-        if (!technicianIds.Any())
+        // Check if the teamId is provided; if not, return 0.
+        if (!teamId.HasValue)
         {
             return 0;
         }
-        else
+
+        // Retrieve assignments for the specified team.
+        var assignments = await _assignmentRepo.WhereAsync(x => x.TeamId == teamId);
+
+        // If there are no assignments for the team, return 0.
+        if (!assignments.Any())
         {
-            int minAssignments = int.MaxValue;
-            int technicianWithLeastAssignmentsId = 0;
+            return 0;
+        }
 
-            foreach (var technicianId in technicianIds)
+        // Create a dictionary to store technician assignment counts.
+        var assignmentCounts = new Dictionary<int, int>();
+
+        foreach (var assignment in assignments)
+        {
+            // If the technicianId is null, skip this assignment.
+            if (!assignment.TechnicianId.HasValue)
             {
-                int assignmentsCount = assignments.Count(x => x.TechnicianId == technicianId);
-
-                if (assignmentsCount < minAssignments)
-                {
-                    minAssignments = assignmentsCount;
-                    technicianWithLeastAssignmentsId = (int)technicianId;
-                }
+                continue;
             }
 
-            return technicianWithLeastAssignmentsId;
+            int technicianId = assignment.TechnicianId.Value;
+
+            // Update or initialize the assignment count for the technician.
+            if (assignmentCounts.ContainsKey(technicianId))
+            {
+                assignmentCounts[technicianId]++;
+            }
+            else
+            {
+                assignmentCounts[technicianId] = 1;
+            }
+        }
+
+        // Find the minimum assignment count.
+        int minAssignments = assignmentCounts.Min(kv => kv.Value);
+
+        // Get the technicians with the minimum assignment count.
+        var techniciansWithMinAssignments = assignmentCounts
+            .Where(kv => kv.Value == minAssignments)
+            .Select(kv => kv.Key)
+            .ToList();
+
+        // If there's only one technician with the minimum assignments, return that technician.
+        if (techniciansWithMinAssignments.Count == 1)
+        {
+            return techniciansWithMinAssignments.First();
+        }
+        else
+        {
+            // Randomly select one technician if there are multiple with the same minimum assignments.
+            Random random = new Random();
+            int randomIndex = random.Next(techniciansWithMinAssignments.Count);
+            return techniciansWithMinAssignments[randomIndex];
         }
     }
 
