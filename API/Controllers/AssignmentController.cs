@@ -33,7 +33,7 @@ public class AssignmentController : BaseController
     }
 
     [Authorize]
-    [HttpGet]
+    [HttpGet("get-technicians")]
     public async Task<IActionResult> GetListOfTechnician(int? teamId)
     {
         List<User> users;
