@@ -6,6 +6,9 @@ using Domain.Exceptions;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using Persistence.Context;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 using Persistence.Services.Interfaces;
@@ -16,15 +19,19 @@ namespace API.Controllers;
 [Route("/v1/itsds/ticket")]
 public class TicketController : BaseController
 {
+    private readonly ApplicationDbContext _dbContext;
     private readonly IRepositoryBase<Ticket> _ticketRepository;
     private readonly IRepositoryBase<Assignment> _assignmentRepository;
     private readonly IStatusTrackingService _statusTrackingService;
+    private readonly IAuditLogService _auditLogService;
 
-    public TicketController(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IStatusTrackingService statusTrackingService)
+    public TicketController(ApplicationDbContext dbContext, IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IStatusTrackingService statusTrackingService, IAuditLogService auditLogService)
     {
+        _dbContext = dbContext;
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
         _statusTrackingService = statusTrackingService;
+        _auditLogService = auditLogService;
     }
 
     [Authorize]
@@ -143,8 +150,6 @@ public class TicketController : BaseController
         return Ok(response);
     }
 
-
-
     [Authorize]
     [HttpGet("{ticketId}")]
     public async Task<IActionResult> GetTicketById(int ticketId)
@@ -158,7 +163,41 @@ public class TicketController : BaseController
         return Ok(entity);
     }
 
-    [Authorize(Roles = Roles.CUSTOMER + "," + Roles.ADMIN)]
+    [Authorize]
+    [HttpGet("log")]
+    public async Task<IActionResult> GetTicketHistories(int ticketId)
+    {
+        try
+        {
+            var histories = await _dbContext.AuditLogs
+                .Where(history => history.EntityName.Equals(Tables.TICKET) && history.EntityRowId == ticketId)
+                .Include(history => history.User)
+                .ToListAsync();
+
+            var groupedHistories = histories
+                .GroupBy(history => new { history.Timestamp, history.User.Username, history.Action })
+                .OrderByDescending(group => group.Key.Timestamp)
+                .Select(group => new
+                {
+                    group.Key.Timestamp,
+                    group.Key.Username,
+                    group.Key.Action,
+                    Entries = group.Select(entry => new
+                    {
+                        entry.Id,
+                        entry.Message
+                    }).ToList()
+                }).ToList();
+
+            return Ok(groupedHistories);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Error = "An error occurred while processing your request.", Details = ex.Message });
+        }
+    }
+
+    [Authorize(Roles = Roles.CUSTOMER)]
     [HttpPost("customer/new")]
     public async Task<IActionResult> CreateTicketByCustomer([FromBody] CreateTicketCustomerRequest model)
     {
@@ -168,6 +207,7 @@ public class TicketController : BaseController
         entity.RequesterId = CurrentUserID;
         //Create
         await _ticketRepository.CreateAsync(entity);
+        await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
         return Ok("Create Successfully");
     }
 
@@ -175,17 +215,23 @@ public class TicketController : BaseController
     [HttpPut("customer/{ticketId}")]
     public async Task<IActionResult> UpdateTicketByCustomer(int ticketId, [FromBody] UpdateTicketCustomerRequest model)
     {
-        var target =
-            await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
-        if (target.TicketStatus == TicketStatus.Open)
+        var target = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId)) ?? throw new BadRequestException("Not Found");
+        if (target.TicketStatus != TicketStatus.Open)
         {
             throw new BadRequestException("Ticket can not be updated when it is being executed");
         }
 
+        // Create a deep copy of the target entity
+        var original = JsonConvert.DeserializeObject<Ticket>(JsonConvert.SerializeObject(target));
+
+        // Map your model to the target entity
         var entity = Mapper.Map(model, target);
+
         await _ticketRepository.UpdateAsync(entity);
-        return Accepted(entity);
+        await _auditLogService.TrackUpdated(original, entity, CurrentUserID, ticketId, Tables.TICKET);
+        return Ok("Update Successfully");
     }
+
 
 
     [Authorize(Roles = Roles.MANAGER)]
@@ -197,6 +243,7 @@ public class TicketController : BaseController
         entity.TicketStatus = TicketStatus.Open;
         //Create
         await _ticketRepository.CreateAsync(entity);
+        await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
         return Ok("Create Successfully");
     }
 
@@ -206,9 +253,14 @@ public class TicketController : BaseController
     {
         var target =
             await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
+
+        // Create a deep copy of the target entity
+        var original = JsonConvert.DeserializeObject<Ticket>(JsonConvert.SerializeObject(target));
+
         var entity = Mapper.Map(model, target);
         await _ticketRepository.UpdateAsync(entity);
-        return Accepted(entity);
+        await _auditLogService.TrackUpdated(original, entity, CurrentUserID, ticketId, Tables.TICKET);
+        return Ok(entity);
     }
 
     //Chưa làm Author
@@ -218,7 +270,7 @@ public class TicketController : BaseController
     {
         var target = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
         await _ticketRepository.DeleteAsync(target);
-        return Accepted(target);
+        return Ok(target);
     }
 
 }

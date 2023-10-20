@@ -96,7 +96,7 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : BaseEntity
     public async Task UpdateAsync(T updated)
     {
         _context.Attach(updated).State = EntityState.Modified;
-        updated.ModifiedAt = DateTime.UtcNow;
+        updated.ModifiedAt = DateTime.Now;
         await _context.SaveChangesAsync();
     }
 

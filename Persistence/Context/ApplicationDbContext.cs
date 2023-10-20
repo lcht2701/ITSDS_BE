@@ -16,13 +16,13 @@ namespace Persistence.Context
 
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Configuration> Configurations { get; set; }
+        public virtual DbSet<AuditLog> AuditLogs { get; set; }
         //Ticket
         public virtual DbSet<Team> Teams { get; set; }
         public virtual DbSet<TeamMember> TeamMembers { get; set; }
         public virtual DbSet<Assignment> Assignments { get; set; }
         public virtual DbSet<Ticket> Tickets { get; set; }
         public virtual DbSet<Mode> Modes { get; set; }
-        public virtual DbSet<History> Histories { get; set; }
         public virtual DbSet<Category> Categories { get; set; }
         public virtual DbSet<TicketTask> TicketTasks { get; set; }
         public virtual DbSet<TicketSolution> TicketSolutions { get; set; }
