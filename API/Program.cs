@@ -31,6 +31,7 @@ builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
 builder.Services.AddScoped<IStatusTrackingService, StatusTrackingService>();
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddSingleton<FirebaseStorageService>();
 
 builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>());
