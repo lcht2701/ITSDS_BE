@@ -1,8 +1,8 @@
 ﻿using API.DTOs.Requests.Assignments;
-using API.DTOs.Requests.Tickets;
 using Domain.Constants.Cases;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
+using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,14 +20,35 @@ public class AssignmentController : BaseController
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IStatusTrackingService _statusTrackingService;
     private readonly IAssignmentService _assignmentService;
+    private readonly IRepositoryBase<User> _userRepository;
 
-    public AssignmentController(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TeamMember> teamMemberRepository, IStatusTrackingService statusTrackingService, IAssignmentService assignmentService)
+    public AssignmentController(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TeamMember> teamMemberRepository, IStatusTrackingService statusTrackingService, IAssignmentService assignmentService, IRepositoryBase<User> userRepository)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
         _teamMemberRepository = teamMemberRepository;
         _statusTrackingService = statusTrackingService;
         _assignmentService = assignmentService;
+        _userRepository = userRepository;
+    }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetListOfTechnician(int? teamId)
+    {
+        List<User> users;
+        if (teamId == null)
+        {
+            users = (List<User>)await _userRepository.WhereAsync(x => x.Role == Role.Technician);
+        }
+        else
+        {
+            var teamMembers = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId));
+            var userIds = teamMembers.Select(tm => tm.MemberId).ToList();
+            users = (List<User>)await _userRepository.WhereAsync(u => userIds.Contains(u.Id) && u.Role == Role.Technician);
+        }
+
+        return Ok(users);
     }
 
     [Authorize]
