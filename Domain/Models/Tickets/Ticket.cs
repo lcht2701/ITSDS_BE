@@ -51,6 +51,8 @@ public partial class Ticket : BaseEntity
 
     public virtual Mode? Mode { get; set; }
 
+    public virtual Assignment? Assignment { get; set; }
+
     [JsonIgnore]
     [ExcludeFromAuditLog]
     public virtual ICollection<TicketTask>? TicketTasks { get; set; }
