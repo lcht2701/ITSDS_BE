@@ -100,56 +100,37 @@ public class AssignmentController : BaseController
             return BadRequest("This ticket is already assigned.");
         }
 
-        switch (GetAssignmentCase(req.TechnicianId, req.TeamId))
+        Assignment assignment = new();
+        if (req.TechnicianId != null || req.TeamId != null)
         {
-            case AssignmentCase.NullNull:
-                return Ok("Both TeamId and TechnicianId must be specified.");
-            case AssignmentCase.NotNullNull:
-                var assignment = new Assignment()
-                {
-                    TicketId = ticketId,
-                    TechnicianId = req.TechnicianId
-                };
-                await _assignmentRepository.CreateAsync(assignment);
-                await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
-                return Ok("Assigned successfully");
-            case AssignmentCase.NullNotNull:
-                req.TechnicianId = await _assignmentService.FindTechnicianWithLeastAssignments(req.TeamId);
-
-                assignment = new Assignment()
-                {
-                    TicketId = ticketId,
-                    TeamId = req.TeamId,
-                    TechnicianId = req.TechnicianId
-                };
-
-                await _assignmentRepository.CreateAsync(assignment);
-                await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
-                return Ok("Assign Successfully");
-            case AssignmentCase.NotNullNotNull:
-
+            if (req.TechnicianId != null && req.TeamId != null)
+            {
                 if (await IsTechnicianMemberOfTeamAsync(req.TechnicianId, req.TeamId) == null)
                 {
                     return BadRequest("This technician is not a member of the specified team.");
                 }
-
-                assignment = new Assignment()
+            }
+            else
+            {
+                assignment = new()
                 {
                     TicketId = ticketId,
-                    TeamId = req.TeamId,
-                    TechnicianId = req.TechnicianId
+                    TechnicianId = req.TechnicianId,
+                    TeamId = req.TeamId
                 };
+            }
 
-                await _assignmentRepository.CreateAsync(assignment);
-                await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
-                return Ok("Assigned successfully");
+            await _assignmentRepository.CreateAsync(assignment);
+            await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
         }
-        return BadRequest("Invalid request.");
+
+        return Ok("Assigned successfully");
     }
+
 
     //Cần update lại
     [Authorize]
-    [HttpPatch("{ticketId}/update")]
+    [HttpPatch("{ticketId}")]
     public async Task<IActionResult> UpdateTicketAssignmentManual(int ticketId, [FromBody] UpdateTicketAssignmentManualRequest req)
     {
         var ticket = await _ticketRepository.FoundOrThrow(x => x.Id == ticketId, new BadRequestException("Assignment Not Found"));
