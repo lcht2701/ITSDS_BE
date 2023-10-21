@@ -101,6 +101,7 @@ public class AssignmentController : BaseController
         }
 
         Assignment assignment = new();
+
         if (req.TechnicianId != null || req.TeamId != null)
         {
             if (req.TechnicianId != null && req.TeamId != null)
@@ -127,50 +128,51 @@ public class AssignmentController : BaseController
         return Ok("Assigned successfully");
     }
 
-
-    //Cần update lại
     [Authorize]
     [HttpPatch("{ticketId}")]
-    public async Task<IActionResult> UpdateTicketAssignmentManual(int ticketId, [FromBody] UpdateTicketAssignmentManualRequest req)
+    public async Task<IActionResult> UpdateTicketAssignment(int ticketId, [FromBody] UpdateTicketAssignmentManualRequest req)
     {
         var ticket = await _ticketRepository.FoundOrThrow(x => x.Id == ticketId, new BadRequestException("Assignment Not Found"));
         var target = await _assignmentRepository.FoundOrThrow(x => x.TicketId.Equals(ticket.Id), new BadRequestException("Assignment Not Found"));
 
-        switch (GetAssignmentCase(req.TechnicianId, req.TeamId))
+        if (req.TechnicianId != target.TechnicianId || req.TeamId != target.TeamId)
         {
-            case AssignmentCase.NullNull:
-                await _assignmentRepository.DeleteAsync(target);
-                return Ok("Update Successfully");
+            Assignment entity;
 
-            case AssignmentCase.NotNullNull:
-                var entity = Mapper.Map(req, target);
-                entity.TeamId = null;
-                await _assignmentRepository.UpdateAsync(entity);
-                return Ok("Update successfully");
+            switch (GetAssignmentCase(req.TechnicianId, req.TeamId))
+            {
+                case AssignmentCase.NullNull:
+                    await _assignmentRepository.DeleteAsync(target);
+                    break;
 
-            case AssignmentCase.NullNotNull:
-                req.TechnicianId = await _assignmentService.FindTechnicianWithLeastAssignments(req.TeamId);
+                case AssignmentCase.NotNullNull:
+                    entity = Mapper.Map(req, target);
+                    entity.TeamId = null;
+                    await _assignmentRepository.UpdateAsync(entity);
+                    break;
 
-                entity = Mapper.Map(req, target);
-                entity.TechnicianId = null;
+                case AssignmentCase.NullNotNull:
+                    entity = Mapper.Map(req, target);
+                    entity.TechnicianId = null;
+                    await _assignmentRepository.UpdateAsync(entity);
+                    break;
 
-                await _assignmentRepository.UpdateAsync(entity);
-                return Ok("Update Successfully");
+                case AssignmentCase.NotNullNotNull:
+                    if (await IsTechnicianMemberOfTeamAsync(req.TechnicianId, req.TeamId) == null)
+                    {
+                        return BadRequest("This technician is not a member of the specified team.");
+                    }
+                    entity = Mapper.Map(req, target);
+                    await _assignmentRepository.UpdateAsync(entity);
+                    break;
 
-            case AssignmentCase.NotNullNotNull:
-                if (await IsTechnicianMemberOfTeamAsync(req.TechnicianId, req.TeamId) == null)
-                {
-                    return BadRequest("This technician is not a member of the specified team.");
-                }
-
-                entity = Mapper.Map(req, target);
-                await _assignmentRepository.UpdateAsync(entity);
-                return Ok("Update Successfully");
-
-            default:
-                return BadRequest("Invalid request.");
+                default:
+                    return BadRequest("Invalid request.");
+            }
         }
+        return Ok("Updated Successfully");
     }
+
 
     [Authorize]
     [HttpDelete("{ticketId}")]
@@ -178,8 +180,6 @@ public class AssignmentController : BaseController
     {
         var entity = await _assignmentRepository.FoundOrThrow(x => x.TicketId.Equals(ticketId), new BadRequestException("Ticket has not been assigned"));
         await _assignmentRepository.DeleteAsync(entity);
-        // Cần kiểm tra lại logic
-        //await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Open);
         return Ok("Remove successfully.");
     }
 
