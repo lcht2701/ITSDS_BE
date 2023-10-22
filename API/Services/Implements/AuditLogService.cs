@@ -1,15 +1,15 @@
-﻿using Domain.Models;
+﻿using API.Services.Interfaces;
+using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using Persistence.Context;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using Persistence.Services.Interfaces;
 using System.Reflection;
 using static Domain.Customs.CustomAttributes;
 
-namespace Persistence.Services.Implements;
+namespace API.Services.Implements;
 
 public class AuditLogService : IAuditLogService
 {
@@ -52,7 +52,7 @@ public class AuditLogService : IAuditLogService
                 continue; // Skip this property
             }
 
-            if (!object.Equals(originalValue, updatedValue))
+            if (!Equals(originalValue, updatedValue))
             {
                 string message = GetUpdateMessage(property.Name, updatedValue);
 

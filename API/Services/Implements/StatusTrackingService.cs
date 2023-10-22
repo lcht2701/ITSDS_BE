@@ -1,14 +1,14 @@
-﻿using Domain.Constants.Enums;
+﻿using API.Services.Interfaces;
+using Domain.Constants.Enums;
 using Domain.Models.Tickets;
 using Persistence.Repositories.Interfaces;
-using Persistence.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Persistence.Services.Implements
+namespace API.Services.Implements
 {
     public class StatusTrackingService : IStatusTrackingService
     {

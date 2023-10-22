@@ -1,7 +1,7 @@
 ﻿using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Http;
 
-namespace Persistence.Services.Interfaces
+namespace API.Services.Interfaces
 {
     public interface IFirebaseStorageService
     {

@@ -1,11 +1,11 @@
-﻿using Domain.Application.AppConfig;
+﻿using API.Services.Interfaces;
+using Domain.Application.AppConfig;
 using Domain.Entities.Mails;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
-using Persistence.Services.Interfaces;
 
-namespace Persistence.Services.Implements
+namespace API.Services.Implements
 {
     public class MailService : IMailService
     {

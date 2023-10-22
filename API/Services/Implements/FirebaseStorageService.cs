@@ -1,16 +1,16 @@
-﻿using Domain.Exceptions;
+﻿using API.Services.Interfaces;
+using Domain.Exceptions;
 using Firebase.Auth;
 using Firebase.Storage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Persistence.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Persistence.Services.Implements
+namespace API.Services.Implements
 {
     public class FirebaseStorageService : IFirebaseStorageService
     {
