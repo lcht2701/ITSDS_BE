@@ -29,7 +29,7 @@ namespace API.Controllers
             return Ok(sortedList);
         }
 
-        [Authorize(Roles = Roles.MANAGER)]
+        [Authorize(Roles = Roles.ADMIN)]
         [HttpGet("{modeId}")]
         public async Task<IActionResult> GetModeById(int modeId)
         {
@@ -37,7 +37,7 @@ namespace API.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = Roles.MANAGER)]
+        [Authorize(Roles = Roles.ADMIN)]
         [HttpPost]
         public async Task<IActionResult> CreateMode([FromBody] CreateModeRequest model)
         {
@@ -46,7 +46,7 @@ namespace API.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = Roles.MANAGER)]
+        [Authorize(Roles = Roles.ADMIN)]
         [HttpPut("{modeId}")]
         public async Task<IActionResult> UpdateMode(int modeId, [FromBody] UpdateModeRequest req)
         {
@@ -56,7 +56,7 @@ namespace API.Controllers
             return Accepted("Update Successfully");
         }
 
-        [Authorize(Roles = Roles.MANAGER)]
+        [Authorize(Roles = Roles.ADMIN)]
         [HttpDelete("{modeId}")]
         public async Task<IActionResult> DeleteMode(int modeId)
         {
