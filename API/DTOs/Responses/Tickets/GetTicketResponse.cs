@@ -16,7 +16,6 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public int? ModeId { get; set; }
     public int? ServiceId { get; set; }
     public int? CategoryId { get; set; }
-    public int? AssignmentId { get; set; }
     public TicketStatus? TicketStatus { get; set; }
     public Priority? Priority { get; set; }
     public Impact? Impact { get; set; }
@@ -31,7 +30,6 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public DateTime? ModifiedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
     public virtual User? Requester { get; set; }
-    public virtual Assignment? Assignment { get; set; }
     public virtual Service? Service { get; set; }
     public virtual Category? Category { get; set; }
     public virtual Mode? Mode { get; set; }

@@ -26,11 +26,15 @@ public class TeamMemberController : BaseController
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpGet("{teamId}")]
-    public async Task<IActionResult> GetTeamMembers(int teamId)
+    public async Task<IActionResult> GetTeamMembersByTeam(int teamId)
     {
-        var result = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId));
-        return Ok(result);
+        var teamMembers = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId));
+        var userIds = teamMembers.Select(tm => tm.MemberId).ToList();
+        var users = await _userRepository.WhereAsync(u => userIds.Contains(u.Id));
+
+        return Ok(users);
     }
+
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpPost("assign")]

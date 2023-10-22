@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231019154036_updateTickethistorytable")]
+    partial class updateTickethistorytable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,39 +23,6 @@ namespace Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
-
-            modelBuilder.Entity("Domain.Models.AuditLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("Action")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EntityName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("EntityRowId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Message")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AuditLogs");
-                });
 
             modelBuilder.Entity("Domain.Models.Configuration", b =>
                 {
@@ -444,9 +413,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TechnicianId");
 
-                    b.HasIndex("TicketId")
-                        .IsUnique()
-                        .HasFilter("[TicketId] IS NOT NULL");
+                    b.HasIndex("TicketId");
 
                     b.ToTable("Assignments");
                 });
@@ -717,6 +684,38 @@ namespace Persistence.Migrations
                     b.ToTable("Tickets");
                 });
 
+            modelBuilder.Entity("Domain.Models.Tickets.TicketHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("Action")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("TicketId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TicketHistories");
+                });
+
             modelBuilder.Entity("Domain.Models.Tickets.TicketSolution", b =>
                 {
                     b.Property<int>("Id")
@@ -912,15 +911,6 @@ namespace Persistence.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Domain.Models.AuditLog", b =>
-                {
-                    b.HasOne("Domain.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Domain.Models.Contracts.Company", b =>
                 {
                     b.HasOne("Domain.Models.User", "CustomerAdmin")
@@ -1019,8 +1009,8 @@ namespace Persistence.Migrations
                         .HasForeignKey("TechnicianId");
 
                     b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
-                        .WithOne("Assignment")
-                        .HasForeignKey("Domain.Models.Tickets.Assignment", "TicketId");
+                        .WithMany()
+                        .HasForeignKey("TicketId");
 
                     b.Navigation("Team");
 
@@ -1102,6 +1092,21 @@ namespace Persistence.Migrations
                     b.Navigation("Requester");
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("Domain.Models.Tickets.TicketHistory", b =>
+                {
+                    b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
+                        .WithMany("Histories")
+                        .HasForeignKey("TicketId");
+
+                    b.HasOne("Domain.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Ticket");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Models.Tickets.TicketSolution", b =>
@@ -1198,7 +1203,7 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Ticket", b =>
                 {
-                    b.Navigation("Assignment");
+                    b.Navigation("Histories");
 
                     b.Navigation("TicketTasks");
                 });

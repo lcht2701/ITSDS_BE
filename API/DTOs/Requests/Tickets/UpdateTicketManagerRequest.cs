@@ -25,6 +25,8 @@ namespace API.DTOs.Requests.Tickets
 
         public Impact? Impact { get; set; }
 
+        public string? ImpactDetail { get; set; }
+
         public Urgency? Urgency { get; set; }
 
         public int? CategoryId { get; set; }
