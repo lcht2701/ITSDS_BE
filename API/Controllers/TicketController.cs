@@ -155,7 +155,7 @@ public class TicketController : BaseController
             //Chỉnh lại tgian hẹn giờ sau
             string jobId = BackgroundJob.Schedule(
                 () => _assignmentService.AssignSupportJob(entity.Id),
-                TimeSpan.FromMinutes(1));
+                TimeSpan.FromMinutes(10));
             RecurringJob.AddOrUpdate(
                 jobId + "_Cancellation",
                 () => _assignmentService.CancelAssignSupportJob(jobId, entity.Id),
@@ -209,7 +209,7 @@ public class TicketController : BaseController
                 //Chỉnh lại tgian hẹn giờ sau
                 string jobId = BackgroundJob.Schedule(
                     () => _assignmentService.AssignSupportJob(entity.Id),
-                    TimeSpan.FromMinutes(1));
+                    TimeSpan.FromMinutes(10));
                 RecurringJob.AddOrUpdate(
                     jobId + "_Cancellation",
                     () => _assignmentService.CancelAssignSupportJob(jobId, entity.Id),
