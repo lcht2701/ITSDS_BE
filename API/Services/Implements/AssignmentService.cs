@@ -144,7 +144,7 @@ public class AssignmentService : IAssignmentService
 
     public async Task<object> GetById(int id)
     {
-        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Team", "Technician" });
+        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Team", "Technician" }) ?? throw new KeyNotFoundException();
         var response = _mapper.Map<GetAssignmentResponse>(entity);
         return response;
     }

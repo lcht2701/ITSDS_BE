@@ -1,14 +1,7 @@
 ﻿using API.DTOs.Requests.Assignments;
-using API.DTOs.Responses.Assignments;
 using API.Services.Interfaces;
-using Domain.Constants.Cases;
-using Domain.Constants.Enums;
-using Domain.Exceptions;
-using Domain.Models;
-using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
 
@@ -92,6 +85,10 @@ public class AssignmentController : BaseController
             var result = await _assignmentService.GetById(id);
             return Ok(result);
         }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Assignment is not exist");
+        }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);
@@ -105,7 +102,7 @@ public class AssignmentController : BaseController
         try
         {
             var result = await _assignmentService.Assign(ticketId, req);
-            return result;
+            return Ok("Assigned Successfully");
         }
         catch (Exception ex)
         {
@@ -122,7 +119,7 @@ public class AssignmentController : BaseController
         try
         {
             var result = await _assignmentService.Update(ticketId, req);
-            return result;
+            return Ok("Updated Successfully");
         }
         catch (Exception ex)
         {
@@ -138,7 +135,7 @@ public class AssignmentController : BaseController
         try
         {
             await _assignmentService.Remove(ticketId);
-            return Ok("Remove successfully.");
+            return Ok("Removed Successfully.");
         }
         catch (Exception ex)
         {
