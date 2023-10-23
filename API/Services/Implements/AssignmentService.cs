@@ -154,7 +154,8 @@ public class AssignmentService : IAssignmentService
 
     public async Task<IActionResult> Assign(int ticketId, AssignTicketManualRequest model)
     {
-        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id == ticketId, new BadRequestException("Ticket not found."));
+
+        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id == ticketId, new KeyNotFoundException("Ticket not found."));
 
         var existingAssignment = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticketId);
         if (existingAssignment != null)
@@ -181,18 +182,19 @@ public class AssignmentService : IAssignmentService
             await _assignmentRepository.CreateAsync(assignment);
             await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
 
+            return new OkObjectResult("Assigned successfully");
         }
         else
         {
             return new OkResult();
         }
-        return new OkObjectResult("Assigned successfully");
     }
+
 
     public async Task<IActionResult> Update(int ticketId, UpdateTicketAssignmentManualRequest model)
     {
-        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id == ticketId, new BadRequestException("Assignment Not Found"));
-        var target = await _assignmentRepository.FoundOrThrow(x => x.TicketId.Equals(ticket.Id), new BadRequestException("Assignment Not Found"));
+        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id == ticketId, new BadRequestException("Ticket Not Found"));
+        var target = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(ticket.Id));
 
         if (model.TechnicianId != target.TechnicianId || model.TeamId != target.TeamId)
         {

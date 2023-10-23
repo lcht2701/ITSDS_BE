@@ -102,7 +102,7 @@ public class AssignmentController : BaseController
         try
         {
             var result = await _assignmentService.Assign(ticketId, req);
-            return Ok("Assigned Successfully");
+            return result;
         }
         catch (Exception ex)
         {
@@ -119,7 +119,7 @@ public class AssignmentController : BaseController
         try
         {
             var result = await _assignmentService.Update(ticketId, req);
-            return Ok("Updated Successfully");
+            return result;
         }
         catch (Exception ex)
         {
