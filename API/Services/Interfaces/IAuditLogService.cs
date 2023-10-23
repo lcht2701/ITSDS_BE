@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Persistence.Services.Interfaces
+namespace API.Services.Interfaces
 {
     public interface IAuditLogService
     {

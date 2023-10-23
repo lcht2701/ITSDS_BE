@@ -1,9 +1,11 @@
 ﻿using API.DTOs.Requests.Tickets;
 using API.DTOs.Responses.Tickets;
+using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models.Tickets;
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +13,6 @@ using Newtonsoft.Json;
 using Persistence.Context;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using Persistence.Services.Interfaces;
 using X.PagedList;
 
 namespace API.Controllers;
@@ -272,5 +273,4 @@ public class TicketController : BaseController
         await _ticketRepository.DeleteAsync(target);
         return Ok(target);
     }
-
 }

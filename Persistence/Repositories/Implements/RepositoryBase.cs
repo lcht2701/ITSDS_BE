@@ -38,6 +38,12 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : BaseEntity
         dbSet.Remove(entity);
         await _context.SaveChangesAsync();
     }
+    
+    public async Task SoftDeleteAsync(T entity)
+    {
+        entity.DeletedAt = DateTime.Now;
+        await _context.SaveChangesAsync();
+    }
 
     public virtual async Task<IEnumerable<T>> GetAsync(
         Expression<Func<T, bool>> filter = null,
