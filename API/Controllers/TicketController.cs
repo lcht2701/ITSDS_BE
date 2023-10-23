@@ -1,7 +1,9 @@
 ﻿using API.DTOs.Requests.Tickets;
+using API.Services.Implements;
 using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Models.Tickets;
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
@@ -12,11 +14,13 @@ namespace API.Controllers;
 public class TicketController : BaseController
 {
     private readonly IAuditLogService _auditLogService;
+    private readonly IAssignmentService _assignmentService;
     private readonly ITicketService _ticketService;
 
-    public TicketController(IAuditLogService auditLogService, ITicketService ticketService)
+    public TicketController(IAuditLogService auditLogService, IAssignmentService assignmentService, ITicketService ticketService)
     {
         _auditLogService = auditLogService;
+        _assignmentService = assignmentService;
         _ticketService = ticketService;
     }
 
@@ -143,13 +147,27 @@ public class TicketController : BaseController
         {
             var entity = await _ticketService.CreateByCustomer(CurrentUserID, model);
             await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
-            return Ok("Create Successfully");
+            //if (await _ticketService.IsTicketAssigned(entity.Id))
+            //{
+            //    return Ok("Ticket already assigned to support.");
+            //}
+
+            //Chỉnh lại tgian hẹn giờ sau
+            string jobId = BackgroundJob.Schedule(
+                () => _assignmentService.AssignSupportJob(entity.Id),
+                TimeSpan.FromMinutes(1));
+            RecurringJob.AddOrUpdate(
+                jobId + "_Cancellation",
+                () => _assignmentService.CancelAssignSupportJob(jobId, entity.Id),
+                "*/30 * * * * *"); //Every 30 secs
+            return Ok("Ticket created and scheduled for assignment.");
         }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);
         }
     }
+
 
     [Authorize(Roles = Roles.CUSTOMER)]
     [HttpPut("customer/{ticketId}")]
@@ -182,7 +200,22 @@ public class TicketController : BaseController
         {
             Ticket entity = await _ticketService.CreateByManager(model);
             await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
-            return Ok("Created Successfully");
+            if (await _ticketService.IsTicketAssigned(entity.Id))
+            {
+                return Ok("Created Successfully");
+            }
+            else
+            {
+                //Chỉnh lại tgian hẹn giờ sau
+                string jobId = BackgroundJob.Schedule(
+                    () => _assignmentService.AssignSupportJob(entity.Id),
+                    TimeSpan.FromMinutes(1));
+                RecurringJob.AddOrUpdate(
+                    jobId + "_Cancellation",
+                    () => _assignmentService.CancelAssignSupportJob(jobId, entity.Id),
+                    "*/30 * * * * *"); //Every 30 
+                return Ok("Ticket created and scheduled for assignment.");
+            }
         }
         catch (Exception ex)
         {

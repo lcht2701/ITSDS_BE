@@ -1,12 +1,5 @@
 ﻿using API.DTOs.Requests.Assignments;
-using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace API.Services.Interfaces
 {
     public interface IAssignmentService
@@ -21,5 +14,8 @@ namespace API.Services.Interfaces
         Task Remove(int ticketId);
         Task<object> IsTechnicianMemberOfTeamAsync(int? technicianId, int? teamId);
         Task<int> FindTechnicianWithLeastAssignments(int? teamId);
+        //Hangfire
+        Task AssignSupportJob(int ticketId);
+        Task CancelAssignSupportJob(string jobId, int ticketId);
     }
 }
