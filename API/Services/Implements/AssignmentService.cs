@@ -8,7 +8,6 @@ using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Mvc;
-using Persistence.Repositories;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
@@ -233,7 +232,7 @@ public class AssignmentService : IAssignmentService
     public async Task Remove(int ticketId)
     {
         var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(ticketId));
-        await _assignmentRepository.DeleteAsync(entity);
+        await _assignmentRepository.SoftDeleteAsync(entity);
     }
 
     private AssignmentCase GetAssignmentCase(int? technicianId, int? teamId)
