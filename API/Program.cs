@@ -1,18 +1,19 @@
+using API.Configurations;
+using API.Services.Implements;
+using API.Services.Interfaces;
 using API.Utils;
+using Domain.Application.AppConfig;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Persistence.Context;
-using Persistence.Repositories.Interfaces;
 using Persistence.Repositories;
-using System.Text;
-using API.Configurations;
+using Persistence.Repositories.Interfaces;
 using System.Reflection;
-using Persistence.Services.Interfaces;
-using Persistence.Services.Implements;
-using Domain.Application.AppConfig;
-using Microsoft.AspNetCore.Http.Features;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -24,15 +25,35 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     var connectionString = configuration.GetConnectionString("DefaultConnection");
     options.UseSqlServer(connectionString);
 });
+builder.Services.AddHangfire(config => config
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
+builder.Services.AddHangfireServer();
+
+
+builder.Services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
+builder.Services.AddSingleton<FirebaseStorageService>();
 
 builder.Services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>));
-builder.Services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
-builder.Services.AddScoped<IMailService, MailService>();
-builder.Services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
-builder.Services.AddScoped<IStatusTrackingService, StatusTrackingService>();
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
-builder.Services.AddSingleton<FirebaseStorageService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+builder.Services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
+builder.Services.AddScoped<IMailService, MailService>();
+builder.Services.AddScoped<IModeService, ModeService>();
+builder.Services.AddScoped<IServicePackService, ServicePackService>();
+builder.Services.AddScoped<IStatusTrackingService, StatusTrackingService>();
+builder.Services.AddScoped<ITeamMemberService, TeamMemberService>();
+builder.Services.AddScoped<ITeamService, TeamService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<ITicketSolutionService, TicketSolutionService>();
+builder.Services.AddScoped<ITicketTaskService, TicketTaskService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>());
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
@@ -121,7 +142,9 @@ app.UseCors(CorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAutoWrapper();
+app.UseHangfireDashboard();
 
 app.MapControllers();
+app.MapHangfireDashboard();
 
 app.Run();

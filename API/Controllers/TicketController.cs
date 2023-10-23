@@ -1,37 +1,27 @@
 ﻿using API.DTOs.Requests.Tickets;
-using API.DTOs.Responses.Tickets;
+using API.Services.Implements;
+using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Constants.Enums;
-using Domain.Exceptions;
 using Domain.Models.Tickets;
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using Persistence.Context;
 using Persistence.Helpers;
-using Persistence.Repositories.Interfaces;
-using Persistence.Services.Interfaces;
-using X.PagedList;
 
 namespace API.Controllers;
 
 [Route("/v1/itsds/ticket")]
 public class TicketController : BaseController
 {
-    private readonly ApplicationDbContext _dbContext;
-    private readonly IRepositoryBase<Ticket> _ticketRepository;
-    private readonly IRepositoryBase<Assignment> _assignmentRepository;
-    private readonly IStatusTrackingService _statusTrackingService;
     private readonly IAuditLogService _auditLogService;
+    private readonly IAssignmentService _assignmentService;
+    private readonly ITicketService _ticketService;
 
-    public TicketController(ApplicationDbContext dbContext, IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IStatusTrackingService statusTrackingService, IAuditLogService auditLogService)
+    public TicketController(IAuditLogService auditLogService, IAssignmentService assignmentService, ITicketService ticketService)
     {
-        _dbContext = dbContext;
-        _ticketRepository = ticketRepository;
-        _assignmentRepository = assignmentRepository;
-        _statusTrackingService = statusTrackingService;
         _auditLogService = auditLogService;
+        _assignmentService = assignmentService;
+        _ticketService = ticketService;
     }
 
     [Authorize]
@@ -42,16 +32,7 @@ public class TicketController : BaseController
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 5)
     {
-        var result = await _ticketRepository.GetAsync(navigationProperties: new string[]
-        { "Requester", "Service", "Category", "Mode" });
-
-        var response = result.Select(ticket =>
-        {
-            var entity = Mapper.Map(ticket, new GetTicketResponse());
-            DataResponse.CleanNullableDateTime(entity);
-            return entity;
-        }).ToList();
-
+        var response = await _ticketService.Get();
         var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
 
         return Ok(pagedResponse);
@@ -66,39 +47,31 @@ public class TicketController : BaseController
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 5)
     {
-        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
-            new string[] { "Requester", "Service", "Category", "Mode" });
-        var response = result.Select(ticket =>
+        try
         {
-            var entity = Mapper.Map(ticket, new GetTicketResponse());
-            DataResponse.CleanNullableDateTime(entity);
-            return entity;
-        }).ToList();
-
-        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-
-        return Ok(pagedResponse);
+            var response = await _ticketService.GetByUser(userId);
+            var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = Roles.CUSTOMER)]
     [HttpGet("user/history")]
-    public async Task<IActionResult> GetTicketHistoryOfCurrentUser()
+    public async Task<IActionResult> GetTicketHistory()
     {
-        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(CurrentUserID),
-        new string[] { "Requester", "Service", "Category", "Mode" });
-
-        var filteredResult = result.Where(x => _statusTrackingService.isTicketDone(x));
-
-        var response = filteredResult.Select(ticket =>
+        try
         {
-            var entity = Mapper.Map<GetTicketResponse>(ticket);
-            DataResponse.CleanNullableDateTime(entity);
-            return entity;
-        })
-        .OrderByDescending(x => x.CompletedTime)
-        .ToList();
-
-        return Ok(response);
+            var response = await _ticketService.GetTicketHistory(CurrentUserID);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
 
     }
 
@@ -106,94 +79,63 @@ public class TicketController : BaseController
     [HttpGet("user/available")]
     public async Task<IActionResult> GetAvailableTicketsOfCurrentUser()
     {
-        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(CurrentUserID),
-        new string[] { "Requester", "Service", "Category", "Mode" });
-
-        var filteredResult = result.Where(x => !_statusTrackingService.isTicketDone(x));
-
-        var response = filteredResult.Select(ticket =>
+        try
         {
-            var entity = Mapper.Map<GetTicketResponse>(ticket);
-            DataResponse.CleanNullableDateTime(entity);
-            return entity;
-        })
-        .OrderByDescending(x => x.CreatedAt)
-        .ToList();
-
-        return Ok(response);
+            var response = await _ticketService.GetTicketAvailable(CurrentUserID);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = Roles.TECHNICIAN)]
     [HttpGet("assign")]
     public async Task<IActionResult> GetAssignedTickets()
     {
-        var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == CurrentUserID);
-
-        if (!assignments.Any())
+        try
         {
-            return Ok("You have not been assigned");
+            var response = await _ticketService.GetAssignedTickets(CurrentUserID);
+            return Ok(response);
         }
-
-        var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
-        var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id), new string[] { "Requester", "Service", "Category", "Mode" });
-
-        // Map the tickets to response entities
-        var response = result.Select(ticket =>
+        catch (Exception ex)
         {
-            var entity = Mapper.Map<GetTicketResponse>(ticket);
-            DataResponse.CleanNullableDateTime(entity);
-            return entity;
-        })
-        .OrderByDescending(x => x.CreatedAt)
-        .ToList();
-
-        return Ok(response);
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize]
     [HttpGet("{ticketId}")]
     public async Task<IActionResult> GetTicketById(int ticketId)
     {
-        var ticket =
-            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId),
-                new string[] { "Requester", "Service", "Category", "Mode" });
-
-        var entity = Mapper.Map<GetTicketResponse>(ticket);
-        DataResponse.CleanNullableDateTime(entity);
-        return Ok(entity);
+        try
+        {
+            var result = await _ticketService.GetById(ticketId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Ticket is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize]
     [HttpGet("log")]
-    public async Task<IActionResult> GetTicketHistories(int ticketId)
+    public async Task<IActionResult> GetTicketLog(int ticketId)
     {
         try
         {
-            var histories = await _dbContext.AuditLogs
-                .Where(history => history.EntityName.Equals(Tables.TICKET) && history.EntityRowId == ticketId)
-                .Include(history => history.User)
-                .ToListAsync();
-
-            var groupedHistories = histories
-                .GroupBy(history => new { history.Timestamp, history.User.Username, history.Action })
-                .OrderByDescending(group => group.Key.Timestamp)
-                .Select(group => new
-                {
-                    group.Key.Timestamp,
-                    group.Key.Username,
-                    group.Key.Action,
-                    Entries = group.Select(entry => new
-                    {
-                        entry.Id,
-                        entry.Message
-                    }).ToList()
-                }).ToList();
-
-            return Ok(groupedHistories);
+            var logs = await _ticketService.GetTicketLog(ticketId);
+            return Ok(logs);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { Error = "An error occurred while processing your request.", Details = ex.Message });
+            return BadRequest(ex.Message);
         }
     }
 
@@ -201,35 +143,51 @@ public class TicketController : BaseController
     [HttpPost("customer/new")]
     public async Task<IActionResult> CreateTicketByCustomer([FromBody] CreateTicketCustomerRequest model)
     {
-        Ticket entity = Mapper.Map(model, new Ticket());
-        //Logic
-        entity.TicketStatus = TicketStatus.Open;
-        entity.RequesterId = CurrentUserID;
-        //Create
-        await _ticketRepository.CreateAsync(entity);
-        await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
-        return Ok("Create Successfully");
+        try
+        {
+            var entity = await _ticketService.CreateByCustomer(CurrentUserID, model);
+            await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
+            //if (await _ticketService.IsTicketAssigned(entity.Id))
+            //{
+            //    return Ok("Ticket already assigned to support.");
+            //}
+
+            //Chỉnh lại tgian hẹn giờ sau
+            string jobId = BackgroundJob.Schedule(
+                () => _assignmentService.AssignSupportJob(entity.Id),
+                TimeSpan.FromMinutes(10));
+            RecurringJob.AddOrUpdate(
+                jobId + "_Cancellation",
+                () => _assignmentService.CancelAssignSupportJob(jobId, entity.Id),
+                "*/30 * * * * *"); //Every 30 secs
+            return Ok("Ticket created and scheduled for assignment.");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
+
 
     [Authorize(Roles = Roles.CUSTOMER)]
     [HttpPut("customer/{ticketId}")]
     public async Task<IActionResult> UpdateTicketByCustomer(int ticketId, [FromBody] UpdateTicketCustomerRequest model)
     {
-        var target = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId)) ?? throw new BadRequestException("Not Found");
-        if (target.TicketStatus != TicketStatus.Open)
+        try
         {
-            throw new BadRequestException("Ticket can not be updated when it is being executed");
+            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            var updated = await _ticketService.UpdateByCustomer(ticketId, model);
+            await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
+            return Ok("Update Successfully");
         }
-
-        // Create a deep copy of the target entity
-        var original = JsonConvert.DeserializeObject<Ticket>(JsonConvert.SerializeObject(target));
-
-        // Map your model to the target entity
-        var entity = Mapper.Map(model, target);
-
-        await _ticketRepository.UpdateAsync(entity);
-        await _auditLogService.TrackUpdated(original, entity, CurrentUserID, ticketId, Tables.TICKET);
-        return Ok("Update Successfully");
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Ticket is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
 
@@ -238,39 +196,66 @@ public class TicketController : BaseController
     [HttpPost("manager/new")]
     public async Task<IActionResult> CreateTicketByManager([FromBody] CreateTicketManagerRequest model)
     {
-        Ticket entity = Mapper.Map(model, new Ticket());
-        //Logic
-        entity.TicketStatus = TicketStatus.Open;
-        //Create
-        await _ticketRepository.CreateAsync(entity);
-        await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
-        return Ok("Create Successfully");
+        try
+        {
+            Ticket entity = await _ticketService.CreateByManager(model);
+            await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
+            if (await _ticketService.IsTicketAssigned(entity.Id))
+            {
+                return Ok("Created Successfully");
+            }
+            else
+            {
+                //Chỉnh lại tgian hẹn giờ sau
+                string jobId = BackgroundJob.Schedule(
+                    () => _assignmentService.AssignSupportJob(entity.Id),
+                    TimeSpan.FromMinutes(10));
+                RecurringJob.AddOrUpdate(
+                    jobId + "_Cancellation",
+                    () => _assignmentService.CancelAssignSupportJob(jobId, entity.Id),
+                    "*/30 * * * * *"); //Every 30 
+                return Ok("Ticket created and scheduled for assignment.");
+            }
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpPut("manager/{ticketId}")]
     public async Task<IActionResult> UpdateTicketByManager(int ticketId, [FromBody] UpdateTicketManagerRequest model)
     {
-        var target =
-            await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
-
-        // Create a deep copy of the target entity
-        var original = JsonConvert.DeserializeObject<Ticket>(JsonConvert.SerializeObject(target));
-
-        var entity = Mapper.Map(model, target);
-        await _ticketRepository.UpdateAsync(entity);
-        await _auditLogService.TrackUpdated(original, entity, CurrentUserID, ticketId, Tables.TICKET);
-        return Ok(entity);
+        try
+        {
+            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            var updated = await _ticketService.UpdateByManager(ticketId, model);
+            await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
+            return Ok("Update Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Ticket is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
-    //Chưa làm Author
     [Authorize(Roles = Roles.MANAGER)]
     [HttpDelete("manager/{ticketId}")]
     public async Task<IActionResult> DeleteTicket(int ticketId)
     {
-        var target = await _ticketRepository.FoundOrThrow(x => x.Id.Equals(ticketId), new NotFoundException("Ticket not found"));
-        await _ticketRepository.DeleteAsync(target);
-        return Ok(target);
+        try
+        {
+            await _ticketService.Remove(ticketId);
+            return Ok("Removed Successfully");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
-
 }

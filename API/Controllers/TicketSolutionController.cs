@@ -86,8 +86,7 @@ namespace API.Controllers
         public async Task<IActionResult> DeleteSolution(int solutionId)
         {
             var target = await _solutionRepository.FoundOrThrow(c => c.Id.Equals(solutionId), new BadRequestException("Solution not found"));
-            //Soft Delete
-            await _solutionRepository.DeleteAsync(target);
+            await _solutionRepository.SoftDeleteAsync(target);
             return Ok("Delete Successfully");
         }
 

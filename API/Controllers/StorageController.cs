@@ -1,7 +1,7 @@
-﻿using Domain.Exceptions;
+﻿using API.Services.Interfaces;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Persistence.Services.Interfaces;
 
 namespace API.Controllers;
 

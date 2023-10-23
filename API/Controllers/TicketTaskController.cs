@@ -73,8 +73,7 @@ public class TicketTaskController : BaseController
     public async Task<IActionResult> DeleteTicketTask(int taskId)
     {
         var target = await _taskRepository.FoundOrThrow(c => c.Id.Equals(taskId), new BadRequestException("Task not found"));
-        //Soft Delete
-        await _taskRepository.DeleteAsync(target);
+        await _taskRepository.SoftDeleteAsync(target);
         return Ok("Delete Successfully");
     }
 
