@@ -1,5 +1,6 @@
 using API.DTOs.Requests.Users;
 using API.DTOs.Responses.Users;
+using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Exceptions;
 using Domain.Models;
@@ -8,7 +9,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using Persistence.Services.Interfaces;
 
 namespace API.Controllers;
 

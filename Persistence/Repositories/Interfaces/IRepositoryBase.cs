@@ -16,5 +16,6 @@ public interface IRepositoryBase<T>
     Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate, params string[] navigationProperties);
     Task UpdateAsync(T updated);
     Task DeleteAsync(T entity);
+    Task SoftDeleteAsync(T entity);
 
 }

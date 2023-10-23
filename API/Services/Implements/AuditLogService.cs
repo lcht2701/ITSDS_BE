@@ -1,24 +1,30 @@
-﻿using Domain.Models;
+﻿using API.Services.Interfaces;
+using Domain.Constants;
+using Domain.Exceptions;
+using Domain.Models;
 using Domain.Models.Tickets;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.X509;
 using Persistence.Context;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using Persistence.Services.Interfaces;
 using System.Reflection;
 using static Domain.Customs.CustomAttributes;
 
-namespace Persistence.Services.Implements;
+namespace API.Services.Implements;
 
 public class AuditLogService : IAuditLogService
 {
     private readonly ApplicationDbContext _dbContext;
-    private readonly IRepositoryBase<User> _userRepository;
-    public AuditLogService(ApplicationDbContext dbContext, IRepositoryBase<User> userRepository)
+    private readonly IRepositoryBase<Ticket> _ticketRepository;
+
+    public AuditLogService(ApplicationDbContext dbContext, IRepositoryBase<Ticket> ticketRepository)
     {
         _dbContext = dbContext;
-        _userRepository = userRepository;
+        _ticketRepository = ticketRepository;
     }
 
     public async Task TrackCreated(int id, string TableName, int userId)
@@ -52,7 +58,7 @@ public class AuditLogService : IAuditLogService
                 continue; // Skip this property
             }
 
-            if (!object.Equals(originalValue, updatedValue))
+            if (!Equals(originalValue, updatedValue))
             {
                 string message = GetUpdateMessage(property.Name, updatedValue);
 
@@ -84,6 +90,46 @@ public class AuditLogService : IAuditLogService
             return $"{propertyName} updated to \"{updatedValue}\"";
         }
     }
+
+    public async Task<object> GetLog(int id, string entityName)
+    {
+        var logs = await _dbContext.AuditLogs
+            .Where(log => log.EntityName.Equals(entityName) && log.EntityRowId == id)
+            .Include(log => log.User)
+            .ToListAsync();
+
+        var groupedHistories = logs
+            .GroupBy(log => new { log.Timestamp, log.User?.Username, log.Action })
+            .OrderByDescending(group => group.Key.Timestamp)
+            .Select(group => new
+            {
+                group.Key.Timestamp,
+                group.Key.Username,
+                group.Key.Action,
+                Entries = group.Select(entry => new
+                {
+                    entry.Id,
+                    entry.Message
+                }).ToList()
+            }).ToList();
+
+        return groupedHistories;
+    }
+
+    public async Task<object> GetOriginalModel(int id, string entityName)
+    {
+        switch (entityName)
+        {
+            case "Ticket":
+                var entity = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id));
+                var original = JsonConvert.DeserializeObject<Ticket>(JsonConvert.SerializeObject(entity));
+                return original;
+
+            default:
+                return null;
+        }
+    }
+
 
 }
 
