@@ -8,6 +8,8 @@ using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Utilities.IO;
+using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 using System.Diagnostics.Contracts;
 
@@ -27,11 +29,15 @@ namespace API.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetAllCategory()
+        public async Task<IActionResult> GetAllCategory(
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
         {
             var result = await _categoryRepository.ToListAsync();
-            var sortedList = result.OrderBy(x => x.Name);
-            return result != null ? Ok(sortedList) : Ok("No Categories");
+            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
         }
 
         [Authorize(Roles = Roles.MANAGER)]
