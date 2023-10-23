@@ -75,8 +75,7 @@ public class TeamController : BaseController
     public async Task<IActionResult> DeleteTeam(int teamId)
     {
         var target = await _teamRepository.FoundOrThrow(c => c.Id.Equals(teamId), new BadRequestException("Team not found"));
-        //Soft Delete
-        await _teamRepository.DeleteAsync(target);
+        await _teamRepository.SoftDeleteAsync(target);
         return Ok("Delete Successfully");
     }
 

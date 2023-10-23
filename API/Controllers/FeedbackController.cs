@@ -90,8 +90,7 @@ namespace API.Controllers
         public async Task<IActionResult> DeleteFeedback(int feedbackId)
         {
             var target = await _feedbackRepository.FoundOrThrow(c => c.Id.Equals(feedbackId), new BadRequestException("Feedback not found"));
-            //Soft Delete
-            await _feedbackRepository.DeleteAsync(target);
+            await _feedbackRepository.SoftDeleteAsync(target);
             return Ok("Delete Successfully");
         }
     }

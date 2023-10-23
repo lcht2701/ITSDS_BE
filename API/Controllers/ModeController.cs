@@ -61,8 +61,7 @@ namespace API.Controllers
         public async Task<IActionResult> DeleteMode(int modeId)
         {
             var target = await _moderepository.FoundOrThrow(c => c.Id.Equals(modeId), new BadRequestException("Mode not found"));
-            //Soft Delete
-            await _moderepository.DeleteAsync(target);
+            await _moderepository.SoftDeleteAsync(target);
             return Ok("Delete Successfully");
         }
     }

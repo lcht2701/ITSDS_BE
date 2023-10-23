@@ -61,8 +61,7 @@ namespace API.Controllers
         public async Task<IActionResult> DeleteServicePack(int id)
         {
             var target = await _servicePackRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service Pack not found"));
-            //Soft Delete
-            await _servicePackRepository.DeleteAsync(target);
+            await _servicePackRepository.SoftDeleteAsync(target);
             return Ok("Delete Successfully");
         }
     }
