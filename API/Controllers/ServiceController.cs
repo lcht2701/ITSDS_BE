@@ -61,8 +61,7 @@ namespace API.Controllers
         public async Task<IActionResult> DeleteService(int id)
         {
             var target = await _serviceRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service not found"));
-            //Soft Delete
-            await _serviceRepository.DeleteAsync(target);
+            await _serviceRepository.SoftDeleteAsync(target);
             return Ok("Delete Successfully");
         }
     }

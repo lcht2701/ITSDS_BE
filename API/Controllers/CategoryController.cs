@@ -82,8 +82,7 @@ namespace API.Controllers
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {
             var target = await _categoryRepository.FoundOrThrow(c => c.Id.Equals(categoryId), new BadRequestException("Category not found"));
-            //Soft Delete
-            await _categoryRepository.DeleteAsync(target);
+            await _categoryRepository.SoftDeleteAsync(target);
             return Ok("Delete Successfully");
         }
     }

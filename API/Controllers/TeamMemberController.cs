@@ -88,8 +88,7 @@ public class TeamMemberController : BaseController
     public async Task<IActionResult> RemoveTeamMember(int memberId)
     {
         var user = await _teamMemberRepository.FoundOrThrow(x => x.MemberId.Equals(memberId), new BadRequestException("User is currently not a member of any team"));
-
-        await _teamMemberRepository.DeleteAsync(user);
+        await _teamMemberRepository.SoftDeleteAsync(user);
         return Ok("Successfully");
     }
 

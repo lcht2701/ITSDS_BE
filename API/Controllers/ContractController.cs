@@ -59,8 +59,7 @@ namespace API.Controllers
         public async Task<IActionResult> DeleteContract(int id)
         {
             var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("Contract not found"));
-            //Soft Delete
-            await _contractRepository.DeleteAsync(target);
+            await _contractRepository.SoftDeleteAsync(target);
             return Ok("Delete Successfully");
         }
 
