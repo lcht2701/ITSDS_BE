@@ -23,6 +23,15 @@ namespace API.Controllers
         }
 
         [Authorize]
+        [HttpGet("/all")]
+
+        public async Task<IActionResult> GetAllMode()
+        {
+            var result = await _moderepository.ToListAsync();
+            return Ok(result);
+        }
+
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetModes(
         [FromQuery] string? filter,

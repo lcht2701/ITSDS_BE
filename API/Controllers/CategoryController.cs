@@ -28,8 +28,17 @@ namespace API.Controllers
         }
 
         [Authorize]
+        [HttpGet("/all")]
+
+        public async Task<IActionResult> GetAllCategory()
+        {
+            var result = await _categoryRepository.ToListAsync();
+            return Ok(result);
+        }
+
+        [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetAllCategory(
+        public async Task<IActionResult> GetCategories(
         [FromQuery] string? filter,
         [FromQuery] string? sort,
         [FromQuery] int page = 1,

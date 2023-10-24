@@ -22,6 +22,15 @@ namespace API.Controllers
         }
 
         [Authorize]
+        [HttpGet("/all")]
+
+        public async Task<IActionResult> GetAllService()
+        {
+            var result = await _serviceRepository.ToListAsync();
+            return Ok(result);
+        }
+
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetServices(
         [FromQuery] string? filter,
