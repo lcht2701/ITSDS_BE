@@ -22,7 +22,7 @@ namespace API.Controllers
         }
 
         [Authorize]
-        [HttpGet("/all")]
+        [HttpGet("all")]
 
         public async Task<IActionResult> GetAllService()
         {

@@ -21,7 +21,7 @@ public class TeamController : BaseController
     }
 
     [Authorize]
-    [HttpGet("/all")]
+    [HttpGet("all")]
 
     public async Task<IActionResult> GetAllTeam()
     {

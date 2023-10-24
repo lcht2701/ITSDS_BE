@@ -26,7 +26,7 @@ public class UserController : BaseController
 
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}")]
-    [HttpGet("/all")]
+    [HttpGet("all")]
 
     public async Task<IActionResult> GetAllUsers()
     {
