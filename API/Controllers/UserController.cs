@@ -24,6 +24,16 @@ public class UserController : BaseController
         _firebaseStorageService = firebaseStorageService;
     }
 
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}")]
+    [HttpGet("/all")]
+
+    public async Task<IActionResult> GetAllUsers()
+    {
+        var result = await _userRepository.ToListAsync();
+        return Ok(result);
+    }
+
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}")]
     [HttpGet]
     public async Task<IActionResult> GetUsers(
