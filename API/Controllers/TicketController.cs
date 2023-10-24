@@ -25,7 +25,7 @@ public class TicketController : BaseController
     }
 
     [Authorize]
-    [HttpGet("/all")]
+    [HttpGet("all")]
 
     public async Task<IActionResult> GetAllTicket()
     {
