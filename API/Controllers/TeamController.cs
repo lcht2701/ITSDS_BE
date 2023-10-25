@@ -20,6 +20,15 @@ public class TeamController : BaseController
         _teamRepository = teamRepository;
     }
 
+    [Authorize]
+    [HttpGet("all")]
+
+    public async Task<IActionResult> GetAllTeam()
+    {
+        var result = await _teamRepository.ToListAsync();
+        return Ok(result);
+    }
+
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet]
     public async Task<IActionResult> GetTeams(

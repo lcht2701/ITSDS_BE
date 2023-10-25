@@ -25,6 +25,15 @@ public class TicketController : BaseController
     }
 
     [Authorize]
+    [HttpGet("all")]
+
+    public async Task<IActionResult> GetAllTicket()
+    {
+        var result = await _ticketService.Get();
+        return Ok(result);
+    }
+
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetTickets(
     [FromQuery] string? filter,
