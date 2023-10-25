@@ -23,4 +23,10 @@ public interface ITicketService
     bool IsTicketDone(Ticket ticket);
     Task UpdateTicketStatus(int ticketId, TicketStatus newStatus);
     Task UpdateTicketStatusForTechnician(int ticketId, TicketStatus newStatus);
+
+    //Background jobs
+    Task AssignSupportJob(int ticketId);
+    Task CancelAssignSupportJob(string jobId, int ticketId);
+    Task CloseTicketJob(int ticketId);
+    Task CancelCloseTicketJob(string jobId, int ticketId);
 }
