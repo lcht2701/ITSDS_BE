@@ -15,16 +15,16 @@ public class TicketService : ITicketService
 {
     private readonly IRepositoryBase<Ticket> _ticketRepository;
     private readonly IRepositoryBase<Assignment> _assignmentRepository;
-    private readonly IStatusTrackingService _statusTrackingService;
     private readonly IAuditLogService _auditLogService;
+    private readonly ITicketService _ticketService;
     private readonly IMapper _mapper;
 
-    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IStatusTrackingService statusTrackingService, IAuditLogService auditLogService, IMapper mapper)
+    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IAuditLogService auditLogService, ITicketService ticketService, IMapper mapper)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
-        _statusTrackingService = statusTrackingService;
         _auditLogService = auditLogService;
+        _ticketService = ticketService;
         _mapper = mapper;
     }
 
@@ -106,7 +106,7 @@ public class TicketService : ITicketService
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
         new string[] { "Requester", "Service", "Category", "Mode" });
 
-        var filteredResult = result.Where(x => !_statusTrackingService.isTicketDone(x));
+        var filteredResult = result.Where(x => !_ticketService.isTicketDone(x));
 
         var response = filteredResult.Select(ticket =>
         {
@@ -124,7 +124,7 @@ public class TicketService : ITicketService
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
         new string[] { "Requester", "Service", "Category", "Mode" });
 
-        var filteredResult = result.Where(x => _statusTrackingService.isTicketDone(x));
+        var filteredResult = result.Where(x => _ticketService.isTicketDone(x));
 
         var response = filteredResult.Select(ticket =>
         {
@@ -174,5 +174,57 @@ public class TicketService : ITicketService
         var result = _mapper.Map(model, target);
         await _ticketRepository.UpdateAsync(result);
         return result;
+    }
+
+    public bool isTicketDone(Ticket ticket)
+    {
+        return ticket.TicketStatus is TicketStatus.Closed or TicketStatus.Cancelled;
+    }
+
+    public async Task UpdateTicketStatus(int ticketId, TicketStatus newStatus)
+    {
+
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId) ?? throw new KeyNotFoundException();
+        switch (ticket.TicketStatus)
+        {
+            case TicketStatus.Open:
+            case TicketStatus.Assigned:
+                if (ticket.TicketStatus != TicketStatus.Closed)
+                {
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                }
+                else
+                {
+                    throw new BadRequestException("Ticket Status cannot update to Closed immediately");
+                }
+                break;
+            case TicketStatus.InProgress:
+                if (ticket.TicketStatus != TicketStatus.Closed)
+                {
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                }
+                else
+                {
+                    throw new BadRequestException();
+                }
+                break;
+            case TicketStatus.Resolved:
+                break;
+            case TicketStatus.Closed:
+                break;
+            case TicketStatus.Cancelled:
+                if (ticket.TicketStatus == TicketStatus.Open)
+                {
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                }
+                else
+                {
+                    throw new BadRequestException("Ticket cannot be cancelled after it being assigned");
+                }
+                break;
+        }
     }
 }

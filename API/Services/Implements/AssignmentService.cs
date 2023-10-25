@@ -19,17 +19,15 @@ public class AssignmentService : IAssignmentService
     private readonly IRepositoryBase<Assignment> _assignmentRepository;
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IRepositoryBase<User> _userRepository;
-    private readonly IStatusTrackingService _statusTrackingService;
     private readonly ITicketService _ticketService;
     private readonly IMapper _mapper;
 
-    public AssignmentService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<User> userRepository, IStatusTrackingService statusTrackingService, ITicketService ticketService, IMapper mapper)
+    public AssignmentService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<User> userRepository, ITicketService ticketService, IMapper mapper)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
         _teamMemberRepository = teamMemberRepository;
         _userRepository = userRepository;
-        _statusTrackingService = statusTrackingService;
         _ticketService = ticketService;
         _mapper = mapper;
     }
@@ -180,7 +178,7 @@ public class AssignmentService : IAssignmentService
                 TeamId = model.TeamId
             };
             await _assignmentRepository.CreateAsync(assignment);
-            await _statusTrackingService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
+            await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
 
             return new OkObjectResult("Assigned successfully");
         }
@@ -300,7 +298,7 @@ public class AssignmentService : IAssignmentService
             };
 
             await _assignmentRepository.CreateAsync(assignment);
-            await _statusTrackingService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
+            await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
         }
         else
         {
