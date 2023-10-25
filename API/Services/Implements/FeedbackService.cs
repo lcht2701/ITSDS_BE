@@ -22,21 +22,25 @@ public class FeedbackService : IFeedbackService
         _mapper = mapper;
     }
 
-    public async Task<List<GetFeedbackResponse>> Get(int solutionId)
+    public async Task<List<GetFeedbackResponse>> Get(int solutionId, int userId)
     {
-        var result = await _feedbackRepository.WhereAsync(x => x.SolutionId.Equals(solutionId),
-            new string[] { "TicketSolution", "User" }) ?? throw new KeyNotFoundException();
+        var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
+        var result = new List<Feedback>();
+        switch (user.Role)
+        {
+            case Role.Manager:
+            case Role.Technician:
+                result = (List<Feedback>)(await _feedbackRepository.WhereAsync(x => x.SolutionId.Equals(solutionId),
+            new string[] { "TicketSolution", "User" }) ?? throw new KeyNotFoundException());
+                break;
+            case Role.Customer:
+                result = (List<Feedback>)(await _feedbackRepository.WhereAsync(x =>
+                x.SolutionId.Equals(solutionId) &&
+                x.IsPublic == true,
+                new string[] { "TicketSolution", "User" }) ?? throw new KeyNotFoundException());
+                break;
+        }
         var response = _mapper.Map<List<GetFeedbackResponse>>(result);
-        return response;
-    }
-
-    public async Task<List<GetFeedbackCustomerResponse>> GetByCustomer(int solutionId)
-    {
-        var result = await _feedbackRepository.WhereAsync(x =>
-            x.SolutionId.Equals(solutionId) &&
-            x.IsPublic == true,
-            new string[] { "TicketSolution", "User" }) ?? throw new KeyNotFoundException();
-        var response = _mapper.Map<List<GetFeedbackCustomerResponse>>(result);
         return response;
     }
 

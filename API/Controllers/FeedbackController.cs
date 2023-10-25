@@ -33,24 +33,17 @@ public class FeedbackController : BaseController
     {
         try
         {
-            var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUserID));
-            switch (user.Role)
-            {
-                case Role.Manager:
-                case Role.Technician:
-                    var result1 = await _feedbackService.Get(solutionId);
-                    var pagedResponse1 = result1.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-                    return Ok(pagedResponse1);
-                case Role.Customer:
-                    var result2 = await _feedbackService.GetByCustomer(solutionId);
-                    var pagedResponse2 = result2.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-                    return Ok(pagedResponse2);
-                default: return BadRequest();
-            }
+            var result = await _feedbackService.Get(solutionId, CurrentUserID);
+            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
         }
         catch (KeyNotFoundException)
         {
             return NotFound("Solution is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
         }
     }
 
