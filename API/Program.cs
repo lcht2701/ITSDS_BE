@@ -47,7 +47,7 @@ builder.Services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IModeService, ModeService>();
 builder.Services.AddScoped<IServicePackService, ServicePackService>();
-builder.Services.AddScoped<IStatusTrackingService, StatusTrackingService>();
+builder.Services.AddScoped<IServiceService, ServiceService>();
 builder.Services.AddScoped<ITeamMemberService, TeamMemberService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<ITicketService, TicketService>();

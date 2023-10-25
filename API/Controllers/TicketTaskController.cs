@@ -1,27 +1,21 @@
-﻿using API.DTOs.Requests.Categories;
-using API.DTOs.Requests.TicketSolutions;
-using API.DTOs.Requests.TicketTasks;
-using API.DTOs.Responses.TicketTasks;
+﻿using API.DTOs.Requests.TicketTasks;
+using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Constants.Enums;
-using Domain.Exceptions;
-using Domain.Models;
-using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
-using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
 
 [Route("/v1/itsds/ticket/task")]
 public class TicketTaskController : BaseController
 {
-    private readonly IRepositoryBase<TicketTask> _taskRepository;
+    private readonly ITicketTaskService _ticketTaskService;
 
-    public TicketTaskController(IRepositoryBase<TicketTask> taskRepository)
+    public TicketTaskController(ITicketTaskService ticketTaskService)
     {
-        _taskRepository = taskRepository;
+        _ticketTaskService = ticketTaskService;
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
@@ -32,58 +26,91 @@ public class TicketTaskController : BaseController
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 5)
     {
-        var result = await _taskRepository.WhereAsync(x => x.TicketId.Equals(ticketId),
-            new string[] { "Technician", "CreateBy", "Team", "Ticket" });
-        var response = result.Select(task =>
+        try
         {
-            var entity = Mapper.Map(task, new GetTicketTaskResponse());
-
-            DataResponse.CleanNullableDateTime(entity);
-            return entity;
-        }).ToList();
-
-        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-
-        return Ok(pagedResponse);
+            var result = await _ticketTaskService.Get(ticketId);
+            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpPost("new")]
     public async Task<IActionResult> CreateTask(int ticketId, [FromBody] CreateTicketTaskRequest model)
     {
-        var entity = Mapper.Map(model, new TicketTask());
-        entity.TicketId = ticketId;
-        entity.CreateById = CurrentUserID;
-        await _taskRepository.CreateAsync(entity);
-        return Ok("Create Successfully");
+        try
+        {
+            await _ticketTaskService.Create(ticketId, model, CurrentUserID);
+            return Ok("Create Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Ticket is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpPut("{taskId}")]
     public async Task<IActionResult> UpdateTicketTask(int taskId, [FromBody] UpdateTicketTaskRequest req)
     {
-        var target = await _taskRepository.FoundOrThrow(c => c.Id.Equals(taskId), new BadRequestException("Task not found")); 
-        TicketTask entity = Mapper.Map(req, target);
-        await _taskRepository.UpdateAsync(entity);
-        return Ok("Update Successfully");
+        try
+        {
+            await _ticketTaskService.Update(taskId, req);
+            return Ok("Updated Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Task is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpDelete("{taskId}")]
     public async Task<IActionResult> DeleteTicketTask(int taskId)
     {
-        var target = await _taskRepository.FoundOrThrow(c => c.Id.Equals(taskId), new BadRequestException("Task not found"));
-        await _taskRepository.SoftDeleteAsync(target);
-        return Ok("Delete Successfully");
+        try
+        {
+            await _ticketTaskService.Remove(taskId);
+            return Ok("Deleted Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Task is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpPatch("update-status")]
     public async Task<IActionResult> UpdateTaskStatus(int taskId, TicketTaskStatus newStatus)
     {
-        var target = await _taskRepository.FoundOrThrow(c => c.Id.Equals(taskId), new BadRequestException("Task not found"));
-        target.TaskStatus = newStatus;
-        await _taskRepository.UpdateAsync(target);
-        return Ok("Update Status Successfully");
+        try
+        {
+            await _ticketTaskService.UpdateTaskStatus(taskId, newStatus);
+            return Ok("Update Status Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Task is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }

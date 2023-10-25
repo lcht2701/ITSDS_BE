@@ -1,5 +1,6 @@
 ﻿using API.DTOs.Requests.Tickets;
 using API.DTOs.Responses.Tickets;
+using Domain.Constants.Enums;
 using Domain.Models.Tickets;
 
 namespace API.Services.Interfaces;
@@ -19,4 +20,13 @@ public interface ITicketService
     Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model);
     Task Remove(int id);
     Task<bool> IsTicketAssigned (int ticketId);
+    bool IsTicketDone(Ticket ticket);
+    Task UpdateTicketStatus(int ticketId, TicketStatus newStatus);
+    Task UpdateTicketStatusForTechnician(int ticketId, TicketStatus newStatus);
+
+    //Background jobs
+    Task AssignSupportJob(int ticketId);
+    Task CancelAssignSupportJob(string jobId, int ticketId);
+    Task CloseTicketJob(int ticketId);
+    Task CancelCloseTicketJob(string jobId, int ticketId);
 }
