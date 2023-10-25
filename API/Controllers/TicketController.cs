@@ -14,16 +14,12 @@ namespace API.Controllers;
 public class TicketController : BaseController
 {
     private readonly IAuditLogService _auditLogService;
-    private readonly IAssignmentService _assignmentService;
     private readonly ITicketService _ticketService;
-    private readonly IBackgroundJobService _backgroundJobService;
 
-    public TicketController(IAuditLogService auditLogService, IAssignmentService assignmentService, ITicketService ticketService, IBackgroundJobService backgroundJobService)
+    public TicketController(IAuditLogService auditLogService, ITicketService ticketService)
     {
         _auditLogService = auditLogService;
-        _assignmentService = assignmentService;
         _ticketService = ticketService;
-        _backgroundJobService = backgroundJobService;
     }
 
     [Authorize]
@@ -165,11 +161,11 @@ public class TicketController : BaseController
 
             //Chỉnh lại tgian hẹn giờ sau
             string jobId = BackgroundJob.Schedule(
-                () => _backgroundJobService.AssignSupportJob(entity.Id),
+                () => _ticketService.AssignSupportJob(entity.Id),
                 TimeSpan.FromMinutes(10));
             RecurringJob.AddOrUpdate(
                 jobId + "_Cancellation",
-                () => _backgroundJobService.CancelAssignSupportJob(jobId, entity.Id),
+                () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
                 "*/5 * * * * *"); //Every 5 secs
             return Ok("Ticket created and scheduled for assignment.");
         }
@@ -219,11 +215,11 @@ public class TicketController : BaseController
             {
                 //Chỉnh lại tgian hẹn giờ sau
                 string jobId = BackgroundJob.Schedule(
-                    () => _backgroundJobService.AssignSupportJob(entity.Id),
+                    () => _ticketService.AssignSupportJob(entity.Id),
                     TimeSpan.FromMinutes(10));
                 RecurringJob.AddOrUpdate(
                     jobId + "_Cancellation",
-                    () => _backgroundJobService.CancelAssignSupportJob(jobId, entity.Id),
+                    () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
                     "*/5 * * * * *"); //Every 5
                 return Ok("Ticket created and scheduled for assignment.");
             }
