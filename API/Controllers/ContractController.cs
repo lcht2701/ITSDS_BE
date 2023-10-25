@@ -5,6 +5,7 @@ using Domain.Exceptions;
 using Domain.Models.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers
@@ -19,12 +20,26 @@ namespace API.Controllers
             _contractRepository = contractRepository;
         }
 
-        [Authorize(Roles = Roles.ACCOUNTANT)]
-        [HttpGet]
-        public async Task<IActionResult> GetContracts()
+        [Authorize]
+        [HttpGet("all")]
+
+        public async Task<IActionResult> GetAllContract()
         {
             var result = await _contractRepository.ToListAsync();
             return Ok(result);
+        }
+
+        [Authorize(Roles = Roles.ACCOUNTANT)]
+        [HttpGet]
+        public async Task<IActionResult> GetContracts(
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
+        {
+            var result = await _contractRepository.ToListAsync();
+            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
         }
 
         [Authorize(Roles = Roles.ACCOUNTANT)]

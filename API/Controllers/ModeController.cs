@@ -6,6 +6,8 @@ using Domain.Exceptions;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Utilities.IO;
+using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers
@@ -21,12 +23,25 @@ namespace API.Controllers
         }
 
         [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetModes()
+        [HttpGet("all")]
+
+        public async Task<IActionResult> GetAllMode()
         {
             var result = await _moderepository.ToListAsync();
-            var sortedList = result.OrderBy(x => x.Name);
-            return Ok(sortedList);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetModes(
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
+        {
+            var result = await _moderepository.ToListAsync();
+            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
         }
 
         [Authorize(Roles = Roles.ADMIN)]

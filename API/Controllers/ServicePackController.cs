@@ -6,6 +6,7 @@ using Domain.Exceptions;
 using Domain.Models.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers
@@ -21,12 +22,25 @@ namespace API.Controllers
         }
 
         [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetServicePack()
+        [HttpGet("all")]
+
+        public async Task<IActionResult> GetAllServicePack()
         {
             var result = await _servicePackRepository.ToListAsync();
-            var sortedList = result.OrderBy(x => x.Description);
             return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetServicePack(
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
+        {
+            var result = await _servicePackRepository.ToListAsync();
+            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
         }
 
         [Authorize(Roles = Roles.MANAGER)]
