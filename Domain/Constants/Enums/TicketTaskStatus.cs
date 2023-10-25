@@ -10,12 +10,8 @@ public enum TicketTaskStatus
     Assigned,
     [Description("In Progress")]
     InProgress,
-    [Description("On Hold")]
-    OnHold,
-    [Description("Resolved")]
-    Resolved,
-    [Description("Closed")]
-    Closed,
+    [Description("Completed")]
+    Completed,
     [Description("Cancelled")]
     Cancelled
 }
