@@ -2,6 +2,8 @@
 using API.Services.Implements;
 using API.Services.Interfaces;
 using Domain.Constants;
+using Domain.Constants.Enums;
+using Domain.Exceptions;
 using Domain.Models.Tickets;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
@@ -28,6 +30,14 @@ public class TicketController : BaseController
     public async Task<IActionResult> GetAllTicket()
     {
         var result = await _ticketService.Get();
+        return Ok(result);
+    }
+    [Authorize]
+    [HttpGet("ticket-status")]
+
+    public async Task<IActionResult> GetStatuses()
+    {
+        var result = await _ticketService.GetTicketStatuses();
         return Ok(result);
     }
 
@@ -259,6 +269,48 @@ public class TicketController : BaseController
         {
             await _ticketService.Remove(ticketId);
             return Ok("Removed Successfully");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpPatch("modify-status")]
+    public async Task<IActionResult> ModifyTicketStatus(int ticketId, TicketStatus newStatus)
+    {
+        try
+        {
+            await _ticketService.ModifyTicketStatus(ticketId, newStatus, CurrentUserID);
+            return Ok("Status Updated Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Ticket is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.CUSTOMER}")]
+    [HttpPatch("cancel")]
+    public async Task<IActionResult> CancelTicket(int ticketId)
+    {
+        try
+        {
+            await _ticketService.CancelTicket(ticketId, CurrentUserID);
+            return Ok("Ticket Cancelled Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Ticket is not exist");
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {

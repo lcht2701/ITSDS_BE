@@ -12,6 +12,7 @@ public interface ITicketService
     Task<List<GetTicketResponse>> GetTicketHistory(int userId);
     Task<List<GetTicketResponse>> GetTicketAvailable(int userId);
     Task<List<GetTicketResponse>> GetAssignedTickets(int userId);
+    Task<List<GetTicketStatusesRequest>> GetTicketStatuses();
     Task<object> GetTicketLog(int id);
     Task<object> GetById(int id);
     Task<Ticket> CreateByCustomer(int userId, CreateTicketCustomerRequest model);
@@ -19,10 +20,11 @@ public interface ITicketService
     Task<Ticket> CreateByManager(CreateTicketManagerRequest model);
     Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model);
     Task Remove(int id);
-    Task<bool> IsTicketAssigned (int ticketId);
+    Task<bool> IsTicketAssigned(int ticketId);
     bool IsTicketDone(Ticket ticket);
     Task UpdateTicketStatus(int ticketId, TicketStatus newStatus);
-    Task UpdateTicketStatusForTechnician(int ticketId, TicketStatus newStatus);
+    Task ModifyTicketStatus(int ticketId, TicketStatus newStatus, int userId);
+    Task CancelTicket(int ticketId, int userId);
 
     //Background jobs
     Task AssignSupportJob(int ticketId);
