@@ -8,7 +8,6 @@ namespace API.DTOs.Requests.Feedbacks
         [Required]
         public string? Comment { get; set; }
 
-        [Required]
         [DefaultValue(false)]
         public bool? IsPublic { get; set; }
     }
