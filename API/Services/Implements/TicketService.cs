@@ -158,10 +158,10 @@ public class TicketService : ITicketService
     {
         var target =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException();
-        if (target.TicketStatus != TicketStatus.Open || target.TicketStatus != TicketStatus.Assigned)
-        {
-            throw new BadRequestException("Ticket can not be updated when it is being executed");
-        }
+        //if (target.TicketStatus != TicketStatus.Open || target.TicketStatus != TicketStatus.Assigned)
+        //{
+        //    throw new BadRequestException("Ticket can not be updated when it is being executed");
+        //}
         var result = _mapper.Map(model, target);
         await _ticketRepository.UpdateAsync(result);
         return result;
