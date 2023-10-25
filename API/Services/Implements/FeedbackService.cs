@@ -1,10 +1,12 @@
 ﻿using API.DTOs.Requests.Feedbacks;
 using API.DTOs.Responses.Feedbacks;
+using API.DTOs.Responses.TicketSolutions;
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Constants.Enums;
 using Domain.Models;
 using Domain.Models.Tickets;
+using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
@@ -25,24 +27,26 @@ public class FeedbackService : IFeedbackService
     public async Task<List<GetFeedbackResponse>> Get(int solutionId, int userId)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
-        var result = new List<Feedback>();
-        switch (user.Role)
+
+        var feedbackQuery = await _feedbackRepository
+            .WhereAsync(x => x.SolutionId.Equals(solutionId), new string[] { "TicketSolution", "User" });
+
+        if (user.Role == Role.Customer)
         {
-            case Role.Manager:
-            case Role.Technician:
-                result = (List<Feedback>)(await _feedbackRepository.WhereAsync(x => x.SolutionId.Equals(solutionId),
-            new string[] { "TicketSolution", "User" }) ?? throw new KeyNotFoundException());
-                break;
-            case Role.Customer:
-                result = (List<Feedback>)(await _feedbackRepository.WhereAsync(x =>
-                x.SolutionId.Equals(solutionId) &&
-                x.IsPublic == true,
-                new string[] { "TicketSolution", "User" }) ?? throw new KeyNotFoundException());
-                break;
+            feedbackQuery = (IList<Feedback>)feedbackQuery.Where(x => x.IsPublic == true);
         }
-        var response = _mapper.Map<List<GetFeedbackResponse>>(result);
+
+        var result = feedbackQuery.ToList() ?? throw new KeyNotFoundException();
+        var response = result.Select(feedback =>
+        {
+            var entity = _mapper.Map<GetFeedbackResponse>(feedback);
+            DataResponse.CleanNullableDateTime(entity);
+            return entity;
+        }).ToList();
+
         return response;
     }
+
 
     public async Task Create(int solutionId, CreateFeedbackRequest model, int userId)
     {

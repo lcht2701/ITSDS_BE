@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Requests.TicketSolutions;
+using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
@@ -6,107 +7,183 @@ using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Ocsp;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 
-namespace API.Controllers
+namespace API.Controllers;
+
+[Route("/v1/itsds/solution")]
+public class TicketSolutionController : BaseController
 {
-    [Route("/v1/itsds/solution")]
-    public class TicketSolutionController : BaseController
+    private readonly ITicketSolutionService _ticketSolutionService;
+
+    public TicketSolutionController(ITicketSolutionService ticketSolutionService)
     {
-        private readonly IRepositoryBase<TicketSolution> _solutionRepository;
-        private readonly IRepositoryBase<User> _userRepository;
+        _ticketSolutionService = ticketSolutionService;
+    }
 
-        public TicketSolutionController(IRepositoryBase<TicketSolution> solutionRepository, IRepositoryBase<User> userRepository)
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
+    [HttpGet]
+    public async Task<IActionResult> GetSolutions()
+    {
+        try
         {
-            _solutionRepository = solutionRepository;
-            _userRepository = userRepository;
+            var result = await _ticketSolutionService.Get(CurrentUserID);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
+    [HttpGet("{solutionId}")]
+    public async Task<IActionResult> GetSolutionById(int solutionId)
+    {
+        try
+        {
+            var result = await _ticketSolutionService.GetById(solutionId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Solution is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpPost("new")]
+    public async Task<IActionResult> CreateSolution([FromBody] CreateTicketSolutionRequest model)
+    {
+        try
+        {
+            await _ticketSolutionService.Create(model);
+            return Ok("Created Successfully");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpPut("{solutionId}")]
+    public async Task<IActionResult> UpdateSolution(int solutionId, [FromBody] UpdateTicketSolutionRequest req)
+    {
+        try
+        {
+            await _ticketSolutionService.Update(solutionId, req);
+            return Ok("Updated Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Solution is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
         }
 
-        [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
-        [HttpGet]
-        public async Task<IActionResult> GetAllSolutions()
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpDelete("{categoryId}")]
+    public async Task<IActionResult> DeleteSolution(int solutionId)
+    {
+        try
         {
-            var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUserID));
-            List<TicketSolution> result;
-            if (user.Role == Role.Customer)
-            {
-                result = (List<TicketSolution>)await _solutionRepository.WhereAsync(
-                    x => x.IsPublic == true &&
-                    x.IsApproved == true &&
-                    x.ExpiredDate <= DateTime.UtcNow,
-                    new string[] { "Category", "Owner" });
-            }
-            else
-            {
-                result = (List<TicketSolution>)await _solutionRepository.GetAsync(navigationProperties: new string[] { "Category", "Owner" });
-            }
-
-            var response = result.Select(solution =>
-            {
-                var entity = Mapper.Map(solution, new TicketSolution());
-                DataResponse.CleanNullableDateTime(entity);
-                return entity;
-            }).ToList();
-
-            return response != null ? Ok(response) : Ok();
+            await _ticketSolutionService.Remove(solutionId);
+            return Ok("Deleted Successfully");
         }
-
-        [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
-        [HttpGet("{solutionId}")]
-        public async Task<IActionResult> GetSolutionById(int solutionId)
+        catch (KeyNotFoundException)
         {
-            var result = await _solutionRepository.FirstOrDefaultAsync(x => x.Id.Equals(solutionId),
-                new string[] { "Category", "Owner" });
-            return result != null ? Ok(result) : throw new BadRequestException("Solution not found");
+            return NotFound("Solution is not exist");
         }
-
-        [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
-        [HttpPost("new")]
-        public async Task<IActionResult> CreateSolution([FromBody] CreateTicketSolutionRequest model)
+        catch (Exception ex)
         {
-            var entity = Mapper.Map(model, new TicketSolution());
-            await _solutionRepository.CreateAsync(entity);
-            return Ok("Create Successfully");
+            return BadRequest(ex.Message);
         }
+    }
 
-        [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
-        [HttpPut("{solutionId}")]
-        public async Task<IActionResult> UpdateSolution(int solutionId, [FromBody] UpdateTicketSolutionRequest req)
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpPatch("change-public")]
+    public async Task<IActionResult> ChangePublic(int solutionId)
+    {
+        try
         {
-            var target = await _solutionRepository.FoundOrThrow(c => c.Id.Equals(solutionId), new BadRequestException("Solution not found"));
-            TicketSolution entity = Mapper.Map(req, target);
-            await _solutionRepository.UpdateAsync(entity);
-            return Accepted("Update Successfully");
+            await _ticketSolutionService.ChangePublic(solutionId);
+            return Ok("Updated Successfully");
         }
-
-        [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
-        [HttpDelete("{categoryId}")]
-        public async Task<IActionResult> DeleteSolution(int solutionId)
+        catch (KeyNotFoundException)
         {
-            var target = await _solutionRepository.FoundOrThrow(c => c.Id.Equals(solutionId), new BadRequestException("Solution not found"));
-            await _solutionRepository.SoftDeleteAsync(target);
-            return Ok("Delete Successfully");
+            return NotFound("Solution is not exist");
         }
-
-        [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
-        [HttpDelete("change-public")]
-        public async Task<IActionResult> ChangePublic(int solutionId)
+        catch (Exception ex)
         {
-            var target = await _solutionRepository.FoundOrThrow(c => c.Id.Equals(solutionId), new BadRequestException("Solution not found"));
-            target.IsPublic = !target.IsPublic;
-            await _solutionRepository.UpdateAsync(target);
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpPatch("approve")]
+    public async Task<IActionResult> ApproveSolution(int solutionId)
+    {
+        try
+        {
+            await _ticketSolutionService.Approve(solutionId);
             return Ok("Update Successfully");
         }
-
-        [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
-        [HttpDelete("approve")]
-        public async Task<IActionResult> ApproveSolution(int solutionId)
+        catch (KeyNotFoundException)
         {
-            var target = await _solutionRepository.FoundOrThrow(c => c.Id.Equals(solutionId), new BadRequestException("Solution not found"));
-            target.IsApproved = !target.IsApproved;
-            await _solutionRepository.UpdateAsync(target);
-            return Ok("Approve Successfully");
+            return NotFound("Solution is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpPatch("reject")]
+    public async Task<IActionResult> RejectSolution(int solutionId)
+    {
+        try
+        {
+            await _ticketSolutionService.Reject(solutionId);
+            return Ok("Update Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Solution is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.TECHNICIAN)]
+    [HttpPatch("submit-approval")]
+    public async Task<IActionResult> SubmitForApproval(int solutionId)
+    {
+        try
+        {
+            await _ticketSolutionService.SubmitForApproval(solutionId);
+            return Ok("Update Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Solution is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
         }
     }
 }
