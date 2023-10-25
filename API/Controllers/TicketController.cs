@@ -16,12 +16,14 @@ public class TicketController : BaseController
     private readonly IAuditLogService _auditLogService;
     private readonly IAssignmentService _assignmentService;
     private readonly ITicketService _ticketService;
+    private readonly IBackgroundJobService _backgroundJobService;
 
-    public TicketController(IAuditLogService auditLogService, IAssignmentService assignmentService, ITicketService ticketService)
+    public TicketController(IAuditLogService auditLogService, IAssignmentService assignmentService, ITicketService ticketService, IBackgroundJobService backgroundJobService)
     {
         _auditLogService = auditLogService;
         _assignmentService = assignmentService;
         _ticketService = ticketService;
+        _backgroundJobService = backgroundJobService;
     }
 
     [Authorize]
@@ -163,12 +165,12 @@ public class TicketController : BaseController
 
             //Chỉnh lại tgian hẹn giờ sau
             string jobId = BackgroundJob.Schedule(
-                () => _assignmentService.AssignSupportJob(entity.Id),
+                () => _backgroundJobService.AssignSupportJob(entity.Id),
                 TimeSpan.FromMinutes(10));
             RecurringJob.AddOrUpdate(
                 jobId + "_Cancellation",
-                () => _assignmentService.CancelAssignSupportJob(jobId, entity.Id),
-                "*/30 * * * * *"); //Every 30 secs
+                () => _backgroundJobService.CancelAssignSupportJob(jobId, entity.Id),
+                "*/5 * * * * *"); //Every 5 secs
             return Ok("Ticket created and scheduled for assignment.");
         }
         catch (Exception ex)
@@ -217,12 +219,12 @@ public class TicketController : BaseController
             {
                 //Chỉnh lại tgian hẹn giờ sau
                 string jobId = BackgroundJob.Schedule(
-                    () => _assignmentService.AssignSupportJob(entity.Id),
+                    () => _backgroundJobService.AssignSupportJob(entity.Id),
                     TimeSpan.FromMinutes(10));
                 RecurringJob.AddOrUpdate(
                     jobId + "_Cancellation",
-                    () => _assignmentService.CancelAssignSupportJob(jobId, entity.Id),
-                    "*/30 * * * * *"); //Every 30 
+                    () => _backgroundJobService.CancelAssignSupportJob(jobId, entity.Id),
+                    "*/5 * * * * *"); //Every 5
                 return Ok("Ticket created and scheduled for assignment.");
             }
         }

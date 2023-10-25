@@ -20,6 +20,7 @@ public interface ITicketService
     Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model);
     Task Remove(int id);
     Task<bool> IsTicketAssigned (int ticketId);
-    bool isTicketDone(Ticket ticket);
+    bool IsTicketDone(Ticket ticket);
     Task UpdateTicketStatus(int ticketId, TicketStatus newStatus);
+    Task UpdateTicketStatusForTechnician(int ticketId, TicketStatus newStatus);
 }

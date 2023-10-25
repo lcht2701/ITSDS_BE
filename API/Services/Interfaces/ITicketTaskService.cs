@@ -11,6 +11,6 @@ namespace API.Services.Interfaces
         Task Create(int ticketId, CreateTicketTaskRequest model, int createdBy);
         Task Update(int taskId, UpdateTicketTaskRequest model);
         Task Remove(int taskId);
-        Task UpdateStatus(int taskId, TicketTaskStatus newStatus);
+        Task UpdateTaskStatus(int taskId, TicketTaskStatus newStatus);
     }
 }

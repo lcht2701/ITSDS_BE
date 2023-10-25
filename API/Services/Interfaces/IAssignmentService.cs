@@ -13,9 +13,6 @@ namespace API.Services.Interfaces
         Task<IActionResult> Update(int ticketId, UpdateTicketAssignmentManualRequest model);
         Task Remove(int ticketId);
         Task<object> IsTechnicianMemberOfTeamAsync(int? technicianId, int? teamId);
-        Task<int> FindTechnicianWithLeastAssignments(int? teamId);
-        //Hangfire
-        Task AssignSupportJob(int ticketId);
-        Task CancelAssignSupportJob(string jobId, int ticketId);
+        Task<int> FindTechnicianWithLeastAssignments(int? teamId);      
     }
 }

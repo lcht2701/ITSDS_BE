@@ -12,23 +12,33 @@ namespace API.Services.Implements;
 public class TicketTaskService : ITicketTaskService
 {
     private readonly IRepositoryBase<TicketTask> _taskRepository;
+    private readonly IRepositoryBase<Ticket> _ticketRepository;
+    private readonly ITicketService _ticketService;
     private readonly IMapper _mapper;
 
-    public TicketTaskService(IRepositoryBase<TicketTask> taskRepository, IMapper mapper)
+    public TicketTaskService(IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<Ticket> ticketRepository, ITicketService ticketService, IMapper mapper)
     {
         _taskRepository = taskRepository;
+        _ticketRepository = ticketRepository;
+        _ticketService = ticketService;
         _mapper = mapper;
     }
 
     public async Task Create(int ticketId, CreateTicketTaskRequest model, int createdBy)
     {
-        var entity = _mapper.Map(model, new TicketTask()) ?? throw new KeyNotFoundException();
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId)) ?? throw new KeyNotFoundException();
+        var entity = _mapper.Map(model, new TicketTask());
         entity.TicketId = ticketId;
         entity.CreateById = createdBy;
         entity.TaskStatus = TicketTaskStatus.Open;
         if (entity.TechnicianId != null || entity.TeamId != null)
         {
             entity.TaskStatus = TicketTaskStatus.Assigned;
+        }
+        var tasksCount = await Get(ticketId);
+        if (tasksCount.Count == 0 && ticket.TicketStatus == TicketStatus.Assigned)
+        {
+            await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.InProgress);
         }
         await _taskRepository.CreateAsync(entity);
     }
@@ -59,7 +69,7 @@ public class TicketTaskService : ITicketTaskService
         await _taskRepository.UpdateAsync(entity);
     }
 
-    public async Task UpdateStatus(int taskId, TicketTaskStatus newStatus)
+    public async Task UpdateTaskStatus(int taskId, TicketTaskStatus newStatus)
     {
         var target = await _taskRepository.FirstOrDefaultAsync(c => c.Id.Equals(taskId)) ?? throw new KeyNotFoundException();
         target.TaskStatus = newStatus;

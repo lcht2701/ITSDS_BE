@@ -201,7 +201,7 @@ public class AssignmentService : IAssignmentService
             switch (GetAssignmentCase(model.TechnicianId, model.TeamId))
             {
                 case AssignmentCase.NullNull:
-                    await _assignmentRepository.DeleteAsync(target);
+                    await _assignmentRepository.SoftDeleteAsync(target);
                     break;
 
                 case AssignmentCase.NotNullNull:
@@ -234,7 +234,7 @@ public class AssignmentService : IAssignmentService
 
     public async Task Remove(int ticketId)
     {
-        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(ticketId));
+        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(ticketId)) ?? throw new KeyNotFoundException();
         await _assignmentRepository.SoftDeleteAsync(entity);
     }
 
@@ -256,68 +256,5 @@ public class AssignmentService : IAssignmentService
         {
             return AssignmentCase.NotNullNotNull;
         }
-    }
-
-    public async Task AssignSupportJob(int ticketId)
-    {
-        var ticket = await _ticketRepository.FirstOrDefaultAsync(t => t.Id == ticketId);
-
-        if (ticket == null)
-        {
-            // Handle the case where the ticket does not exist
-            return;
-        }
-
-        var availableTechnicians = await _userRepository.WhereAsync(x => x.Role == Role.Technician && x.IsActive == true);
-
-        if (!availableTechnicians.Any())
-        {
-            // Handle the case where no technicians are available
-            return;
-        }
-
-        int selectedTechnician = -1;
-        int minValue = int.MaxValue;
-
-        foreach (var technician in availableTechnicians)
-        {
-            int count = await GetNumberOfAssignmentsForTechnician(technician.Id);
-            if (count < minValue)
-            {
-                minValue = count;
-                selectedTechnician = technician.Id;
-            }
-        }
-
-        if (selectedTechnician != -1)
-        {
-            var assignment = new Assignment()
-            {
-                TicketId = ticketId,
-                TechnicianId = selectedTechnician
-            };
-
-            await _assignmentRepository.CreateAsync(assignment);
-            await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
-        }
-        else
-        {
-            // Handle the case where no technician is available
-            // You might want to log this or take other actions
-        }
-    }
-
-    public async Task CancelAssignSupportJob(string jobId, int ticketId)
-    {
-        if (await _ticketService.IsTicketAssigned(ticketId) == true)
-        {
-            BackgroundJob.Delete(jobId);
-        }
-    }
-
-    private async Task<int> GetNumberOfAssignmentsForTechnician(int technicianId)
-    {
-        var result = await _assignmentRepository.WhereAsync(x => x.TechnicianId == technicianId);
-        return result.Count;
     }
 }

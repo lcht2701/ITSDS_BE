@@ -137,6 +137,10 @@ public class AssignmentController : BaseController
             await _assignmentService.Remove(ticketId);
             return Ok("Removed Successfully.");
         }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Assignment is not exist");
+        }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);

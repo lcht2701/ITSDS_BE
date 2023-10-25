@@ -101,7 +101,7 @@ public class TicketTaskController : BaseController
     {
         try
         {
-            await _ticketTaskService.UpdateStatus(taskId, newStatus);
+            await _ticketTaskService.UpdateTaskStatus(taskId, newStatus);
             return Ok("Update Status Successfully");
         }
         catch (KeyNotFoundException)
