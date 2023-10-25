@@ -1,6 +1,8 @@
 ﻿using API.Services.Interfaces;
 using Domain.Constants.Enums;
+using Domain.Exceptions;
 using Domain.Models.Tickets;
+using Microsoft.AspNetCore.Mvc;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
@@ -21,17 +23,50 @@ public class StatusTrackingService : IStatusTrackingService
         return ticket.TicketStatus is TicketStatus.Closed or TicketStatus.Cancelled;
     }
 
-    public async Task<bool> UpdateTicketStatusTo(Ticket ticket, TicketStatus newStatus)
+    public async Task UpdateTicketStatus(int ticketId, TicketStatus newStatus)
     {
-        try
+
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId) ?? throw new KeyNotFoundException();
+        switch (ticket.TicketStatus)
         {
-            ticket.TicketStatus = newStatus;
-            await _ticketRepository.UpdateAsync(ticket);
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
+            case TicketStatus.Open:
+            case TicketStatus.Assigned:
+                if (ticket.TicketStatus != TicketStatus.Closed)
+                {
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                }
+                else
+                {
+                    throw new BadRequestException("Ticket Status cannot update to Closed immediately");
+                }
+                break;
+            case TicketStatus.InProgress:
+                if (ticket.TicketStatus != TicketStatus.Closed)
+                {
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                }
+                else
+                {
+                    throw new BadRequestException();
+                }
+                break;
+            case TicketStatus.Resolved:
+                break;
+            case TicketStatus.Closed:
+                break;
+            case TicketStatus.Cancelled:
+                if (ticket.TicketStatus == TicketStatus.Open)
+                {
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                }
+                else
+                {
+                    throw new BadRequestException("Ticket cannot be cancelled after it being assigned");
+                }
+                break;
         }
     }
 }

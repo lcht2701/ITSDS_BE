@@ -11,6 +11,6 @@ namespace API.Services.Interfaces
     public interface IStatusTrackingService
     {
         bool isTicketDone(Ticket ticket);
-        Task<bool> UpdateTicketStatusTo(Ticket ticket, TicketStatus newStatus);
+        Task UpdateTicketStatus(int ticketId, TicketStatus newStatus);
     }
 }

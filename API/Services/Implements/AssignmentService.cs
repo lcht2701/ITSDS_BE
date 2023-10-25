@@ -180,7 +180,7 @@ public class AssignmentService : IAssignmentService
                 TeamId = model.TeamId
             };
             await _assignmentRepository.CreateAsync(assignment);
-            await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
+            await _statusTrackingService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
 
             return new OkObjectResult("Assigned successfully");
         }
@@ -300,7 +300,7 @@ public class AssignmentService : IAssignmentService
             };
 
             await _assignmentRepository.CreateAsync(assignment);
-            await _statusTrackingService.UpdateTicketStatusTo(ticket, TicketStatus.Assigned);
+            await _statusTrackingService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
         }
         else
         {
