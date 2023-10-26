@@ -24,21 +24,20 @@ public class TicketTaskService : ITicketTaskService
         _mapper = mapper;
     }
 
-    public async Task Create(int ticketId, CreateTicketTaskRequest model, int createdBy)
+    public async Task Create(CreateTicketTaskRequest model, int createdBy)
     {
-        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId)) ?? throw new KeyNotFoundException();
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.TicketId)) ?? throw new KeyNotFoundException();
         var entity = _mapper.Map(model, new TicketTask());
-        entity.TicketId = ticketId;
         entity.CreateById = createdBy;
         entity.TaskStatus = TicketTaskStatus.Open;
         if (entity.TechnicianId != null || entity.TeamId != null)
         {
             entity.TaskStatus = TicketTaskStatus.Assigned;
         }
-        var tasksCount = await Get(ticketId);
+        var tasksCount = await Get((int)model.TicketId);
         if (tasksCount.Count == 0 && ticket.TicketStatus == TicketStatus.Assigned)
         {
-            await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.InProgress);
+            await _ticketService.UpdateTicketStatus(model.TicketId, TicketStatus.InProgress);
         }
         await _taskRepository.CreateAsync(entity);
     }

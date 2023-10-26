@@ -8,7 +8,7 @@ namespace API.Services.Interfaces
     public interface ITicketTaskService
     {
         Task<List<GetTicketTaskResponse>> Get(int ticketId);
-        Task Create(int ticketId, CreateTicketTaskRequest model, int createdBy);
+        Task Create(CreateTicketTaskRequest model, int createdBy);
         Task Update(int taskId, UpdateTicketTaskRequest model);
         Task Remove(int taskId);
         Task UpdateTaskStatus(int taskId, TicketTaskStatus newStatus);

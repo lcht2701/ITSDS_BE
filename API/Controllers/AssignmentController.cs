@@ -1,5 +1,6 @@
 ﻿using API.DTOs.Requests.Assignments;
 using API.Services.Interfaces;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -101,8 +102,16 @@ public class AssignmentController : BaseController
     {
         try
         {
-            var result = await _assignmentService.Assign(ticketId, req);
-            return result;
+            await _assignmentService.Assign(ticketId, req);
+            return Ok("Assigned Ticket Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
@@ -118,11 +127,20 @@ public class AssignmentController : BaseController
     {
         try
         {
-            var result = await _assignmentService.Update(ticketId, req);
-            return result;
+            await _assignmentService.Update(ticketId, req);
+            return Ok("Updated Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
+
             return BadRequest(ex.Message);
         }
     }
