@@ -1,15 +1,8 @@
 ﻿using API.DTOs.Requests.TicketSolutions;
 using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Constants.Enums;
-using Domain.Exceptions;
-using Domain.Models;
-using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Ocsp;
-using Persistence.Helpers;
-using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
 
@@ -93,7 +86,7 @@ public class TicketSolutionController : BaseController
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
-    [HttpDelete("{categoryId}")]
+    [HttpDelete("{solutionId}")]
     public async Task<IActionResult> DeleteSolution(int solutionId)
     {
         try
@@ -168,22 +161,22 @@ public class TicketSolutionController : BaseController
         }
     }
 
-    [Authorize(Roles = Roles.TECHNICIAN)]
-    [HttpPatch("submit-approval")]
-    public async Task<IActionResult> SubmitForApproval(int solutionId)
-    {
-        try
-        {
-            await _ticketSolutionService.SubmitForApproval(solutionId);
-            return Ok("Update Successfully");
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound("Solution is not exist");
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
+    // [Authorize(Roles = Roles.TECHNICIAN)]
+    // [HttpPatch("submit-approval")]
+    // public async Task<IActionResult> SubmitForApproval(int solutionId)
+    // {
+    //     try
+    //     {
+    //         await _ticketSolutionService.SubmitForApproval(solutionId);
+    //         return Ok("Update Successfully");
+    //     }
+    //     catch (KeyNotFoundException)
+    //     {
+    //         return NotFound("Solution is not exist");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         return BadRequest(ex.Message);
+    //     }
+    // }
 }

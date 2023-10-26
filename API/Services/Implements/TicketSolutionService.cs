@@ -18,7 +18,8 @@ public class TicketSolutionService : ITicketSolutionService
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IMapper _mapper;
 
-    public TicketSolutionService(IRepositoryBase<TicketSolution> solutionRepository, IRepositoryBase<User> userRepository, IMapper mapper)
+    public TicketSolutionService(IRepositoryBase<TicketSolution> solutionRepository,
+        IRepositoryBase<User> userRepository, IMapper mapper)
     {
         _solutionRepository = solutionRepository;
         _userRepository = userRepository;
@@ -29,15 +30,13 @@ public class TicketSolutionService : ITicketSolutionService
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
 
-        var solutionQuery = await _solutionRepository
+        var result = await _solutionRepository
             .GetAsync(navigationProperties: new string[] { "Category", "Owner" });
 
         if (user.Role == Role.Customer)
         {
-            solutionQuery = solutionQuery.Where(x => x.IsPublic == true && x.IsApproved == true);
+            result = result.Where(x => x.IsPublic == true && x.IsApproved == true);
         }
-
-        var result = solutionQuery.ToList();
 
         var response = result.Select(solution =>
         {
@@ -57,6 +56,7 @@ public class TicketSolutionService : ITicketSolutionService
         var response = _mapper.Map(result, new GetTicketSolutionResponse());
         return response;
     }
+
     public async Task Create(CreateTicketSolutionRequest model)
     {
         var entity = _mapper.Map(model, new TicketSolution());
@@ -65,34 +65,44 @@ public class TicketSolutionService : ITicketSolutionService
 
     public async Task Update(int solutionId, UpdateTicketSolutionRequest model)
     {
-        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ?? throw new KeyNotFoundException();
+        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ??
+                     throw new KeyNotFoundException();
         var entity = _mapper.Map(model, target);
         await _solutionRepository.UpdateAsync(entity);
     }
+
     public async Task Remove(int solutionId)
     {
-        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ?? throw new KeyNotFoundException();
+        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ??
+                     throw new KeyNotFoundException();
         await _solutionRepository.SoftDeleteAsync(target);
     }
+
     public async Task Approve(int solutionId)
     {
-        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ?? throw new KeyNotFoundException();
+        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ??
+                     throw new KeyNotFoundException();
         target.IsApproved = true;
         await _solutionRepository.UpdateAsync(target);
     }
+
     public async Task Reject(int solutionId)
     {
-        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ?? throw new KeyNotFoundException();
+        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ??
+                     throw new KeyNotFoundException();
         target.IsApproved = false;
         await _solutionRepository.UpdateAsync(target);
     }
+
     public async Task SubmitForApproval(int solutionId)
     {
         //handle later
     }
+
     public async Task ChangePublic(int solutionId)
     {
-        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ?? throw new KeyNotFoundException();
+        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ??
+                     throw new KeyNotFoundException();
         target.IsPublic = !target.IsPublic;
         await _solutionRepository.UpdateAsync(target);
     }

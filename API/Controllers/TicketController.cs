@@ -26,15 +26,14 @@ public class TicketController : BaseController
 
     [Authorize]
     [HttpGet("all")]
-
     public async Task<IActionResult> GetAllTicket()
     {
         var result = await _ticketService.Get();
         return Ok(result);
     }
+
     [Authorize]
     [HttpGet("ticket-status")]
-
     public async Task<IActionResult> GetStatuses()
     {
         var result = await _ticketService.GetTicketStatuses();
@@ -44,10 +43,10 @@ public class TicketController : BaseController
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetTickets(
-    [FromQuery] string? filter,
-    [FromQuery] string? sort,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 5)
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
     {
         var response = await _ticketService.Get();
         var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
@@ -59,10 +58,10 @@ public class TicketController : BaseController
     [Authorize]
     [HttpGet("user/{userId}")]
     public async Task<IActionResult> GetTicketsOfUser(int userId,
-    [FromQuery] string? filter,
-    [FromQuery] string? sort,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 5)
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
     {
         try
         {
@@ -89,7 +88,6 @@ public class TicketController : BaseController
         {
             return BadRequest(ex.Message);
         }
-
     }
 
     [Authorize(Roles = Roles.CUSTOMER)]
@@ -208,7 +206,6 @@ public class TicketController : BaseController
     }
 
 
-
     [Authorize(Roles = Roles.MANAGER)]
     [HttpPost("manager/new")]
     public async Task<IActionResult> CreateTicketByManager([FromBody] CreateTicketManagerRequest model)
@@ -282,7 +279,10 @@ public class TicketController : BaseController
     {
         try
         {
+            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
             await _ticketService.ModifyTicketStatus(ticketId, newStatus, CurrentUserID);
+            var updated = await _ticketService.GetById(ticketId);
+            await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
             return Ok("Status Updated Successfully");
         }
         catch (KeyNotFoundException)
@@ -301,7 +301,10 @@ public class TicketController : BaseController
     {
         try
         {
+            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
             await _ticketService.CancelTicket(ticketId, CurrentUserID);
+            var updated = await _ticketService.GetById(ticketId);
+            await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
             return Ok("Ticket Cancelled Successfully");
         }
         catch (KeyNotFoundException)
