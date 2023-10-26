@@ -49,11 +49,11 @@ public class FeedbackController : BaseController
 
     [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpPost]
-    public async Task<IActionResult> CreateFeedback(int solutionId, [FromBody] CreateFeedbackRequest model)
+    public async Task<IActionResult> CreateFeedback([FromBody] CreateFeedbackRequest model)
     {
         try
         {
-            await _feedbackService.Create(solutionId, model, CurrentUserID);
+            await _feedbackService.Create(model, CurrentUserID);
             return Ok("Created Successfully");
         }
         catch (Exception ex)

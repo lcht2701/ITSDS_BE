@@ -48,11 +48,10 @@ public class FeedbackService : IFeedbackService
     }
 
 
-    public async Task Create(int solutionId, CreateFeedbackRequest model, int userId)
+    public async Task Create(CreateFeedbackRequest model, int userId)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
         var entity = _mapper.Map(model, new Feedback());
-        entity.SolutionId = solutionId;
         entity.UserId = userId;
         if (user.Role == Role.Customer)
         {
