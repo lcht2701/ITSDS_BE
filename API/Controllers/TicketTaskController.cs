@@ -40,11 +40,11 @@ public class TicketTaskController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpPost("new")]
-    public async Task<IActionResult> CreateTask(int ticketId, [FromBody] CreateTicketTaskRequest model)
+    public async Task<IActionResult> CreateTask([FromBody] CreateTicketTaskRequest model)
     {
         try
         {
-            await _ticketTaskService.Create(ticketId, model, CurrentUserID);
+            await _ticketTaskService.Create(model, CurrentUserID);
             return Ok("Create Successfully");
         }
         catch (KeyNotFoundException)

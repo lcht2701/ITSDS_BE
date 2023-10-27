@@ -3,8 +3,11 @@ using API.Services.Implements;
 using API.Services.Interfaces;
 using API.Utils;
 using Domain.Application.AppConfig;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -19,7 +22,6 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 var CorsPolicy = "CorsPolicy";
 
-// Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var connectionString = configuration.GetConnectionString("DefaultConnection");
@@ -33,6 +35,7 @@ builder.Services.AddHangfire(config => config
 builder.Services.AddHangfireServer();
 
 
+// Add services to the container.
 builder.Services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
 builder.Services.AddSingleton<FirebaseStorageService>();
 
@@ -127,6 +130,11 @@ builder.Services.AddCors(options =>
                     .AllowAnyHeader()
                     .AllowAnyMethod();
         });
+});
+
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-twxch-bd8d0b1075.json")),
 });
 
 var app = builder.Build();

@@ -9,6 +9,8 @@ namespace API.DTOs.Requests.TicketTasks
     public class CreateTicketTaskRequest : IMapTo<TicketTask>
     {
         [Required]
+        public int? TicketId { get; set; }
+        [Required]
         public string? Title { get; set; }
         public string? Description { get; set; }
         [Required]
