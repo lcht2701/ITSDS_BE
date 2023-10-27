@@ -14,12 +14,14 @@ namespace API.Services.Implements;
 public class FeedbackService : IFeedbackService
 {
     private readonly IRepositoryBase<Feedback> _feedbackRepository;
+    private readonly IRepositoryBase<TicketSolution> _solutionRepository;
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IMapper _mapper;
 
-    public FeedbackService(IRepositoryBase<Feedback> feedbackRepository, IRepositoryBase<User> userRepository, IMapper mapper)
+    public FeedbackService(IRepositoryBase<Feedback> feedbackRepository, IRepositoryBase<TicketSolution> solutionRepository, IRepositoryBase<User> userRepository, IMapper mapper)
     {
         _feedbackRepository = feedbackRepository;
+        _solutionRepository = solutionRepository;
         _userRepository = userRepository;
         _mapper = mapper;
     }
@@ -51,6 +53,7 @@ public class FeedbackService : IFeedbackService
     public async Task Create(CreateFeedbackRequest model, int userId)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
+        var solution = await _solutionRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.SolutionId)) ?? throw new KeyNotFoundException("solution is not exist");
         var entity = _mapper.Map(model, new Feedback());
         entity.UserId = userId;
         if (user.Role == Role.Customer)

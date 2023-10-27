@@ -13,12 +13,10 @@ namespace API.Controllers;
 [Route("/v1/itsds/solution/feedback")]
 public class FeedbackController : BaseController
 {
-    private readonly IRepositoryBase<User> _userRepository;
     private readonly IFeedbackService _feedbackService;
 
-    public FeedbackController(IRepositoryBase<User> userRepository, IFeedbackService feedbackService)
+    public FeedbackController(IFeedbackService feedbackService)
     {
-        _userRepository = userRepository;
         _feedbackService = feedbackService;
     }
 
@@ -55,6 +53,10 @@ public class FeedbackController : BaseController
         {
             await _feedbackService.Create(model, CurrentUserID);
             return Ok("Created Successfully");
+        }
+        catch(KeyNotFoundException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
