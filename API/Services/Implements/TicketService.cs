@@ -200,7 +200,7 @@ public class TicketService : ITicketService
         return ticket.TicketStatus is TicketStatus.Closed or TicketStatus.Cancelled;
     }
 
-    public async Task UpdateTicketStatus(int? ticketId, TicketStatus newStatus)
+    public async Task UpdateTicketStatus(int ticketId, TicketStatus newStatus)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ?? throw new KeyNotFoundException();
         ticket.TicketStatus = newStatus;
