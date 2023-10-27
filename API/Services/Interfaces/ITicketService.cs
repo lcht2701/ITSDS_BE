@@ -22,7 +22,7 @@ public interface ITicketService
     Task Remove(int id);
     Task<bool> IsTicketAssigned(int ticketId);
     bool IsTicketDone(Ticket ticket);
-    Task UpdateTicketStatus(int? ticketId, TicketStatus newStatus);
+    Task UpdateTicketStatus(int ticketId, TicketStatus newStatus);
     Task ModifyTicketStatus(int ticketId, TicketStatus newStatus, int userId);
     Task CancelTicket(int ticketId, int userId);
 
