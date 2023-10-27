@@ -190,10 +190,14 @@ public class TicketController : BaseController
     {
         try
         {
-            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            Ticket? original = (Ticket?)await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
             var updated = await _ticketService.UpdateByCustomer(ticketId, model);
             await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
             return Ok("Update Successfully");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (KeyNotFoundException)
         {
@@ -243,10 +247,14 @@ public class TicketController : BaseController
     {
         try
         {
-            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            Ticket? original = (Ticket?)await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
             var updated = await _ticketService.UpdateByManager(ticketId, model);
             await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
             return Ok("Update Successfully");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (KeyNotFoundException)
         {
