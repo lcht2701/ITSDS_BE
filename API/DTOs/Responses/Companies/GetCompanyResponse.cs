@@ -1,13 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using API.Mappings;
+using Domain.Models;
+using Domain.Models.Contracts;
+using System.Text.Json.Serialization;
 
-namespace Domain.Models.Contracts
+namespace API.DTOs.Responses.Companies
 {
-    public partial class Company : BaseEntity
+    public class GetCompanyResponse : IMapFrom<Company>
     {
-        public Company()
-        {
-            Contracts = new HashSet<Contract>();
-        }
         public string? CompanyName { get; set; }
 
         public string? TaxCode { get; set; }
@@ -28,10 +27,9 @@ namespace Domain.Models.Contracts
 
         public int? CustomerAdminId { get; set; }
 
-        public virtual User? CustomerAdmin { get; set; }
+        public string? CustomerAdminName => $"{CustomerAdmin?.FirstName} {CustomerAdmin?.LastName}";
 
         [JsonIgnore]
-        public virtual ICollection<Contract>? Contracts { get; set; }
-
+        public virtual User? CustomerAdmin { get; set; }
     }
 }

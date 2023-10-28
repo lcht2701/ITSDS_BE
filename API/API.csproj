@@ -36,7 +36,6 @@
 
   <ItemGroup>
     <Folder Include="DTOs\Responses\Feedbacks\" />
-    <Folder Include="DTOs\Responses\Teams\" />
   </ItemGroup>
 
 </Project>
