@@ -207,86 +207,85 @@ public class TicketService : ITicketService
         await _ticketRepository.UpdateAsync(ticket);
     }
 
-    public async Task ModifyTicketStatus(int ticketId, TicketStatus newStatus, int userId)
+    public async Task ModifyTicketStatus(int ticketId, TicketStatus newStatus)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ?? throw new KeyNotFoundException();
-        var user = await _userRepository.FirstOrDefaultAsync(u => u.Id.Equals(userId));
-        switch (user.Role)
+        var tasks = await _taskRepository.WhereAsync(x => x.TicketId.Equals(ticket.Id));
+        var taskIncompletedCount = 0;
+        if (tasks.Count > 0)
         {
-            case Role.Manager:
-                if (ticket.TicketStatus == TicketStatus.Closed)
-                {
-                    //Handle Re-open state
-                }
-                else
+            taskIncompletedCount = tasks.Count(x =>
+            x.TaskStatus != TicketTaskStatus.Completed &&
+            x.TaskStatus != TicketTaskStatus.Cancelled);
+        }
+        string jobId = null;
+
+        if (ticket.TicketStatus == TicketStatus.Closed && ticket.TicketStatus == TicketStatus.Cancelled)
+        {
+            throw new BadRequestException("Cannot update ticket status when ticket is Closed or Cancelled");
+        }
+
+        if (newStatus == TicketStatus.Open && newStatus == TicketStatus.Closed && newStatus == TicketStatus.Cancelled)
+        {
+            throw new BadRequestException("Cannot update ticket status to Open, Closed or Cancelled");
+        }
+
+        switch (ticket.TicketStatus)
+        {
+            case TicketStatus.Assigned:
+                if (newStatus == TicketStatus.InProgress)
                 {
                     ticket.TicketStatus = newStatus;
                     await _ticketRepository.UpdateAsync(ticket);
                 }
-                break;
-            case Role.Technician:
-                var tasks = await _taskRepository.WhereAsync(x => x.TicketId.Equals(ticket.Id));
-                var taskIncompletedCount = 0;
-                if (tasks.Count > 0)
+                if (newStatus == TicketStatus.Resolved && taskIncompletedCount == 0)
                 {
-                    taskIncompletedCount = tasks.Count(x =>
-                    x.TaskStatus != TicketTaskStatus.Completed ||
-                    x.TaskStatus != TicketTaskStatus.Cancelled);
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                    jobId = AutoCloseBackgroundService(ticket);
                 }
-                if (ticket.TicketStatus != TicketStatus.Open)
+                else
                 {
-                    switch (ticket.TicketStatus)
-                    {
-                        case TicketStatus.Assigned:
-                            if (newStatus == TicketStatus.InProgress)
-                            {
-                                ticket.TicketStatus = newStatus;
-                                await _ticketRepository.UpdateAsync(ticket);
-                            }
-                            if (newStatus != TicketStatus.Resolved && taskIncompletedCount == 0)
-                            {
-                                ticket.TicketStatus = newStatus;
-                                await _ticketRepository.UpdateAsync(ticket);
-                            }
-                            else
-                            {
-                                throw new BadRequestException("Cannot resovle ticket if all the tasks are not completed");
-                            }
-                            break;
-                        case TicketStatus.InProgress:
-                            if (newStatus == TicketStatus.Resolved)
-                            {
-                                ticket.TicketStatus = newStatus;
-                                await _ticketRepository.UpdateAsync(ticket);
-                            }
-                            break;
-                        case TicketStatus.Resolved:
-                            if (newStatus == TicketStatus.Closed)
-                            {
-                                string jobId = BackgroundJob.Schedule(
-                                    () => CloseTicketJob(ticket.Id),
-                                    TimeSpan.FromDays(2));
-                                RecurringJob.AddOrUpdate(
-                                    jobId + "_Cancellation",
-                                    () => CancelCloseTicketJob(jobId, ticket.Id),
-                                    "*/5 * * * * *"); //Every 5
-                            }
-                            if (newStatus == TicketStatus.InProgress)
-                            {
-                                ticket.TicketStatus = newStatus;
-                                await _ticketRepository.UpdateAsync(ticket);
-                            }
-                            break;
-                        case TicketStatus.Closed:
-                            // Handle re-open logic if needed
-                            // You can add re-open logic here if you want to allow re-opening of closed tickets.
-                            break;
-                        default:
-                            throw new BadRequestException();
-                    }
+                    throw new BadRequestException("Cannot resovle ticket if all the tasks are not completed");
                 }
                 break;
+            case TicketStatus.InProgress:
+                if (newStatus == TicketStatus.Resolved && taskIncompletedCount == 0)
+                {
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                    jobId = AutoCloseBackgroundService(ticket);
+                }
+                else
+                {
+                    throw new BadRequestException("Cannot resovle ticket if all the tasks are not completed");
+                }
+                break;
+            case TicketStatus.Resolved:
+
+                if (newStatus == TicketStatus.InProgress)
+                {
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                    if (jobId != null) await CancelCloseTicketJob(jobId, ticketId);
+                }
+                break;
+            default:
+                throw new BadRequestException();
         }
+    }
+
+    private string AutoCloseBackgroundService(Ticket ticket)
+    {
+        //Auto Schedule Job to Close Ticket
+        string jobId = BackgroundJob.Schedule(
+                    () => CloseTicketJob(ticket.Id),
+                    TimeSpan.FromDays(2));
+        RecurringJob.AddOrUpdate(
+                    jobId + "_Cancellation",
+                    () => CancelCloseTicketJob(jobId, ticket.Id),
+                    "*/5 * * * * *"); //Every 5
+        return jobId;
     }
 
     public async Task CancelTicket(int ticketId, int userId)
@@ -369,7 +368,7 @@ public class TicketService : ITicketService
     public async Task CancelCloseTicketJob(string jobId, int ticketId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
-        if (ticket.TicketStatus == TicketStatus.Closed)
+        if (ticket.TicketStatus != TicketStatus.Resolved)
         {
             BackgroundJob.Delete(jobId);
         }
