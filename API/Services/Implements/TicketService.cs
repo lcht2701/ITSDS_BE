@@ -220,12 +220,12 @@ public class TicketService : ITicketService
         }
         string jobId = null;
 
-        if (ticket.TicketStatus == TicketStatus.Closed && ticket.TicketStatus == TicketStatus.Cancelled)
+        if (ticket.TicketStatus == TicketStatus.Closed || ticket.TicketStatus == TicketStatus.Cancelled)
         {
             throw new BadRequestException("Cannot update ticket status when ticket is Closed or Cancelled");
         }
 
-        if (newStatus == TicketStatus.Open && newStatus == TicketStatus.Closed && newStatus == TicketStatus.Cancelled)
+        if (newStatus == TicketStatus.Open || newStatus == TicketStatus.Closed || newStatus == TicketStatus.Cancelled)
         {
             throw new BadRequestException("Cannot update ticket status to Open, Closed or Cancelled");
         }
@@ -238,7 +238,7 @@ public class TicketService : ITicketService
                     ticket.TicketStatus = newStatus;
                     await _ticketRepository.UpdateAsync(ticket);
                 }
-                if (newStatus == TicketStatus.Resolved && taskIncompletedCount == 0)
+                else if (newStatus == TicketStatus.Resolved && taskIncompletedCount == 0)
                 {
                     ticket.TicketStatus = newStatus;
                     await _ticketRepository.UpdateAsync(ticket);
