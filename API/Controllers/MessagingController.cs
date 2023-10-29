@@ -1,6 +1,4 @@
-﻿using API.DTOs.Requests.Notifications;
-using API.Services.Interfaces;
-using Domain.Exceptions;
+﻿using API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,27 +20,8 @@ public class MessagingController : BaseController
     {
         try
         {
-            var result = await _messagingService.Get(CurrentUserID);
+            var result = await _messagingService.GetNotification(CurrentUserID);
             return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize]
-    [HttpPost]
-    public async Task<IActionResult> SendNotification([FromBody] SendNotificationRequest model)
-    {
-        try
-        {
-            await _messagingService.SendNotification(model, CurrentUserID);
-            return Ok("Notification sent successfully");
-        }
-        catch (BadRequestException ex)
-        {
-            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
@@ -58,6 +37,36 @@ public class MessagingController : BaseController
         {
             await _messagingService.MarkAsRead(CurrentUserID);
             return Ok("Successfully");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpPost]
+    public async Task<IActionResult> GetToken(string token)
+    {
+        try
+        {
+            await _messagingService.GetToken(CurrentUserID, token);
+            return Ok("Get token successfully");
+        }
+        catch(Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpDelete]
+    public async Task<IActionResult> RemoveToken(string token)
+    {
+        try
+        {
+            await _messagingService.RemoveToken(CurrentUserID, token);
+            return Ok("Remove token successfully");
         }
         catch (Exception ex)
         {

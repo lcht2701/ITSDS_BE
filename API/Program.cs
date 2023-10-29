@@ -7,7 +7,6 @@ using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -146,14 +145,11 @@ app.UseSwaggerUI();
 await app.Services.ApplyMigrations();
 
 app.UseHttpsRedirection();
-
 app.UseCors(CorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAutoWrapper();
 app.UseHangfireDashboard();
-
 app.MapControllers();
 app.MapHangfireDashboard();
-
 app.Run();

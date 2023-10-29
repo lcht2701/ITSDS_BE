@@ -14,4 +14,5 @@ public class Messaging : BaseEntity
 
     [JsonIgnore]
     public virtual User? User { get; set; }
+
 }

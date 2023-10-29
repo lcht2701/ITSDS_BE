@@ -1,5 +1,4 @@
-﻿using API.DTOs.Requests.Notifications;
-using API.Services.Interfaces;
+﻿using API.Services.Interfaces;
 using Domain.Exceptions;
 using Domain.Models;
 using FirebaseAdmin.Messaging;
@@ -10,40 +9,43 @@ namespace API.Services.Implements;
 public class MessagingService : IMessagingService
 {
     private readonly IRepositoryBase<Messaging> _messagingRepository;
+    private readonly IRepositoryBase<DeviceToken> _tokenRepository;
 
-    public MessagingService(IRepositoryBase<Messaging> messagingRepository)
+    public MessagingService(IRepositoryBase<Messaging> messagingRepository, IRepositoryBase<DeviceToken> tokenRepository)
     {
         _messagingRepository = messagingRepository;
+        _tokenRepository = tokenRepository;
     }
 
-    public async Task<List<Messaging>> Get(int userId)
+    public async Task<List<Messaging>> GetNotification(int userId)
     {
         var result = await _messagingRepository.GetAsync(x => x.UserId == userId);
         return (List<Messaging>)result;
     }
 
-    public async Task SendNotification(SendNotificationRequest model, int userId)
+    public async Task SendNotification(string message, int userId)
     {
         string title = "ITSDS";
-        var message = new Message()
+        var tokenList = await _tokenRepository.WhereAsync(x => x.UserId == userId);
+        var notification = new MulticastMessage()
         {
             Notification = new Notification
             {
                 Title = title,
-                Body = model.Body,
+                Body = message,
             },
-            Token = model.DeviceToken
+            Tokens = (IReadOnlyList<string>)tokenList
         };
 
         var messaging = FirebaseMessaging.DefaultInstance;
-        var result = await messaging.SendAsync(message);
+        var result = await messaging.SendMulticastAsync(notification);
 
-        if (!string.IsNullOrEmpty(result))
+        if (result != null)
         {
             var entity = new Messaging()
             {
                 Title = title,
-                Body = model.Body,
+                Body = message,
                 UserId = userId,
                 IsRead = false
             };
@@ -67,4 +69,57 @@ public class MessagingService : IMessagingService
             }
         }
     }
+
+    public async Task GetToken(int userId, string token)
+    {
+        var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token.Equals(token) && x.UserId.Equals(userId));
+        if (existToken == null)
+        {
+            var newToken = new DeviceToken()
+            {
+                Token = token,
+                UserId = userId,
+            };
+            await _tokenRepository.CreateAsync(newToken);
+        }
+        else
+        {
+
+            await _tokenRepository.UpdateAsync(existToken);
+        }
+    }
+
+    public async Task RemoveToken(int userId, string token)
+    {
+        var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token.Equals(token) && x.UserId.Equals(userId));
+        if (existToken != null)
+        {
+            await _tokenRepository.DeleteAsync(existToken);
+        }
+    }
+
+    public async Task RemoveOldToken()
+    {
+        var listTokens = await _tokenRepository.ToListAsync();
+
+        foreach (var token in listTokens)
+        {
+            TimeSpan timeDifference;
+            if (token.ModifiedAt != null)
+            {
+                timeDifference = (TimeSpan)(DateTime.UtcNow - token.ModifiedAt);
+            }
+            else
+            {
+                timeDifference = (TimeSpan)(DateTime.UtcNow - token.CreatedAt);
+            }
+
+            // Remove tokens older than 7 days
+            if (timeDifference.TotalDays > 7)
+            {
+                await _tokenRepository.DeleteAsync(token);
+            }
+        }
+    }
+
 }
