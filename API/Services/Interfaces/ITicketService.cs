@@ -23,9 +23,8 @@ public interface ITicketService
     Task<bool> IsTicketAssigned(int ticketId);
     bool IsTicketDone(Ticket ticket);
     Task UpdateTicketStatus(int ticketId, TicketStatus newStatus);
-    Task ModifyTicketStatus(int ticketId, TicketStatus newStatus, int userId);
+    Task ModifyTicketStatus(int ticketId, TicketStatus newStatus);
     Task CancelTicket(int ticketId, int userId);
-
     //Background jobs
     Task AssignSupportJob(int ticketId);
     Task CancelAssignSupportJob(string jobId, int ticketId);

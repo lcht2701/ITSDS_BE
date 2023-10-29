@@ -288,7 +288,7 @@ public class TicketController : BaseController
         try
         {
             var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
-            await _ticketService.ModifyTicketStatus(ticketId, newStatus, CurrentUserID);
+            await _ticketService.ModifyTicketStatus(ticketId, newStatus);
             var updated = await _ticketService.GetById(ticketId);
             await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
             return Ok("Status Updated Successfully");
@@ -296,6 +296,10 @@ public class TicketController : BaseController
         catch (KeyNotFoundException)
         {
             return NotFound("Ticket is not exist");
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {

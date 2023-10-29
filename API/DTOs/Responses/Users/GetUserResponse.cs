@@ -1,6 +1,8 @@
 ﻿using API.Mappings;
 using Domain.Constants.Enums;
 using Domain.Models;
+using Domain.Models.Contracts;
+using Domain.Models.Tickets;
 
 namespace API.DTOs.Responses.Users;
 
@@ -22,4 +24,6 @@ public class GetUserResponse : IMapFrom<User>
     public DateTime? CreatedAt { get; set; }
     public DateTime? ModifiedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
+    public virtual Team? Team { get; set; }
+    public virtual Company? Company { get; set; }    
 }

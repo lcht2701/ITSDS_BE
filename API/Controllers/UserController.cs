@@ -1,14 +1,20 @@
 using API.DTOs.Requests.Users;
+using API.DTOs.Responses.Companies;
+using API.DTOs.Responses.Teams;
 using API.DTOs.Responses.Users;
 using API.Services.Interfaces;
 using Domain.Constants;
+using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
+using Domain.Models.Contracts;
+using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace API.Controllers;
 
@@ -16,14 +22,21 @@ namespace API.Controllers;
 public class UserController : BaseController
 {
     private readonly IRepositoryBase<User> _userRepository;
+    private readonly IRepositoryBase<Team> _teamRepository;
+    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
+    private readonly IRepositoryBase<Company> _companyRepository;
+    private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IFirebaseStorageService _firebaseStorageService;
 
-    public UserController(IRepositoryBase<User> userRepository, IFirebaseStorageService firebaseStorageService)
+    public UserController(IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IFirebaseStorageService firebaseStorageService)
     {
         _userRepository = userRepository;
+        _teamRepository = teamRepository;
+        _teamMemberRepository = teamMemberRepository;
+        _companyRepository = companyRepository;
+        _companyMemberRepository = companyMemberRepository;
         _firebaseStorageService = firebaseStorageService;
     }
-
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}")]
     [HttpGet("all")]
@@ -114,11 +127,37 @@ public class UserController : BaseController
     [HttpGet("profile")]
     public async Task<IActionResult> GetProfile()
     {
-        var result = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID),
+        var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID),
             new NotFoundException("User is not found"));
-        var entity = Mapper.Map(result, new GetUserProfileResponse());
-
+        var entity = Mapper.Map(user, new GetUserProfileResponse());
         DataResponse.CleanNullableDateTime(entity);
+        if (user.Role == Role.Customer)
+        {
+            var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId == user.Id);
+
+            if (companyMember != null)
+            {
+                var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id == companyMember.CompanyId, new string[] { "CustomerAdmin" });
+                if (company != null)
+                {
+                    entity.Company = Mapper.Map(company, new GetCompanyResponse());
+                }
+            }
+        }
+        else
+        {
+            var teamMember = await _teamMemberRepository.FirstOrDefaultAsync(x => x.MemberId == user.Id);
+
+            if (teamMember != null)
+            {
+                var team = await _teamRepository.FirstOrDefaultAsync(x => x.Id == teamMember.TeamId, new string[] { "Manager" });
+                if (team != null)
+                {
+                    entity.Team = Mapper.Map(team, new GetTeamResponse());
+                }
+            }
+        }
+
         return Ok(entity);
     }
 
