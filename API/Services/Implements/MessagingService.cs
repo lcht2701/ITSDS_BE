@@ -39,22 +39,18 @@ public class MessagingService : IMessagingService
 
         var messaging = FirebaseMessaging.DefaultInstance;
         var result = await messaging.SendMulticastAsync(notification);
+    }
 
-        if (result != null)
+    public async Task CreateNotification(string title, string message, int userId)
+    {
+        var entity = new Messaging()
         {
-            var entity = new Messaging()
-            {
-                Title = title,
-                Body = message,
-                UserId = userId,
-                IsRead = false
-            };
-            await _messagingRepository.CreateAsync(entity);
-        }
-        else
-        {
-            throw new BadRequestException("Error sending the message.");
-        }
+            Title = title,
+            Body = message,
+            UserId = userId,
+            IsRead = false
+        };
+        await _messagingRepository.CreateAsync(entity);
     }
 
     public async Task MarkAsRead(int userId)
