@@ -26,19 +26,23 @@ public class MessagingService : IMessagingService
     public async Task SendNotification(string message, int userId)
     {
         string title = "ITSDS";
-        var tokenList = await _tokenRepository.WhereAsync(x => x.UserId == userId);
-        var notification = new MulticastMessage()
+        string token = (await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId))?.ToString();
+        if (token == null)
+        {
+            return;
+        }
+        var notification = new Message()
         {
             Notification = new Notification
             {
                 Title = title,
                 Body = message,
             },
-            Tokens = (IReadOnlyList<string>)tokenList
+            Token = token
         };
 
         var messaging = FirebaseMessaging.DefaultInstance;
-        var result = await messaging.SendMulticastAsync(notification);
+        var result = await messaging.SendAsync(notification);
     }
 
     public async Task CreateNotification(string title, string message, int userId)

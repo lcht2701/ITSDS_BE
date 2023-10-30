@@ -124,15 +124,15 @@ public class TicketService : ITicketService
         return response;
     }
 
-    public async Task<object> GetById(int id)
+    public async Task<GetTicketResponse> GetById(int id)
     {
         var result =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
                 new string[] { "Requester", "Service", "Category", "Mode" }) ?? throw new KeyNotFoundException();
         ;
-        _mapper.Map<GetTicketResponse>(result);
-        DataResponse.CleanNullableDateTime(result);
-        return result;
+        var entity = _mapper.Map<GetTicketResponse>(result);
+        DataResponse.CleanNullableDateTime(entity);
+        return entity;
     }
 
     public async Task<List<GetTicketResponse>> GetByUser(int userId)
