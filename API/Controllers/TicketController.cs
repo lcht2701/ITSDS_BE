@@ -106,12 +106,27 @@ public class TicketController : BaseController
     }
 
     [Authorize(Roles = Roles.TECHNICIAN)]
-    [HttpGet("assign")]
+    [HttpGet("assign/available")]
     public async Task<IActionResult> GetAssignedTickets()
     {
         try
         {
             var response = await _ticketService.GetAssignedTickets(CurrentUserID);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    
+    [Authorize(Roles = Roles.TECHNICIAN)]
+    [HttpGet("assign/done")]
+    public async Task<IActionResult> GetCompleteAssignedTickets()
+    {
+        try
+        {
+            var response = await _ticketService.GetCompletedAssignedTickets(CurrentUserID);
             return Ok(response);
         }
         catch (Exception ex)

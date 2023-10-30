@@ -37,6 +37,36 @@ public class TicketTaskController : BaseController
             return BadRequest(ex.Message);
         }
     }
+    
+    [Authorize(Roles = Roles.TECHNICIAN)]
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActiveTasks()
+    {
+        try
+        {
+            var result = await _ticketTaskService.GetActiveTasks(CurrentUserID);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    
+    [Authorize(Roles = Roles.TECHNICIAN)]
+    [HttpGet("inactive")]
+    public async Task<IActionResult> GetInActiveTasks()
+    {
+        try
+        {
+            var result = await _ticketTaskService.GetInActiveTasks(CurrentUserID);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpPost("new")]
