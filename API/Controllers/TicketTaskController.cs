@@ -2,9 +2,11 @@
 using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Constants.Enums;
+using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
 
@@ -12,10 +14,14 @@ namespace API.Controllers;
 public class TicketTaskController : BaseController
 {
     private readonly ITicketTaskService _ticketTaskService;
+    private readonly IMessagingService _messagingService;
+    private readonly IRepositoryBase<Ticket> _ticketRepository;
 
-    public TicketTaskController(ITicketTaskService ticketTaskService)
+    public TicketTaskController(ITicketTaskService ticketTaskService, IMessagingService messagingService, IRepositoryBase<Ticket> ticketRepository)
     {
         _ticketTaskService = ticketTaskService;
+        _messagingService = messagingService;
+        _ticketRepository = ticketRepository;
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
@@ -37,6 +43,36 @@ public class TicketTaskController : BaseController
             return BadRequest(ex.Message);
         }
     }
+    
+    [Authorize(Roles = Roles.TECHNICIAN)]
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActiveTasks()
+    {
+        try
+        {
+            var result = await _ticketTaskService.GetActiveTasks(CurrentUserID);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    
+    [Authorize(Roles = Roles.TECHNICIAN)]
+    [HttpGet("inactive")]
+    public async Task<IActionResult> GetInActiveTasks()
+    {
+        try
+        {
+            var result = await _ticketTaskService.GetInActiveTasks(CurrentUserID);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpPost("new")]
@@ -45,6 +81,8 @@ public class TicketTaskController : BaseController
         try
         {
             await _ticketTaskService.Create(model, CurrentUserID);
+            var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == model.TicketId);
+            await _messagingService.SendNotification($"Ticket [{ticket.Title}] has got new task: {model.Title}", CurrentUserID);
             return Ok("Create Successfully");
         }
         catch (KeyNotFoundException)
@@ -64,6 +102,7 @@ public class TicketTaskController : BaseController
         try
         {
             await _ticketTaskService.Update(taskId, req);
+            await _messagingService.SendNotification($"Task [{req.Title}] has been updated", CurrentUserID);
             return Ok("Updated Successfully");
         }
         catch (KeyNotFoundException)
@@ -83,6 +122,7 @@ public class TicketTaskController : BaseController
         try
         {
             await _ticketTaskService.Remove(taskId);
+            await _messagingService.SendNotification($"Task has been removed", CurrentUserID);
             return Ok("Deleted Successfully");
         }
         catch (KeyNotFoundException)
@@ -102,6 +142,8 @@ public class TicketTaskController : BaseController
         try
         {
             await _ticketTaskService.UpdateTaskStatus(taskId, newStatus);
+            var statusName = DataResponse.GetEnumDescription(newStatus);
+            await _messagingService.SendNotification($"Status has been updated to [{statusName}]", CurrentUserID);
             return Ok("Update Status Successfully");
         }
         catch (KeyNotFoundException)
