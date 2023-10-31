@@ -136,6 +136,8 @@ FirebaseApp.Create(new AppOptions()
 {
     Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-twxch-bd8d0b1075.json")),
 });
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-twxch-bd8d0b1075.json"));
+
 
 var app = builder.Build();
 

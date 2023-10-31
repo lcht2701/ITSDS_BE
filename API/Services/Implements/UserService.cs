@@ -195,6 +195,7 @@ public class UserService : IUserService
     {
         FirestoreDb db = FirestoreDb.Create("itsds-v1");
         DocumentReference docRef = db.Collection("users").Document(user.Id.ToString());
+        string modifiedTime = new DateTimeOffset((DateTime)user.ModifiedAt!).ToUnixTimeMilliseconds().ToString();
 
         // Get the existing user document data
         DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
@@ -205,9 +206,8 @@ public class UserService : IUserService
 
             // Update only the fields that need to be changed
             existingData["name"] = $"{user.FirstName} {user.LastName}";
-            existingData["username"] = user.Username ?? existingData["username"];
             existingData["image"] = user.AvatarUrl ?? existingData["image"];
-            existingData["modified_at"] = user.ModifiedAt ?? existingData["modified_at"];
+            existingData["modified_at"] = modifiedTime ?? existingData["modified_at"];
             existingData["role"] = DataResponse.GetEnumDescription(user.Role) ?? existingData["role"];
 
             // Update the Firestore document with the modified data
