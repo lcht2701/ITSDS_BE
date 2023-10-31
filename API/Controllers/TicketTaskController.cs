@@ -46,11 +46,11 @@ public class TicketTaskController : BaseController
     
     [Authorize(Roles = Roles.TECHNICIAN)]
     [HttpGet("active")]
-    public async Task<IActionResult> GetActiveTasks()
+    public async Task<IActionResult> GetActiveTasks([FromQuery]int? ticketId)
     {
         try
         {
-            var result = await _ticketTaskService.GetActiveTasks(CurrentUserID);
+            var result = await _ticketTaskService.GetActiveTasks(CurrentUserID, ticketId);
             return Ok(result);
         }
         catch (Exception ex)
@@ -61,11 +61,11 @@ public class TicketTaskController : BaseController
     
     [Authorize(Roles = Roles.TECHNICIAN)]
     [HttpGet("inactive")]
-    public async Task<IActionResult> GetInActiveTasks()
+    public async Task<IActionResult> GetInActiveTasks([FromQuery] int? ticketId)
     {
         try
         {
-            var result = await _ticketTaskService.GetInActiveTasks(CurrentUserID);
+            var result = await _ticketTaskService.GetInActiveTasks(CurrentUserID, ticketId);
             return Ok(result);
         }
         catch (Exception ex)

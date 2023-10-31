@@ -40,53 +40,67 @@ public class TicketTaskService : ITicketTaskService
         return response;
     }
 
-    public async Task<List<GetTicketTaskResponse>> GetActiveTasks(int userId)
+    public async Task<List<GetTicketTaskResponse>> GetActiveTasks(int userId, int? ticketId)
     {
-        var taskList = new List<TicketTask>();
-        var assignments = await _assignmentRepository
-            .WhereAsync(x => x.TechnicianId == userId);
-
-        var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
-
-        var ticketList = await _ticketRepository
-            .WhereAsync(ticket => ticketIds.Contains(ticket.Id) &&
-                                  (ticket.TicketStatus != TicketStatus.Closed &&
-                                   ticket.TicketStatus != TicketStatus.Cancelled));
-
-        foreach (var ticket in ticketList)
+        var response = new List<GetTicketTaskResponse>();
+        if (ticketId != null)
         {
-            var tasks = await _taskRepository
-                .WhereAsync(x => x.TicketId == ticket.Id,
-                    new string[] { "Technician", "CreateBy", "Team", "Ticket" });
-            taskList.AddRange(tasks);
+            response = await Get((int)ticketId);
         }
+        else
+        {
+            var taskList = new List<TicketTask>();
+            var assignments = await _assignmentRepository
+                .WhereAsync(x => x.TechnicianId == userId);
 
-        var response = _mapper.Map<List<GetTicketTaskResponse>>(taskList);
+            var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
+
+            var ticketList = await _ticketRepository
+                .WhereAsync(ticket => ticketIds.Contains(ticket.Id) &&
+                                      (ticket.TicketStatus != TicketStatus.Closed &&
+                                       ticket.TicketStatus != TicketStatus.Cancelled));
+
+            foreach (var ticket in ticketList)
+            {
+                var tasks = await _taskRepository
+                    .WhereAsync(x => x.TicketId == ticket.Id,
+                    new string[] { "Technician", "CreateBy", "Team", "Ticket" });
+                taskList.AddRange(tasks);
+            }
+            response = _mapper.Map<List<GetTicketTaskResponse>>(taskList);
+        }
         return response;
     }
 
-    public async Task<List<GetTicketTaskResponse>> GetInActiveTasks(int userId)
+    public async Task<List<GetTicketTaskResponse>> GetInActiveTasks(int userId, int? ticketId)
     {
-        var taskList = new List<TicketTask>();
-        var assignments = await _assignmentRepository
-            .WhereAsync(x => x.TechnicianId == userId);
-
-        var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
-
-        var ticketList = await _ticketRepository
-            .WhereAsync(ticket => ticketIds.Contains(ticket.Id) &&
-                                  (ticket.TicketStatus == TicketStatus.Closed ||
-                                   ticket.TicketStatus == TicketStatus.Cancelled));
-
-        foreach (var ticket in ticketList)
+        var response = new List<GetTicketTaskResponse>();
+        if (ticketId != null)
         {
-            var tasks = await _taskRepository
-                .WhereAsync(x => x.TicketId == ticket.Id,
-                    new string[] { "Technician", "CreateBy", "Team", "Ticket" });
-            taskList.AddRange(tasks);
+            response = await Get((int)ticketId);
         }
+        else
+        {
+            var taskList = new List<TicketTask>();
+            var assignments = await _assignmentRepository
+                .WhereAsync(x => x.TechnicianId == userId);
 
-        var response = _mapper.Map<List<GetTicketTaskResponse>>(taskList);
+            var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
+
+            var ticketList = await _ticketRepository
+                .WhereAsync(ticket => ticketIds.Contains(ticket.Id) &&
+                                      (ticket.TicketStatus == TicketStatus.Closed ||
+                                       ticket.TicketStatus == TicketStatus.Cancelled));
+
+            foreach (var ticket in ticketList)
+            {
+                var tasks = await _taskRepository
+                    .WhereAsync(x => x.TicketId == ticket.Id,
+                new string[] { "Technician", "CreateBy", "Team", "Ticket" });
+                taskList.AddRange(tasks);
+            }
+            response = _mapper.Map<List<GetTicketTaskResponse>>(taskList);
+        }
         return response;
     }
 
@@ -135,7 +149,7 @@ public class TicketTaskService : ITicketTaskService
         {
             target.ActualStartTime = DateTime.Now;
         }
-        else if(newStatus == TicketTaskStatus.Completed || newStatus == TicketTaskStatus.Cancelled)
+        else if (newStatus == TicketTaskStatus.Completed || newStatus == TicketTaskStatus.Cancelled)
         {
             if (target.ActualStartTime == null)
             {
