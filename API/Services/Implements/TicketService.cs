@@ -88,7 +88,7 @@ public class TicketService : ITicketService
         var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
             new string[] { "Requester", "Service", "Category", "Mode" });
         var filterResult = result.Where(x =>
-            IsTicketDone(x) == false);
+            IsTicketDone(x.Id) == false);
 
         // Map the tickets to response entities
         var response = filterResult.Select(ticket =>
@@ -110,7 +110,7 @@ public class TicketService : ITicketService
         var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
             new string[] { "Requester", "Service", "Category", "Mode" });
         var filterResult = result.Where(x =>
-            IsTicketDone(x) == true);
+            IsTicketDone(x.Id) == true);
 
         // Map the tickets to response entities
         var response = filterResult.Select(ticket =>
@@ -154,7 +154,7 @@ public class TicketService : ITicketService
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
             new string[] { "Requester", "Service", "Category", "Mode" });
 
-        var filteredResult = result.Where(x => !IsTicketDone(x));
+        var filteredResult = result.Where(x => !IsTicketDone(x.Id));
 
         var response = filteredResult.Select(ticket =>
             {
@@ -173,7 +173,7 @@ public class TicketService : ITicketService
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
             new string[] { "Requester", "Service", "Category", "Mode" });
 
-        var filteredResult = result.Where(x => IsTicketDone(x));
+        var filteredResult = result.Where(x => IsTicketDone(x.Id));
 
         var response = filteredResult.Select(ticket =>
             {
@@ -225,8 +225,9 @@ public class TicketService : ITicketService
         return result;
     }
 
-    public bool IsTicketDone(Ticket ticket)
+    public bool IsTicketDone(int ticketId)
     {
+        var ticket = _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId).Result;
         return ticket.TicketStatus is TicketStatus.Closed or TicketStatus.Cancelled;
     }
 

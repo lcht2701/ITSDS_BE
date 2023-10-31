@@ -1,4 +1,5 @@
-﻿using API.Services.Interfaces;
+﻿using API.DTOs.Requests.Messagings;
+using API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -46,11 +47,11 @@ public class MessagingController : BaseController
 
     [Authorize]
     [HttpPost]
-    public async Task<IActionResult> GetToken(string token)
+    public async Task<IActionResult> GetToken([FromBody] GetTokenRequest model)
     {
         try
         {
-            await _messagingService.GetToken(CurrentUserID, token);
+            await _messagingService.GetToken(CurrentUserID, model.Token);
             return Ok("Get token successfully");
         }
         catch(Exception ex)
@@ -61,11 +62,11 @@ public class MessagingController : BaseController
 
     [Authorize]
     [HttpDelete]
-    public async Task<IActionResult> RemoveToken(string token)
+    public async Task<IActionResult> RemoveToken([FromBody] GetTokenRequest model)
     {
         try
         {
-            await _messagingService.RemoveToken(CurrentUserID, token);
+            await _messagingService.RemoveToken(CurrentUserID, model.Token);
             return Ok("Remove token successfully");
         }
         catch (Exception ex)

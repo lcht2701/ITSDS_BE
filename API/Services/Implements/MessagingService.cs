@@ -1,5 +1,4 @@
 ﻿using API.Services.Interfaces;
-using Domain.Exceptions;
 using Domain.Models;
 using FirebaseAdmin.Messaging;
 using Persistence.Repositories.Interfaces;
@@ -70,31 +69,37 @@ public class MessagingService : IMessagingService
         }
     }
 
-    public async Task GetToken(int userId, string token)
+    public async Task GetToken(int userId, string? token)
     {
-        var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token.Equals(token) && x.UserId.Equals(userId));
-        if (existToken == null)
+        if (token != null)
         {
-            var newToken = new DeviceToken()
+            var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token.Equals(token) && x.UserId.Equals(userId));
+            if (existToken == null)
             {
-                Token = token,
-                UserId = userId,
-            };
-            await _tokenRepository.CreateAsync(newToken);
-        }
-        else
-        {
+                var newToken = new DeviceToken()
+                {
+                    Token = token,
+                    UserId = userId,
+                };
+                await _tokenRepository.CreateAsync(newToken);
+            }
+            else
+            {
 
-            await _tokenRepository.UpdateAsync(existToken);
+                await _tokenRepository.UpdateAsync(existToken);
+            } 
         }
     }
 
-    public async Task RemoveToken(int userId, string token)
+    public async Task RemoveToken(int userId, string? token)
     {
-        var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token.Equals(token) && x.UserId.Equals(userId));
-        if (existToken != null)
+        if (token != null)
         {
-            await _tokenRepository.DeleteAsync(existToken);
+            var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token.Equals(token) && x.UserId.Equals(userId));
+            if (existToken != null)
+            {
+                await _tokenRepository.DeleteAsync(existToken);
+            }
         }
     }
 

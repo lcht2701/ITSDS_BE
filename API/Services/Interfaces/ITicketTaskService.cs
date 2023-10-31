@@ -8,8 +8,8 @@ namespace API.Services.Interfaces
     public interface ITicketTaskService
     {
         Task<List<GetTicketTaskResponse>> Get(int ticketId);
-        Task<List<GetTicketTaskResponse>> GetActiveTasks(int userId);
-        Task<List<GetTicketTaskResponse>> GetInActiveTasks(int userId);
+        Task<List<GetTicketTaskResponse>> GetActiveTasks(int userId, int? ticketId);
+        Task<List<GetTicketTaskResponse>> GetInActiveTasks(int userId, int? ticketId);
         Task Create(CreateTicketTaskRequest model, int createdBy);
         Task Update(int taskId, UpdateTicketTaskRequest model);
         Task Remove(int taskId);

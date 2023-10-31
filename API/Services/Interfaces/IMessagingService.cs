@@ -8,7 +8,7 @@ public interface IMessagingService
     Task SendNotification(string message, int userId);
     Task CreateNotification(string title, string message, int userId);
     Task MarkAsRead(int userId);
-    Task GetToken(int userId, string token);
-    Task RemoveToken(int userId, string token);
+    Task GetToken(int userId, string? token);
+    Task RemoveToken(int userId, string? token);
     Task RemoveOldToken();
 }
