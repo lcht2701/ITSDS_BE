@@ -78,7 +78,8 @@ public class UserController : BaseController
     {
         try
         {
-            await _userService.Create(model);
+            var user = await _userService.Create(model);
+            await _userService.CreateUserDocument(user);
             return Ok("Created Successfully");
         }
         catch (Exception ex)
@@ -94,7 +95,8 @@ public class UserController : BaseController
     {
         try
         {
-            await _userService.Update(id, model);
+            var user = await _userService.Update(id, model);
+            await _userService.UpdateUserDocument(user);
             return Ok("Updated Successfully");
         }
         catch (KeyNotFoundException ex)
@@ -151,7 +153,8 @@ public class UserController : BaseController
     {
         try
         {
-            await _userService.UpdateProfile(CurrentUserID, model);
+            var user = await _userService.UpdateProfile(CurrentUserID, model);
+            await _userService.UpdateUserDocument(user);
             return Ok("Updated Successfully");
         }
         catch (KeyNotFoundException ex)
@@ -189,7 +192,8 @@ public class UserController : BaseController
     {
         try
         {
-            await _userService.UploadAvatarByUrl(CurrentUserID, model);
+            var user = await _userService.UploadAvatarByUrl(CurrentUserID, model);
+            await _userService.UpdateUserDocument(user);
             return Ok("Avatar URL updated successfully");
         }
         catch (KeyNotFoundException ex)

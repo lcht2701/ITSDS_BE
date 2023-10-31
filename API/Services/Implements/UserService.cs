@@ -132,6 +132,7 @@ public class UserService : IUserService
         var linkImage = await _firebaseStorageService.UploadFirebaseAsync(stream, file.FileName);
         user.AvatarUrl = linkImage;
         await _userRepository.UpdateAsync(user);
+        await UpdateUserDocument(user);
         return linkImage;
     }
 
@@ -192,27 +193,30 @@ public class UserService : IUserService
 
     public async Task UpdateUserDocument(User user)
     {
-        string createdAtTime = new DateTimeOffset((DateTime)user.CreatedAt!).ToUnixTimeMilliseconds().ToString();
-        string lastActiveTime = new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds().ToString();
-        string roleName = DataResponse.GetEnumDescription(user.Role);
-        string fullname = $"{user.FirstName} {user.LastName}";
         FirestoreDb db = FirestoreDb.Create("itsds-v1");
         DocumentReference docRef = db.Collection("users").Document(user.Id.ToString());
 
-        // Create a data object for the document
-        Dictionary<string, object> data = new()
+        // Get the existing user document data
+        DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
+        if (snapshot.Exists)
         {
-            { "id", user.Id },
-            { "name", fullname },
-            { "username", user.Username! },
-            { "image", user.AvatarUrl! },
-            { "created_at", createdAtTime },
-            { "modified_at", "" },
-            { "last_active", lastActiveTime },
-            { "role", roleName },
-            { "about", $"I am {roleName}" },
-            { "push_token", "" },
-        };
-        await docRef.SetAsync(data);
+            // Extract existing data
+            Dictionary<string, object> existingData = snapshot.ToDictionary();
+
+            // Update only the fields that need to be changed
+            existingData["name"] = $"{user.FirstName} {user.LastName}";
+            existingData["username"] = user.Username ?? existingData["username"];
+            existingData["image"] = user.AvatarUrl ?? existingData["image"];
+            existingData["modified_at"] = user.ModifiedAt ?? existingData["modified_at"];
+            existingData["role"] = DataResponse.GetEnumDescription(user.Role) ?? existingData["role"];
+
+            // Update the Firestore document with the modified data
+            await docRef.UpdateAsync(existingData);
+        }
+        else
+        {
+            // Handle the case where the user document doesn't exist
+            // You can choose to create a new document or handle the error as needed.
+        }
     }
 }
