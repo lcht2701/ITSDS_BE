@@ -16,6 +16,21 @@ public class MessagingController : BaseController
     }
 
     [Authorize]
+    [HttpPost("send-notification")]
+    public async Task<IActionResult> SendNotification([FromBody] SendNotificationRequest model)
+    {
+        try
+        {
+            await _messagingService.SendNotification(model.Message!, CurrentUserID);
+            return Ok("Send Notification Successfully");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetNotifications()
     {

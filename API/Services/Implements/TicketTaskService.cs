@@ -116,7 +116,7 @@ public class TicketTaskService : ITicketTaskService
             entity.TaskStatus = TicketTaskStatus.Assigned;
         }
 
-        var tasksCount = await Get((int)model.TicketId);
+        var tasksCount = await Get((int)model.TicketId!);
         if (tasksCount.Count == 0 && ticket.TicketStatus == TicketStatus.Assigned)
         {
             await _ticketService.UpdateTicketStatus((int)model.TicketId, TicketStatus.InProgress);

@@ -25,7 +25,8 @@ public class MessagingService : IMessagingService
     public async Task SendNotification(string message, int userId)
     {
         string title = "ITSDS";
-        string token = (await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId))?.ToString();
+        var tokenModel = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId);
+        string token = tokenModel.Token!;
         if (token == null)
         {
             return;
@@ -87,7 +88,7 @@ public class MessagingService : IMessagingService
             {
 
                 await _tokenRepository.UpdateAsync(existToken);
-            } 
+            }
         }
     }
 

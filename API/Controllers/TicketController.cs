@@ -377,4 +377,31 @@ public class TicketController : BaseController
             return BadRequest(ex.Message);
         }
     }
+
+    [Authorize(Roles = $"{Roles.CUSTOMER}")]
+    [HttpPatch("close")]
+    public async Task<IActionResult> CloseTicket(int ticketId)
+    {
+        try
+        {
+            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            await _ticketService.CloseTicket(ticketId, CurrentUserID);
+            var updated = await _ticketService.GetById(ticketId);
+            await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
+            await _messagingService.SendNotification($"Ticket [{updated.Title}] has been closed", CurrentUserID);
+            return Ok("Ticket Closed Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Ticket is not exist");
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 }
