@@ -8,11 +8,11 @@ namespace API.Controllers;
 [Route("/v1/itsds/storage")]
 public class StorageController : BaseController
 {
-    private readonly IFirebaseStorageService _firebaseStorageService;
+    private readonly IFirebaseService _firebaseService;
 
-    public StorageController(IFirebaseStorageService firebaseStorageService)
+    public StorageController(IFirebaseService firebaseService)
     {
-        _firebaseStorageService = firebaseStorageService;
+        _firebaseService = firebaseService;
     }
 
     [Authorize]
@@ -28,7 +28,7 @@ public class StorageController : BaseController
         await file.CopyToAsync(stream);
         stream.Position = 0;
 
-        var linkImage = await _firebaseStorageService.UploadFirebaseAsync(stream, file.FileName);
+        var linkImage = await _firebaseService.UploadFirebaseAsync(stream, file.FileName);
         return Ok(linkImage);
     }
 }

@@ -23,17 +23,17 @@ public class UserService : IUserService
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IRepositoryBase<Company> _companyRepository;
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
-    private readonly IFirebaseStorageService _firebaseStorageService;
+    private readonly IFirebaseService _firebaseService;
     private readonly IMapper _mapper;
 
-    public UserService(IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IFirebaseStorageService firebaseStorageService, IMapper mapper)
+    public UserService(IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IFirebaseService firebaseService, IMapper mapper)
     {
         _userRepository = userRepository;
         _teamRepository = teamRepository;
         _teamMemberRepository = teamMemberRepository;
         _companyRepository = companyRepository;
         _companyMemberRepository = companyMemberRepository;
-        _firebaseStorageService = firebaseStorageService;
+        _firebaseService = firebaseService;
         _mapper = mapper;
     }
 
@@ -129,7 +129,7 @@ public class UserService : IUserService
         await file.CopyToAsync(stream);
         stream.Position = 0;
 
-        var linkImage = await _firebaseStorageService.UploadFirebaseAsync(stream, file.FileName);
+        var linkImage = await _firebaseService.UploadFirebaseAsync(stream, file.FileName);
         user.AvatarUrl = linkImage;
         await _userRepository.UpdateAsync(user);
         await UpdateUserDocument(user);

@@ -11,10 +11,12 @@ namespace API.Controllers;
 public class UserController : BaseController
 {
     private readonly IUserService _userService;
+    private readonly IFirebaseService _firebaseService;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IFirebaseService firebaseService)
     {
         _userService = userService;
+        _firebaseService = firebaseService;
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}")]
@@ -79,7 +81,10 @@ public class UserController : BaseController
         try
         {
             var user = await _userService.Create(model);
-            await _userService.CreateUserDocument(user);
+            if (user != null && await _firebaseService.SignUp(model.Email, model.Password) == true)
+            {
+                await _userService.CreateUserDocument(user!);
+            }
             return Ok("Created Successfully");
         }
         catch (Exception ex)

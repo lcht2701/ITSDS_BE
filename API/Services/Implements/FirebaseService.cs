@@ -5,12 +5,19 @@ using Firebase.Storage;
 
 namespace API.Services.Implements;
 
-public class FirebaseStorageService : IFirebaseStorageService
+public class FirebaseService : IFirebaseService
 {
     private static string Apikey = "AIzaSyDSp2BGBcsS282cPTJSxUzFoW2PKWzAZ0A";
     private static string Bucket = "itsds-v1.appspot.com";
     private static string AuthEmail = "itsds@gmail.com";
     private static string AuthPassword = "itsds@123";
+
+    public async Task<bool> SignUp(string email, string password)
+    {
+        var auth = new FirebaseAuthProvider(new FirebaseConfig(Apikey));
+        var userCredentials = await auth.CreateUserWithEmailAndPasswordAsync(email, password);
+        return userCredentials is not null;
+    }
 
     public async Task<string> UploadFirebaseAsync(MemoryStream stream, string fileName)
     {

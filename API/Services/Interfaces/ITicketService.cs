@@ -26,6 +26,7 @@ public interface ITicketService
     Task UpdateTicketStatus(int ticketId, TicketStatus newStatus);
     Task ModifyTicketStatus(int ticketId, TicketStatus newStatus);
     Task CancelTicket(int ticketId, int userId);
+    Task CloseTicket(int ticketId, int userId);
     //Background jobs
     Task AssignSupportJob(int ticketId);
     Task CancelAssignSupportJob(string jobId, int ticketId);

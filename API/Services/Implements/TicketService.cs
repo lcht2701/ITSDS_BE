@@ -65,7 +65,7 @@ public class TicketService : ITicketService
         return response;
     }
 
-    public async Task<List<GetTicketStatusesRequest>> GetTicketStatuses()
+    public Task<List<GetTicketStatusesRequest>> GetTicketStatuses()
     {
         var enumValues = Enum.GetValues(typeof(TicketStatus))
             .Cast<TicketStatus>()
@@ -77,7 +77,7 @@ public class TicketService : ITicketService
             })
             .ToList();
 
-        return enumValues;
+        return Task.FromResult(enumValues);
     }
 
     //For Technician
@@ -252,7 +252,7 @@ public class TicketService : ITicketService
                 x.TaskStatus != TicketTaskStatus.Cancelled);
         }
 
-        string jobId = null;
+        string? jobId = null;
 
         if (ticket.TicketStatus == TicketStatus.Closed || ticket.TicketStatus == TicketStatus.Cancelled)
         {
@@ -330,7 +330,7 @@ public class TicketService : ITicketService
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
                      throw new KeyNotFoundException();
         if (ticket.RequesterId == userId &&
-            (ticket.TicketStatus == TicketStatus.Open || ticket.TicketStatus == TicketStatus.Assigned))
+            ticket.TicketStatus == TicketStatus.Open)
         {
             ticket.TicketStatus = TicketStatus.Cancelled;
             await _ticketRepository.UpdateAsync(ticket);
@@ -339,6 +339,23 @@ public class TicketService : ITicketService
         {
             throw new BadRequestException(
                 "Cancellation of the ticket is not allowed once it has entered the processing state");
+        }
+    }
+
+    public async Task CloseTicket(int ticketId, int userId)
+    {
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
+                     throw new KeyNotFoundException();
+        if (ticket.RequesterId == userId &&
+            ticket.TicketStatus == TicketStatus.Resolved)
+        {
+            ticket.TicketStatus = TicketStatus.Closed;
+            await _ticketRepository.UpdateAsync(ticket);
+        }
+        else
+        {
+            throw new BadRequestException(
+                "If the ticket is not resolved, it cannot be closed");
         }
     }
 
