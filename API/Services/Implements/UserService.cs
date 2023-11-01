@@ -180,6 +180,7 @@ public class UserService : IUserService
             { "id", user.Id },
             { "name", fullname },
             { "username", user.Username! },
+            { "email", user.Email! },
             { "image", user.AvatarUrl! },
             { "created_at", createdAtTime },
             { "modified_at", "" },
@@ -196,6 +197,7 @@ public class UserService : IUserService
         FirestoreDb db = FirestoreDb.Create("itsds-v1");
         DocumentReference docRef = db.Collection("users").Document(user.Id.ToString());
         string modifiedTime = new DateTimeOffset((DateTime)user.ModifiedAt!).ToUnixTimeMilliseconds().ToString();
+        string fullname = $"{user.FirstName} {user.LastName}";
 
         // Get the existing user document data
         DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
@@ -205,7 +207,9 @@ public class UserService : IUserService
             Dictionary<string, object> existingData = snapshot.ToDictionary();
 
             // Update only the fields that need to be changed
-            existingData["name"] = $"{user.FirstName} {user.LastName}";
+            existingData["name"] = fullname ?? existingData["name"];
+            existingData["username"] = user.Username ?? existingData["username"];
+            existingData["email"] = user.Username ?? existingData["email"];
             existingData["image"] = user.AvatarUrl ?? existingData["image"];
             existingData["modified_at"] = modifiedTime ?? existingData["modified_at"];
             existingData["role"] = DataResponse.GetEnumDescription(user.Role) ?? existingData["role"];
