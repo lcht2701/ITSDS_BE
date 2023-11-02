@@ -6,7 +6,9 @@ namespace API.Services.Interfaces
     public interface IFeedbackService
     {
         Task<List<GetFeedbackResponse>> Get(int solutionId, int userId);
+        Task<object> GetById(int id);
         Task Create(CreateFeedbackRequest model, int userId);
+        Task CreateReply(CreateReplyRequest model, int userId);
         Task Update(int id, UpdateFeedbackRequest model, int userId);
         Task Delete(int id);
 
