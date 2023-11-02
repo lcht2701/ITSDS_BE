@@ -43,14 +43,27 @@ public class FeedbackService : IFeedbackService
         var response = _mapper.Map<List<GetFeedbackResponse>>(result);
         foreach (var feedback in response)
         {
-            var replies = await _feedbackRepository.WhereAsync(x => x.ParentFeedbackId == feedback.Id, new string[] { "User" });
-            if (replies.Count > 0)
-            {
-                feedback.Replies = _mapper.Map<List<GetReplyResponse>>(replies);
-            }
+            feedback.FeedbackReplies = await GetRepliesRecursive(feedback.Id);
         }
         return response;
     }
+
+    private async Task<List<GetFeedbackResponse>> GetRepliesRecursive(int parentFeedbackId)
+    {
+        var replies = await _feedbackRepository.WhereAsync(x => x.ParentFeedbackId == parentFeedbackId, new string[] { "User" });
+        if (replies.Count == 0)
+        {
+            return new List<GetFeedbackResponse>();
+        }
+
+        var response = _mapper.Map<List<GetFeedbackResponse>>(replies);
+        foreach (var reply in response)
+        {
+            reply.FeedbackReplies = await GetRepliesRecursive(reply.Id);
+        }
+        return response;
+    }
+
 
     public async Task<object> GetById(int id)
     {
@@ -60,12 +73,12 @@ public class FeedbackService : IFeedbackService
         {
             var response = _mapper.Map(feedback, new GetFeedbackResponse());
             var replies = await _feedbackRepository.WhereAsync(x => x.ParentFeedbackId == feedback.Id);
-            response.Replies = replies.Select(r => _mapper.Map<GetReplyResponse>(r)).ToList();
+            response.FeedbackReplies = replies.Select(r => _mapper.Map<GetFeedbackResponse>(r)).ToList();
             return response;
         }
         else
         {
-            var reply = _mapper.Map(feedback, new GetReplyResponse());
+            var reply = _mapper.Map(feedback, new GetFeedbackResponse());
             return reply;
         }
     }
@@ -86,8 +99,7 @@ public class FeedbackService : IFeedbackService
     public async Task CreateReply(CreateReplyRequest model, int userId)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
-        var parentFeedback = await _feedbackRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ParentFeedbackId) &&
-            x.ParentFeedbackId == null) ?? throw new KeyNotFoundException("Parent feedback is not found");
+        var parentFeedback = await _feedbackRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ParentFeedbackId)) ?? throw new KeyNotFoundException("Parent feedback is not found");
 
         var entity = _mapper.Map(model, new Feedback());
         entity.UserId = userId;
