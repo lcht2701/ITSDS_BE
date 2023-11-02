@@ -2,6 +2,7 @@
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace Persistence.Context
 {
@@ -38,7 +39,13 @@ namespace Persistence.Context
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            builder.Entity<TicketSolution>()
+                    .HasOne(ts => ts.CreatedBy)
+                    .WithMany()
+                    .HasForeignKey(ts => ts.CreatedById);
+
             base.OnModelCreating(builder);
+
             foreach (var entityType in builder.Model.GetEntityTypes())
             {
                 //other automated configurations left out

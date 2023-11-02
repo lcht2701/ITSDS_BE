@@ -31,7 +31,7 @@ public class TicketSolutionService : ITicketSolutionService
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
 
         var result = await _solutionRepository
-            .GetAsync(navigationProperties: new string[] { "Category", "Owner" });
+            .GetAsync(navigationProperties: new string[] { "Category", "Owner", "CreatedBy" });
 
         if (user.Role == Role.Customer)
         {
@@ -52,14 +52,15 @@ public class TicketSolutionService : ITicketSolutionService
     public async Task<object> GetById(int id)
     {
         var result = await _solutionRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
-            new string[] { "Category", "Owner" }) ?? throw new KeyNotFoundException();
+            new string[] { "Category", "Owner", "CreatedBy" }) ?? throw new KeyNotFoundException();
         var response = _mapper.Map(result, new GetTicketSolutionResponse());
         return response;
     }
 
-    public async Task Create(CreateTicketSolutionRequest model)
+    public async Task Create(CreateTicketSolutionRequest model, int createdById)
     {
         var entity = _mapper.Map(model, new TicketSolution());
+        entity.CreatedById = createdById;
         await _solutionRepository.CreateAsync(entity);
     }
 

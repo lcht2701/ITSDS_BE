@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace Domain.Models.Tickets
 {
@@ -22,6 +17,8 @@ namespace Domain.Models.Tickets
 
         public int? OwnerId { get; set; }
 
+        public int? CreatedById { get; set; }
+
         public DateTime? ReviewDate { get; set; }
 
         public DateTime? ExpiredDate { get; set; }
@@ -36,9 +33,11 @@ namespace Domain.Models.Tickets
 
         public string? AttachmentUrl { get; set; }
 
-        public virtual User Owner { get; set; }
+        public virtual User? Owner { get; set; }
 
-        public virtual Category Category { get; set; }
+        public virtual User? CreatedBy { get; set; }
+
+        public virtual Category? Category { get; set; }
 
         [JsonIgnore]
         public virtual ICollection<Feedback>? Feedbacks { get; set; }

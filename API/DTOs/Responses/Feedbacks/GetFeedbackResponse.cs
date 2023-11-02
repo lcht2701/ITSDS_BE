@@ -20,7 +20,7 @@ public class GetFeedbackResponse : IMapFrom<Feedback>
 
     public DateTime? ModifiedAt { get; set; }
 
-    public List<GetReplyResponse>? Replies { get; set; }
+    public List<GetFeedbackResponse>? FeedbackReplies { get; set; }
 
     //public virtual TicketSolution? TicketSolution { get; set; }
 

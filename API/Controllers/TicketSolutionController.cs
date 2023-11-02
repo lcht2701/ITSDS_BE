@@ -56,7 +56,7 @@ public class TicketSolutionController : BaseController
     {
         try
         {
-            await _ticketSolutionService.Create(model);
+            await _ticketSolutionService.Create(model, CurrentUserID);
             return Ok("Created Successfully");
         }
         catch (Exception ex)
