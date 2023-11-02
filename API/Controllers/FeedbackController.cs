@@ -108,8 +108,8 @@ public class FeedbackController : BaseController
     {
         try
         {
-            await _feedbackService.Update(feedbackId, model, CurrentUserID);
-            return Ok("Updated Successfully");
+            var result = await _feedbackService.Update(feedbackId, model, CurrentUserID);
+            return Ok(result);
         }
         catch (KeyNotFoundException)
         {

@@ -113,7 +113,7 @@ public class FeedbackService : IFeedbackService
         await _feedbackRepository.CreateAsync(entity);
     }
 
-    public async Task Update(int id, UpdateFeedbackRequest model, int userId)
+    public async Task<object> Update(int id, UpdateFeedbackRequest model, int userId)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
         var target = await _feedbackRepository.FirstOrDefaultAsync(c => c.Id.Equals(id)) ?? throw new KeyNotFoundException();
@@ -123,6 +123,7 @@ public class FeedbackService : IFeedbackService
             entity.IsPublic = true;
         }
         await _feedbackRepository.UpdateAsync(entity);
+        return entity;
     }
 
     public async Task Delete(int id)
