@@ -11,6 +11,8 @@ public class Feedback : BaseEntity
     public string? Comment { get; set; }
     
     public bool? IsPublic { get; set; }
+
+    public int? ParentFeedbackId { get; set; }
     
     public virtual TicketSolution? TicketSolution { get; set; }
 
