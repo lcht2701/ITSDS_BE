@@ -1,100 +1,104 @@
-﻿using API.DTOs.Requests.Categories;
-using API.DTOs.Requests.Contracts;
-using API.DTOs.Requests.Feedbacks;
-using API.DTOs.Requests.Teams;
+﻿using API.DTOs.Requests.Feedbacks;
+using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Constants.Enums;
-using Domain.Exceptions;
 using Domain.Models;
-using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using System.Diagnostics.Contracts;
 
-namespace API.Controllers
+namespace API.Controllers;
+
+[Route("/v1/itsds/solution/feedback")]
+public class FeedbackController : BaseController
 {
-    [Route("/v1/itsds/solution/feedback")]
-    public class FeedbackController : BaseController
+    private readonly IFeedbackService _feedbackService;
+
+    public FeedbackController(IFeedbackService feedbackService)
     {
-        private readonly IRepositoryBase<Feedback> _feedbackRepository;
-        private readonly IRepositoryBase<User> _userRepository;
+        _feedbackService = feedbackService;
+    }
 
-        public FeedbackController(IRepositoryBase<Feedback> feedbackRepository, IRepositoryBase<User> userRepository)
-        {
-            _feedbackRepository = feedbackRepository;
-            _userRepository = userRepository;
-        }
-
-        [Authorize]
-        [HttpGet("all")]
-
-        public async Task<IActionResult> GetAllContract()
-        {
-            var result = await _feedbackRepository.ToListAsync();
-            return Ok(result);
-        }
-
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetFeedbacksOfSolution(
+    [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpGet]
+    public async Task<IActionResult> GetFeedbacks(
+        int solutionId,
         [FromQuery] string? filter,
         [FromQuery] string? sort,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 5)
+    {
+        try
         {
-            var result = await _feedbackRepository.ToListAsync();
+            var result = await _feedbackService.Get(solutionId, CurrentUserID);
             var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
             return Ok(pagedResponse);
         }
-
-        [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
-        [HttpGet("{feedbackId}")]
-        public async Task<IActionResult> GetFeedbackById(int feedbackId)
+        catch (KeyNotFoundException)
         {
-            var result = await _feedbackRepository.FirstOrDefaultAsync(x => x.Id.Equals(feedbackId), new string[] { "User", "TicketSolution" });
-            return result != null ? Ok(result) : throw new BadRequestException("Feedback not found");
+            return NotFound("Solution is not exist");
         }
-
-        [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
-        [HttpPost]
-        public async Task<IActionResult> CreateFeedback(int solutionId, [FromBody] CreateFeedbackRequest model)
+        catch (Exception ex)
         {
-            var user = await _userRepository.FoundOrThrow(x => x.Id.Equals(CurrentUserID), new BadRequestException("User not found"));
-            var entity = Mapper.Map(model, new Feedback());
-            entity.SolutionId = solutionId;
-            entity.UserId = CurrentUserID;
-            if (user.Role == Role.Customer)
-            {
-                entity.IsPublic = true;
-            }
-            await _feedbackRepository.CreateAsync(entity);
-            return Ok();
+            return BadRequest(ex.Message);
         }
+    }
 
-        [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
-        [HttpPut("{feedbackId}")]
-        public async Task<IActionResult> UpdateFeedback(int feedbackId, [FromBody] UpdateFeedbackRequest req)
+    [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpPost]
+    public async Task<IActionResult> CreateFeedback([FromBody] CreateFeedbackRequest model)
+    {
+        try
         {
-            var user = await _userRepository.FoundOrThrow(x => x.Id.Equals(CurrentUserID), new BadRequestException("User not found"));
-            var target = await _feedbackRepository.FoundOrThrow(c => c.Id.Equals(feedbackId), new BadRequestException("Feedback not found"));
-            Feedback entity = Mapper.Map(req, target);
-            if (user.Role == Role.Customer)
-            {
-                entity.IsPublic = true;
-            }
-            await _feedbackRepository.UpdateAsync(entity);
-            return Accepted("Update Successfully");
+            await _feedbackService.Create(model, CurrentUserID);
+            return Ok("Created Successfully");
         }
-
-        [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
-        [HttpDelete("{feedbackId}")]
-        public async Task<IActionResult> DeleteFeedback(int feedbackId)
+        catch(KeyNotFoundException ex)
         {
-            var target = await _feedbackRepository.FoundOrThrow(c => c.Id.Equals(feedbackId), new BadRequestException("Feedback not found"));
-            await _feedbackRepository.SoftDeleteAsync(target);
-            return Ok("Delete Successfully");
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpPut("{feedbackId}")]
+    public async Task<IActionResult> UpdateFeedback(int feedbackId, [FromBody] UpdateFeedbackRequest model)
+    {
+        try
+        {
+            await _feedbackService.Update(feedbackId, model, CurrentUserID);
+            return Ok("Updated Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return BadRequest("Feedback is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.CUSTOMER},{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpDelete("{feedbackId}")]
+    public async Task<IActionResult> DeleteFeedback(int feedbackId)
+    {
+        try
+        {
+            await _feedbackService.Delete(feedbackId);
+            return Ok("Deleted Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return BadRequest("Feedback is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
         }
     }
 }

@@ -2,11 +2,14 @@
 using API.Services.Implements;
 using API.Services.Interfaces;
 using Domain.Constants;
+using Domain.Constants.Enums;
+using Domain.Exceptions;
 using Domain.Models.Tickets;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
 
@@ -15,16 +18,20 @@ public class TicketController : BaseController
 {
     private readonly IAuditLogService _auditLogService;
     private readonly ITicketService _ticketService;
+    private readonly IMessagingService _messagingService;
+    private readonly IRepositoryBase<Ticket> _ticketRepository;
 
-    public TicketController(IAuditLogService auditLogService, ITicketService ticketService)
+    public TicketController(IAuditLogService auditLogService, ITicketService ticketService,
+        IMessagingService messagingService, IRepositoryBase<Ticket> ticketRepository)
     {
         _auditLogService = auditLogService;
         _ticketService = ticketService;
+        _messagingService = messagingService;
+        _ticketRepository = ticketRepository;
     }
 
     [Authorize]
     [HttpGet("all")]
-
     public async Task<IActionResult> GetAllTicket()
     {
         var result = await _ticketService.Get();
@@ -32,12 +39,20 @@ public class TicketController : BaseController
     }
 
     [Authorize]
+    [HttpGet("ticket-status")]
+    public async Task<IActionResult> GetStatuses()
+    {
+        var result = await _ticketService.GetTicketStatuses();
+        return Ok(result);
+    }
+
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetTickets(
-    [FromQuery] string? filter,
-    [FromQuery] string? sort,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 5)
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
     {
         var response = await _ticketService.Get();
         var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
@@ -49,10 +64,10 @@ public class TicketController : BaseController
     [Authorize]
     [HttpGet("user/{userId}")]
     public async Task<IActionResult> GetTicketsOfUser(int userId,
-    [FromQuery] string? filter,
-    [FromQuery] string? sort,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 5)
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
     {
         try
         {
@@ -79,7 +94,6 @@ public class TicketController : BaseController
         {
             return BadRequest(ex.Message);
         }
-
     }
 
     [Authorize(Roles = Roles.CUSTOMER)]
@@ -98,12 +112,27 @@ public class TicketController : BaseController
     }
 
     [Authorize(Roles = Roles.TECHNICIAN)]
-    [HttpGet("assign")]
+    [HttpGet("assign/available")]
     public async Task<IActionResult> GetAssignedTickets()
     {
         try
         {
             var response = await _ticketService.GetAssignedTickets(CurrentUserID);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.TECHNICIAN)]
+    [HttpGet("assign/done")]
+    public async Task<IActionResult> GetCompleteAssignedTickets()
+    {
+        try
+        {
+            var response = await _ticketService.GetCompletedAssignedTickets(CurrentUserID);
             return Ok(response);
         }
         catch (Exception ex)
@@ -154,10 +183,6 @@ public class TicketController : BaseController
         {
             var entity = await _ticketService.CreateByCustomer(CurrentUserID, model);
             await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
-            //if (await _ticketService.IsTicketAssigned(entity.Id))
-            //{
-            //    return Ok("Ticket already assigned to support.");
-            //}
 
             //Chỉnh lại tgian hẹn giờ sau
             string jobId = BackgroundJob.Schedule(
@@ -167,6 +192,7 @@ public class TicketController : BaseController
                 jobId + "_Cancellation",
                 () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
                 "*/5 * * * * *"); //Every 5 secs
+            await _messagingService.SendNotification($"Ticket [{model.Title}] has been created", CurrentUserID);
             return Ok("Ticket created and scheduled for assignment.");
         }
         catch (Exception ex)
@@ -182,10 +208,15 @@ public class TicketController : BaseController
     {
         try
         {
-            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            Ticket? original = (Ticket?)await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
             var updated = await _ticketService.UpdateByCustomer(ticketId, model);
             await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
+            await _messagingService.SendNotification($"Ticket [{model.Title}] has been updated", CurrentUserID);
             return Ok("Update Successfully");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (KeyNotFoundException)
         {
@@ -196,7 +227,6 @@ public class TicketController : BaseController
             return BadRequest(ex.Message);
         }
     }
-
 
 
     [Authorize(Roles = Roles.MANAGER)]
@@ -221,6 +251,13 @@ public class TicketController : BaseController
                     jobId + "_Cancellation",
                     () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
                     "*/5 * * * * *"); //Every 5
+                await _messagingService.SendNotification($"Ticket [{model.Title}] has been created", CurrentUserID);
+                if (model.RequesterId != null)
+                {
+                    await _messagingService.SendNotification($"Ticket [{model.Title}] has been created",
+                        (int)model.RequesterId);
+                }
+
                 return Ok("Ticket created and scheduled for assignment.");
             }
         }
@@ -236,10 +273,21 @@ public class TicketController : BaseController
     {
         try
         {
-            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            Ticket? original = (Ticket?)await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
             var updated = await _ticketService.UpdateByManager(ticketId, model);
             await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
+            await _messagingService.SendNotification($"Ticket [{model.Title}] has been updated", CurrentUserID);
+            if (model.RequesterId != null)
+            {
+                await _messagingService.SendNotification($"Ticket [{model.Title}] has been updated",
+                    (int)model.RequesterId);
+            }
+
             return Ok("Update Successfully");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (KeyNotFoundException)
         {
@@ -258,7 +306,71 @@ public class TicketController : BaseController
         try
         {
             await _ticketService.Remove(ticketId);
+            var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId);
+            await _messagingService.SendNotification($"Ticket [{ticket.Title}] has been removed", CurrentUserID);
             return Ok("Removed Successfully");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpPatch("modify-status")]
+    public async Task<IActionResult> ModifyTicketStatus(int ticketId, TicketStatus newStatus)
+    {
+        try
+        {
+            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            await _ticketService.ModifyTicketStatus(ticketId, newStatus);
+            var updated = await _ticketService.GetById(ticketId);
+            await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
+            //Send Notification
+            await _messagingService.SendNotification($"Status of ticket [{updated.Title}] has been update",
+                CurrentUserID);
+            if (updated.RequesterId != null)
+            {
+                await _messagingService.SendNotification($"Status of ticket [{updated.Title}] has been update",
+                    (int)updated.RequesterId);
+            }
+
+            return Ok("Status Updated Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Ticket is not exist");
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.CUSTOMER}")]
+    [HttpPatch("cancel")]
+    public async Task<IActionResult> CancelTicket(int ticketId)
+    {
+        try
+        {
+            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            await _ticketService.CancelTicket(ticketId, CurrentUserID);
+            var updated = await _ticketService.GetById(ticketId);
+            await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
+            await _messagingService.SendNotification($"Ticket [{updated.Title}] has been cancelled", CurrentUserID);
+            return Ok("Ticket Cancelled Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Ticket is not exist");
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {

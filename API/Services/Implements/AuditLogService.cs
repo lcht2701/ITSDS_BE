@@ -44,8 +44,15 @@ public class AuditLogService : IAuditLogService
 
     public async Task TrackUpdated<T>(T originalEntity, T updatedEntity, int userId, int id, string tableName)
     {
+
+        if (originalEntity.GetType() != updatedEntity.GetType())
+        {
+            throw new InvalidOperationException("originalEntity and updatedEntity must be of the same type.");
+        }
+
         var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
         var currentTime = DateTime.UtcNow;
+        List<AuditLog> historyEntries = new List<AuditLog>();
 
         foreach (var property in properties)
         {
@@ -72,12 +79,15 @@ public class AuditLogService : IAuditLogService
                     Timestamp = currentTime,
                 };
 
-                await _dbContext.AuditLogs.AddAsync(historyEntry);
+                historyEntries.Add(historyEntry);
             }
         }
 
+        await _dbContext.AuditLogs.AddRangeAsync(historyEntries);
         await _dbContext.SaveChangesAsync();
     }
+
+
 
     private static string GetUpdateMessage(string propertyName, object updatedValue)
     {

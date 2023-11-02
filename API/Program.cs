@@ -3,6 +3,8 @@ using API.Services.Implements;
 using API.Services.Interfaces;
 using API.Utils;
 using Domain.Application.AppConfig;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
@@ -19,7 +21,6 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 var CorsPolicy = "CorsPolicy";
 
-// Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var connectionString = configuration.GetConnectionString("DefaultConnection");
@@ -33,6 +34,7 @@ builder.Services.AddHangfire(config => config
 builder.Services.AddHangfireServer();
 
 
+// Add services to the container.
 builder.Services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
 builder.Services.AddSingleton<FirebaseStorageService>();
 
@@ -46,6 +48,7 @@ builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IModeService, ModeService>();
+builder.Services.AddScoped<IMessagingService, MessagingService>();
 builder.Services.AddScoped<IServicePackService, ServicePackService>();
 builder.Services.AddScoped<IServiceService, ServiceService>();
 builder.Services.AddScoped<ITeamMemberService, TeamMemberService>();
@@ -129,6 +132,11 @@ builder.Services.AddCors(options =>
         });
 });
 
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-twxch-bd8d0b1075.json")),
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -137,14 +145,11 @@ app.UseSwaggerUI();
 await app.Services.ApplyMigrations();
 
 app.UseHttpsRedirection();
-
 app.UseCors(CorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAutoWrapper();
 app.UseHangfireDashboard();
-
 app.MapControllers();
 app.MapHangfireDashboard();
-
 app.Run();

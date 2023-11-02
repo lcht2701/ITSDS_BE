@@ -34,6 +34,8 @@ namespace Domain.Models.Tickets
 
         public bool? IsPublic { get; set; }
 
+        public string? AttachmentUrl { get; set; }
+
         public virtual User Owner { get; set; }
 
         public virtual Category Category { get; set; }

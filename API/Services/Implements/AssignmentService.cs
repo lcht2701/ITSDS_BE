@@ -2,7 +2,6 @@
 using API.DTOs.Responses.Assignments;
 using API.Services.Interfaces;
 using AutoMapper;
-using Domain.Constants.Cases;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
@@ -150,15 +149,14 @@ public class AssignmentService : IAssignmentService
         return response;
     }
 
-    public async Task<IActionResult> Assign(int ticketId, AssignTicketManualRequest model)
+    public async Task Assign(int ticketId, AssignTicketManualRequest model)
     {
-
         var ticket = await _ticketRepository.FoundOrThrow(x => x.Id == ticketId, new KeyNotFoundException("Ticket not found."));
 
         var existingAssignment = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticketId);
         if (existingAssignment != null)
         {
-            return new BadRequestObjectResult("Ticket has been assigned");
+            throw new BadRequestException("Ticket has been assigned");
         }
 
         if (model.TechnicianId != null || model.TeamId != null)
@@ -167,7 +165,7 @@ public class AssignmentService : IAssignmentService
             {
                 if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
                 {
-                    return new BadRequestObjectResult("This technician is not a member of the specified team.");
+                    throw new BadRequestException("This technician is not a member of the specified team.");
                 }
             }
 
@@ -179,19 +177,13 @@ public class AssignmentService : IAssignmentService
             };
             await _assignmentRepository.CreateAsync(assignment);
             await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
-
-            return new OkObjectResult("Assigned successfully");
-        }
-        else
-        {
-            return new OkResult();
         }
     }
 
 
-    public async Task<IActionResult> Update(int ticketId, UpdateTicketAssignmentManualRequest model)
+    public async Task Update(int ticketId, UpdateTicketAssignmentManualRequest model)
     {
-        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id == ticketId, new BadRequestException("Ticket Not Found"));
+        var ticket = await _ticketRepository.FoundOrThrow(x => x.Id == ticketId, new KeyNotFoundException("Ticket Not Found"));
         var target = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(ticket.Id));
 
         if (model.TechnicianId != target.TechnicianId || model.TeamId != target.TeamId)
@@ -219,17 +211,16 @@ public class AssignmentService : IAssignmentService
                 case AssignmentCase.NotNullNotNull:
                     if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
                     {
-                        return new BadRequestObjectResult("This technician is not a member of the specified team.");
+                        throw new BadRequestException("This technician is not a member of the specified team.");
                     }
                     entity = _mapper.Map(model, target);
                     await _assignmentRepository.UpdateAsync(entity);
                     break;
 
                 default:
-                    return new BadRequestObjectResult("Invalid modeluest.");
+                    throw new BadRequestException("Invalid modeluest.");
             }
         }
-        return new OkObjectResult("Updated Successfully");
     }
 
     public async Task Remove(int ticketId)

@@ -22,7 +22,9 @@ public class TicketService : ITicketService
     private readonly IAuditLogService _auditLogService;
     private readonly IMapper _mapper;
 
-    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository, IAuditLogService auditLogService, IMapper mapper)
+    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository,
+        IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository,
+        IAuditLogService auditLogService, IMapper mapper)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -52,7 +54,7 @@ public class TicketService : ITicketService
     public async Task<List<GetTicketResponse>> Get()
     {
         var result = await _ticketRepository.GetAsync(navigationProperties: new string[]
-        { "Requester", "Service", "Category", "Mode" });
+            { "Requester", "Service", "Category", "Mode" });
 
         var response = result.Select(ticket =>
         {
@@ -63,33 +65,74 @@ public class TicketService : ITicketService
         return response;
     }
 
+    public async Task<List<GetTicketStatusesRequest>> GetTicketStatuses()
+    {
+        var enumValues = Enum.GetValues(typeof(TicketStatus))
+            .Cast<TicketStatus>()
+            .Where(status => status != TicketStatus.Cancelled && status != TicketStatus.Closed)
+            .Select(status => new GetTicketStatusesRequest
+            {
+                Id = (int)status,
+                StatusName = DataResponse.GetEnumDescription((Enum?)status)
+            })
+            .ToList();
+
+        return enumValues;
+    }
+
+    //For Technician
     public async Task<List<GetTicketResponse>> GetAssignedTickets(int userId)
     {
         var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == userId);
-
         var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
-        var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id), new string[] { "Requester", "Service", "Category", "Mode" });
+        var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
+            new string[] { "Requester", "Service", "Category", "Mode" });
+        var filterResult = result.Where(x =>
+            IsTicketDone(x) == false);
 
         // Map the tickets to response entities
-        var response = result.Select(ticket =>
-        {
-            var entity = _mapper.Map<GetTicketResponse>(ticket);
-            DataResponse.CleanNullableDateTime(entity);
-            return entity;
-        })
-        .OrderByDescending(x => x.CreatedAt)
-        .ToList();
+        var response = filterResult.Select(ticket =>
+            {
+                var entity = _mapper.Map<GetTicketResponse>(ticket);
+                DataResponse.CleanNullableDateTime(entity);
+                return entity;
+            })
+            .OrderByDescending(x => x.TicketStatus)
+            .ToList();
         return response;
     }
 
-    public async Task<object> GetById(int id)
+    //For Technician
+    public async Task<List<GetTicketResponse>> GetCompletedAssignedTickets(int userId)
+    {
+        var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == userId);
+        var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
+        var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
+            new string[] { "Requester", "Service", "Category", "Mode" });
+        var filterResult = result.Where(x =>
+            IsTicketDone(x) == true);
+
+        // Map the tickets to response entities
+        var response = filterResult.Select(ticket =>
+            {
+                var entity = _mapper.Map<GetTicketResponse>(ticket);
+                DataResponse.CleanNullableDateTime(entity);
+                return entity;
+            })
+            .OrderByDescending(x => x.TicketStatus)
+            .ToList();
+        return response;
+    }
+
+    public async Task<GetTicketResponse> GetById(int id)
     {
         var result =
-             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
-                 new string[] { "Requester", "Service", "Category", "Mode" }) ?? throw new KeyNotFoundException(); ;
-        _mapper.Map<GetTicketResponse>(result);
-        DataResponse.CleanNullableDateTime(result);
-        return result;
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
+                new string[] { "Requester", "Service", "Category", "Mode" }) ?? throw new KeyNotFoundException();
+        ;
+        var entity = _mapper.Map<GetTicketResponse>(result);
+        DataResponse.CleanNullableDateTime(entity);
+        return entity;
     }
 
     public async Task<List<GetTicketResponse>> GetByUser(int userId)
@@ -105,39 +148,41 @@ public class TicketService : ITicketService
         return response;
     }
 
+    //For Customer
     public async Task<List<GetTicketResponse>> GetTicketAvailable(int userId)
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
-        new string[] { "Requester", "Service", "Category", "Mode" });
+            new string[] { "Requester", "Service", "Category", "Mode" });
 
         var filteredResult = result.Where(x => !IsTicketDone(x));
 
         var response = filteredResult.Select(ticket =>
-        {
-            var entity = _mapper.Map<GetTicketResponse>(ticket);
-            DataResponse.CleanNullableDateTime(entity);
-            return entity;
-        })
-        .OrderByDescending(x => x.CreatedAt)
-        .ToList();
+            {
+                var entity = _mapper.Map<GetTicketResponse>(ticket);
+                DataResponse.CleanNullableDateTime(entity);
+                return entity;
+            })
+            .OrderByDescending(x => x.CreatedAt)
+            .ToList();
         return response;
     }
 
+    //For Customer
     public async Task<List<GetTicketResponse>> GetTicketHistory(int userId)
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
-        new string[] { "Requester", "Service", "Category", "Mode" });
+            new string[] { "Requester", "Service", "Category", "Mode" });
 
         var filteredResult = result.Where(x => IsTicketDone(x));
 
         var response = filteredResult.Select(ticket =>
-        {
-            var entity = _mapper.Map<GetTicketResponse>(ticket);
-            DataResponse.CleanNullableDateTime(entity);
-            return entity;
-        })
-        .OrderByDescending(x => x.CompletedTime)
-        .ToList();
+            {
+                var entity = _mapper.Map<GetTicketResponse>(ticket);
+                DataResponse.CleanNullableDateTime(entity);
+                return entity;
+            })
+            .OrderByDescending(x => x.CompletedTime)
+            .ToList();
         return response;
     }
 
@@ -187,78 +232,116 @@ public class TicketService : ITicketService
 
     public async Task UpdateTicketStatus(int ticketId, TicketStatus newStatus)
     {
-        var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ?? throw new KeyNotFoundException();
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
+                     throw new KeyNotFoundException();
         ticket.TicketStatus = newStatus;
         await _ticketRepository.UpdateAsync(ticket);
     }
 
-    public async Task UpdateTicketStatusForTechnician(int ticketId, TicketStatus newStatus)
+    public async Task ModifyTicketStatus(int ticketId, TicketStatus newStatus)
     {
-        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId) ?? throw new KeyNotFoundException();
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
+                     throw new KeyNotFoundException();
         var tasks = await _taskRepository.WhereAsync(x => x.TicketId.Equals(ticket.Id));
         var taskIncompletedCount = 0;
         if (tasks.Count > 0)
         {
             taskIncompletedCount = tasks.Count(x =>
-            x.TaskStatus != TicketTaskStatus.Completed ||
-            x.TaskStatus != TicketTaskStatus.Cancelled);
+                x.TaskStatus != TicketTaskStatus.Completed &&
+                x.TaskStatus != TicketTaskStatus.Cancelled);
         }
-        if (ticket.TicketStatus != TicketStatus.Open)
+
+        string jobId = null;
+
+        if (ticket.TicketStatus == TicketStatus.Closed || ticket.TicketStatus == TicketStatus.Cancelled)
         {
-            switch (ticket.TicketStatus)
-            {
-                case TicketStatus.Assigned:
-                    if (newStatus == TicketStatus.InProgress)
-                    {
-                        ticket.TicketStatus = newStatus;
-                        await _ticketRepository.UpdateAsync(ticket);
-                    }
-                    if (newStatus != TicketStatus.Resolved && taskIncompletedCount == 0)
-                    {
-                        ticket.TicketStatus = newStatus;
-                        await _ticketRepository.UpdateAsync(ticket);
-                    }
-                    else
-                    {
-                        throw new BadRequestException("Cannot resovle ticket if all the tasks are not completed");
-                    }
-                    break;
-                case TicketStatus.InProgress:
-                    if (newStatus == TicketStatus.Resolved)
-                    {
-                        ticket.TicketStatus = newStatus;
-                        await _ticketRepository.UpdateAsync(ticket);
-                    }
-                    break;
-                case TicketStatus.Resolved:
-                    if (newStatus == TicketStatus.Closed)
-                    {
-                        string jobId = BackgroundJob.Schedule(
-                            () => CloseTicketJob(ticket.Id),
-                            TimeSpan.FromDays(2));
-                        RecurringJob.AddOrUpdate(
-                            jobId + "_Cancellation",
-                            () => CancelCloseTicketJob(jobId, ticket.Id),
-                            "*/5 * * * * *"); //Every 5
-                    }
-                    if (newStatus == TicketStatus.InProgress)
-                    {
-                        ticket.TicketStatus = newStatus;
-                        await _ticketRepository.UpdateAsync(ticket);
-                    }
-                    break;
-                case TicketStatus.Closed:
-                    // Handle re-open logic if needed
-                    // You can add re-open logic here if you want to allow re-opening of closed tickets.
-                    break;
-                case TicketStatus.Cancelled:
-                    break;
-                default:
-                    throw new BadRequestException();
-            }
+            throw new BadRequestException("Cannot update ticket status when ticket is Closed or Cancelled");
+        }
+
+        if (newStatus == TicketStatus.Open || newStatus == TicketStatus.Closed || newStatus == TicketStatus.Cancelled)
+        {
+            throw new BadRequestException("Cannot update ticket status to Open, Closed or Cancelled");
+        }
+
+        switch (ticket.TicketStatus)
+        {
+            case TicketStatus.Assigned:
+                if (newStatus == TicketStatus.InProgress)
+                {
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                }
+                else if (newStatus == TicketStatus.Resolved && taskIncompletedCount == 0)
+                {
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                    jobId = AutoCloseBackgroundService(ticket);
+                }
+                else
+                {
+                    throw new BadRequestException("Cannot resovle ticket if all the tasks are not completed");
+                }
+
+                break;
+            case TicketStatus.InProgress:
+                if (newStatus == TicketStatus.Resolved && taskIncompletedCount == 0)
+                {
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                    jobId = AutoCloseBackgroundService(ticket);
+                }
+                else
+                {
+                    throw new BadRequestException("Cannot resovle ticket if all the tasks are not completed");
+                }
+
+                break;
+            case TicketStatus.Resolved:
+
+                if (newStatus == TicketStatus.InProgress)
+                {
+                    ticket.TicketStatus = newStatus;
+                    await _ticketRepository.UpdateAsync(ticket);
+                    if (jobId != null) await CancelCloseTicketJob(jobId, ticketId);
+                }
+
+                break;
+            default:
+                throw new BadRequestException();
         }
     }
 
+    private string AutoCloseBackgroundService(Ticket ticket)
+    {
+        //Auto Schedule Job to Close Ticket
+        string jobId = BackgroundJob.Schedule(
+            () => CloseTicketJob(ticket.Id),
+            TimeSpan.FromDays(2));
+        RecurringJob.AddOrUpdate(
+            jobId + "_Cancellation",
+            () => CancelCloseTicketJob(jobId, ticket.Id),
+            "*/5 * * * * *"); //Every 5
+        return jobId;
+    }
+
+    public async Task CancelTicket(int ticketId, int userId)
+    {
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
+                     throw new KeyNotFoundException();
+        if (ticket.RequesterId == userId &&
+            (ticket.TicketStatus == TicketStatus.Open || ticket.TicketStatus == TicketStatus.Assigned))
+        {
+            ticket.TicketStatus = TicketStatus.Cancelled;
+            await _ticketRepository.UpdateAsync(ticket);
+        }
+        else
+        {
+            throw new BadRequestException(
+                "Cancellation of the ticket is not allowed once it has entered the processing state");
+        }
+    }
+
+    //Background Services
     public async Task AssignSupportJob(int ticketId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(t => t.Id == ticketId);
@@ -269,7 +352,8 @@ public class TicketService : ITicketService
             return;
         }
 
-        var availableTechnicians = await _userRepository.WhereAsync(x => x.Role == Role.Technician && x.IsActive == true);
+        var availableTechnicians =
+            await _userRepository.WhereAsync(x => x.Role == Role.Technician && x.IsActive == true);
 
         if (!availableTechnicians.Any())
         {
@@ -324,11 +408,10 @@ public class TicketService : ITicketService
     public async Task CancelCloseTicketJob(string jobId, int ticketId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
-        if (ticket.TicketStatus == TicketStatus.Closed)
+        if (ticket.TicketStatus != TicketStatus.Resolved)
         {
             BackgroundJob.Delete(jobId);
         }
-
     }
 
     private async Task<int> GetNumberOfAssignmentsForTechnician(int technicianId)
@@ -336,5 +419,4 @@ public class TicketService : ITicketService
         var result = await _assignmentRepository.WhereAsync(x => x.TechnicianId == technicianId);
         return result.Count;
     }
-
 }

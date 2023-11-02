@@ -1,38 +1,58 @@
 ﻿using API.DTOs.Requests.TeamMembers;
+using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Constants.Enums;
 using Domain.Exceptions;
-using Domain.Models;
-using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
 
 [Route("/v1/itsds/team/member/")]
 public class TeamMemberController : BaseController
 {
-    private readonly IRepositoryBase<Team> _teamRepository;
-    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
-    private readonly IRepositoryBase<User> _userRepository;
+    private readonly ITeamMemberService _teamMemberService;
 
-    public TeamMemberController(IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<User> userRepository)
+    public TeamMemberController(ITeamMemberService teamMemberService)
     {
-        _teamRepository = teamRepository;
-        _teamMemberRepository = teamMemberRepository;
-        _userRepository = userRepository;
+        _teamMemberService = teamMemberService;
     }
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpGet("{teamId}")]
     public async Task<IActionResult> GetTeamMembersByTeam(int teamId)
     {
-        var teamMembers = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId));
-        var userIds = teamMembers.Select(tm => tm.MemberId).ToList();
-        var users = await _userRepository.WhereAsync(u => userIds.Contains(u.Id));
-
-        return Ok(users);
+        try
+        {
+            var members = await _teamMemberService.GetByTeam(teamId);
+            return Ok(members);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Team is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("select-list")]
+    public async Task<IActionResult> GetSelectList(int teamId)
+    {
+        try
+        {
+            var members = await _teamMemberService.GetMembersNotInTeam(teamId);
+            return Ok(members);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Team is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
 
@@ -40,60 +60,83 @@ public class TeamMemberController : BaseController
     [HttpPost("assign")]
     public async Task<IActionResult> AssignMemberToTeam([FromBody] AssignMemberToTeamRequest model)
     {
-        var user = await _userRepository.FoundOrThrow(x => x.Id.Equals(model.MemberId), new BadRequestException("User not found"));
-        if (user.Role != Role.Accountant || user.Role != Role.Technician)
+        try
         {
-            throw new BadRequestException("This user is not allowed to assign to a team");
+            await _teamMemberService.Assign(model);
+            return Ok("Assigned Successfully");
         }
-        var team = await _teamRepository.FoundOrThrow(x => x.Id.Equals(model.TeamId), new BadRequestException("Team not found"));
-        var isInTeam = await _teamMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
-        if (isInTeam != null)
+        catch (KeyNotFoundException ex)
         {
-            throw new BadRequestException("User is already in a team");
+            return NotFound(ex.Message);
         }
-
-        var entity = Mapper.Map(model, new TeamMember());
-        await _teamMemberRepository.CreateAsync(entity);
-        return Ok("Successfully");
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpPut("update")]
-    public async Task<IActionResult> UpdateTeamMember([FromBody] UpdateTeamMemberRequest model, int teamId, int memberId)
+    public async Task<IActionResult> UpdateTeamMember(int memberId, [FromBody] UpdateTeamMemberRequest model)
     {
-        var user = await _teamMemberRepository.FoundOrThrow(x => x.TeamId.Equals(teamId) && x.MemberId.Equals(memberId), new BadRequestException("Member is not in this team."));
-        TeamMember entity = Mapper.Map(model, user);
-        await _teamMemberRepository.CreateAsync(entity);
-        return Ok("Successfully");
+        try
+        {
+            await _teamMemberService.Update(memberId, model);
+            return Ok("Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpPatch("transfer")]
     public async Task<IActionResult> TransferTeamMember(int memberId, int newTeamId)
     {
-        var user = await _teamMemberRepository.FoundOrThrow(x => x.MemberId.Equals(memberId), new BadRequestException("User is currently not a member of any team"));
-
-        if (user.TeamId == newTeamId)
+        try
         {
-            throw new BadRequestException("Cannot transfer in the same team");
+            await _teamMemberService.Transfer(memberId, newTeamId);
+            return Ok("Successfully");
         }
-
-        user.TeamId = newTeamId;
-        await _teamMemberRepository.UpdateAsync(user);
-        return Ok("Successfully");
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpDelete("remove")]
     public async Task<IActionResult> RemoveTeamMember(int memberId)
     {
-        var user = await _teamMemberRepository.FoundOrThrow(x => x.MemberId.Equals(memberId), new BadRequestException("User is currently not a member of any team"));
-        await _teamMemberRepository.SoftDeleteAsync(user);
-        return Ok("Successfully");
+        try
+        {
+            await _teamMemberService.Remove(memberId);
+            return Ok("Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
-
-
-
-
-
 }
