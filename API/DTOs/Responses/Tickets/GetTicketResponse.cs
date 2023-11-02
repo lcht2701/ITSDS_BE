@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using API.DTOs.Responses.Assignments;
 using API.Mappings;
 using Domain.Constants.Enums;
 using Domain.Models;
@@ -29,6 +30,7 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public DateTime? CreatedAt { get; set; }
     public DateTime? ModifiedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
+    public GetAssignmentResponse? Assignment { get; set; }
     public virtual User? Requester { get; set; }
     public virtual Service? Service { get; set; }
     public virtual Category? Category { get; set; }

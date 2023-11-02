@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Requests.Tickets;
+using API.DTOs.Responses.Assignments;
 using API.DTOs.Responses.Tickets;
 using API.Services.Interfaces;
 using AutoMapper;
@@ -131,6 +132,12 @@ public class TicketService : ITicketService
                 new string[] { "Requester", "Service", "Category", "Mode" }) ?? throw new KeyNotFoundException();
         ;
         var entity = _mapper.Map<GetTicketResponse>(result);
+        var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == entity.Id);
+        if (ass != null)
+        {
+            var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
+            entity.Assignment = assMapping;
+        }
         DataResponse.CleanNullableDateTime(entity);
         return entity;
     }

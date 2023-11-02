@@ -169,7 +169,7 @@ public class UserService : IUserService
     {
         string createdAtTime = new DateTimeOffset((DateTime)user.CreatedAt!).ToUnixTimeMilliseconds().ToString();
         string lastActiveTime = new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds().ToString();
-        string roleName = DataResponse.GetEnumDescription(user.Role);
+        string about = $"I am {DataResponse.GetEnumDescription(user.Role)}";
         string fullname = $"{user.FirstName} {user.LastName}";
         FirestoreDb db = FirestoreDb.Create("itsds-v1");
         DocumentReference docRef = db.Collection("users").Document(user.Id.ToString());
@@ -179,14 +179,12 @@ public class UserService : IUserService
         {
             { "id", user.Id },
             { "name", fullname },
-            { "username", user.Username! },
             { "email", user.Email! },
             { "image", user.AvatarUrl! },
             { "created_at", createdAtTime },
-            { "modified_at", "" },
             { "last_active", lastActiveTime },
-            { "role", roleName },
-            { "about", $"I am {roleName}" },
+            { "about", about },
+            { "is_active", true },
             { "push_token", "" },
         };
         await docRef.SetAsync(data);
@@ -196,8 +194,8 @@ public class UserService : IUserService
     {
         FirestoreDb db = FirestoreDb.Create("itsds-v1");
         DocumentReference docRef = db.Collection("users").Document(user.Id.ToString());
-        string modifiedTime = new DateTimeOffset((DateTime)user.ModifiedAt!).ToUnixTimeMilliseconds().ToString();
-        string fullname = $"{user.FirstName} {user.LastName}";
+        string newFullname = $"{user.FirstName} {user.LastName}";
+        string newAbout = $"I am {DataResponse.GetEnumDescription(user.Role)}";
 
         // Get the existing user document data
         DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
@@ -207,12 +205,10 @@ public class UserService : IUserService
             Dictionary<string, object> existingData = snapshot.ToDictionary();
 
             // Update only the fields that need to be changed
-            existingData["name"] = fullname ?? existingData["name"];
-            existingData["username"] = user.Username ?? existingData["username"];
+            existingData["name"] = newFullname ?? existingData["name"];
             existingData["email"] = user.Username ?? existingData["email"];
             existingData["image"] = user.AvatarUrl ?? existingData["image"];
-            existingData["modified_at"] = modifiedTime ?? existingData["modified_at"];
-            existingData["role"] = DataResponse.GetEnumDescription(user.Role) ?? existingData["role"];
+            existingData["about"] = newAbout ?? existingData["about"];
 
             // Update the Firestore document with the modified data
             await docRef.UpdateAsync(existingData);
