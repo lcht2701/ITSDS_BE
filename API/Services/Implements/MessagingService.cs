@@ -57,7 +57,14 @@ public class MessagingService : IMessagingService
         await _messagingRepository.CreateAsync(entity);
     }
 
-    public async Task MarkAsRead(int userId)
+    public async Task MarkAsRead(int notificationId)
+    {
+        var notification = await _messagingRepository.FirstOrDefaultAsync(x => x.Id == notificationId) ?? throw new KeyNotFoundException("Notification is not exist");
+        notification.IsRead = true;
+        await _messagingRepository.UpdateAsync(notification);
+    }
+
+    public async Task MarkAsReadAll(int userId)
     {
         var result = await _messagingRepository.GetAsync(x => x.UserId == userId);
         foreach (var item in result)
