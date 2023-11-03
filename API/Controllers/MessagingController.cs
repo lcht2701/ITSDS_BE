@@ -36,7 +36,7 @@ public class MessagingController : BaseController
     {
         try
         {
-            await _messagingService.SendNotification(model.Message!, CurrentUserID);
+            await _messagingService.SendNotification("ITSDS", model.Message!, CurrentUserID);
             return Ok("Send Notification Successfully");
         }
         catch (Exception ex)
@@ -88,7 +88,7 @@ public class MessagingController : BaseController
             await _messagingService.GetToken(CurrentUserID, model.Token);
             return Ok("Get token successfully");
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return BadRequest(ex.Message);
         }

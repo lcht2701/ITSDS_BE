@@ -22,9 +22,8 @@ public class MessagingService : IMessagingService
         return (List<Messaging>)result;
     }
 
-    public async Task SendNotification(string message, int userId)
+    public async Task SendNotification(string title, string message, int userId)
     {
-        string title = "ITSDS";
         var tokenModel = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId);
         string token = tokenModel.Token!;
         if (token == null)
@@ -43,18 +42,54 @@ public class MessagingService : IMessagingService
 
         var messaging = FirebaseMessaging.DefaultInstance;
         var result = await messaging.SendAsync(notification);
+        if (result != null)
+        {
+            var entity = new Messaging()
+            {
+                Title = title,
+                Body = message,
+                UserId = userId,
+                IsRead = false
+            };
+            await _messagingRepository.CreateAsync(entity);
+        }
     }
 
-    public async Task CreateNotification(string title, string message, int userId)
+    public async Task SendNotifications(string title, string message, List<int> userIds)
     {
-        var entity = new Messaging()
+        foreach (int userId in userIds)
         {
-            Title = title,
-            Body = message,
-            UserId = userId,
-            IsRead = false
-        };
-        await _messagingRepository.CreateAsync(entity);
+            var tokenModel = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId);
+            string token = tokenModel.Token!;
+
+            if (token != null)
+            {
+                var notification = new Message()
+                {
+                    Notification = new Notification
+                    {
+                        Title = title,
+                        Body = message,
+                    },
+                    Token = token
+                };
+
+                var messaging = FirebaseMessaging.DefaultInstance;
+                var result = await messaging.SendAsync(notification);
+
+                if (result != null)
+                {
+                    var entity = new Messaging()
+                    {
+                        Title = title,
+                        Body = message,
+                        UserId = userId,
+                        IsRead = false
+                    };
+                    await _messagingRepository.CreateAsync(entity);
+                }
+            }
+        }
     }
 
     public async Task MarkAsRead(int notificationId)
