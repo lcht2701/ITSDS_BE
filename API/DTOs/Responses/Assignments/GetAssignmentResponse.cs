@@ -19,6 +19,8 @@ namespace API.DTOs.Responses.Assignments
 
         public string? TechnicianEmail => Technician?.Email;
 
+        public string? TechnicianPhoneNumber => Technician?.PhoneNumber;
+
         public string? TeamName => Team?.Name;
 
         [JsonIgnore]

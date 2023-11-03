@@ -3,10 +3,8 @@ using API.DTOs.Responses.TicketSolutions;
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Constants.Enums;
-using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
-using Org.BouncyCastle.Ocsp;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 
@@ -97,7 +95,10 @@ public class TicketSolutionService : ITicketSolutionService
 
     public async Task SubmitForApproval(int solutionId)
     {
-        //handle later
+        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ??
+                     throw new KeyNotFoundException();
+        target.IsApproved = !target.IsApproved;
+        await _solutionRepository.UpdateAsync(target);
     }
 
     public async Task ChangePublic(int solutionId)
