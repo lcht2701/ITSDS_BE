@@ -177,13 +177,13 @@ public class UserService : IUserService
         // Create a data object for the document
         Dictionary<string, object> data = new()
         {
-            { "id", user.Id },
-            { "name", fullname },
-            { "email", user.Email! },
-            { "image", user.AvatarUrl! },
-            { "created_at", createdAtTime },
-            { "last_active", lastActiveTime },
-            { "about", about },
+            { "id", user.Id.ToString() ?? "" },
+            { "name", fullname ?? "" },
+            { "email", user.Email! ?? "" },
+            { "image", user.AvatarUrl! ?? "" },
+            { "created_at", createdAtTime ?? "" },
+            { "last_active", lastActiveTime ?? "" },
+            { "about", about ?? "" },
             { "is_active", true },
             { "push_token", "" },
         };

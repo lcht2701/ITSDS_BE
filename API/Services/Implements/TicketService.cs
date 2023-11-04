@@ -232,6 +232,15 @@ public class TicketService : ITicketService
         return result;
     }
 
+    public async Task<Ticket> UpdateByTechnician(int id, TechnicianAddDetailRequest model)
+    {
+        var target =
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException();
+        var result = _mapper.Map(model, target);
+        await _ticketRepository.UpdateAsync(result);
+        return result;
+    }
+
     public bool IsTicketDone(int ticketId)
     {
         var ticket = _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId).Result;

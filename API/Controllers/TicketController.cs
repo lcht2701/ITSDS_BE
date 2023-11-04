@@ -332,6 +332,49 @@ public class TicketController : BaseController
         }
     }
 
+    [Authorize(Roles = Roles.TECHNICIAN)]
+    [HttpPatch("technician/{ticketId}")]
+    public async Task<IActionResult> UpdateTicketByTechnician(int ticketId, [FromBody] TechnicianAddDetailRequest model)
+    {
+        try
+        {
+            Ticket? original = (Ticket?)await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            var updated = await _ticketService.UpdateByTechnician(ticketId, model);
+            await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
+            #region Notification
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{updated.Title}] has been updated", CurrentUserID);
+            if (updated.RequesterId != null)
+            {
+                await _messagingService.SendNotification("ITSDS", $"Ticket [{updated.Title}] has been updated",
+                    (int)updated.RequesterId);
+            }
+            var technicianId = await GetTechnicianAssigned(ticketId);
+            if (technicianId != null)
+            {
+                await _messagingService.SendNotification("ITSDS", $"Ticket [{updated.Title}] has been updated",
+                    (int)technicianId);
+            }
+            foreach (var managerId in await GetManagerIdsList())
+            {
+                await _messagingService.SendNotification("ITSDS", $"Ticket [{updated.Title}] has been updated", managerId);
+            }
+            #endregion
+            return Ok("Update Successfully");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Ticket is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [Authorize(Roles = Roles.MANAGER)]
     [HttpDelete("manager/{ticketId}")]
     public async Task<IActionResult> DeleteTicket(int ticketId)
