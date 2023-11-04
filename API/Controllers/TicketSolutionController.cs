@@ -28,8 +28,8 @@ public class TicketSolutionController : BaseController
         try
         {
             var result = await _ticketSolutionService.Get(CurrentUserID);
-            var pageResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(result);
+            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
         }
         catch (Exception ex)
         {
