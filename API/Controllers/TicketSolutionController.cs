@@ -3,6 +3,7 @@ using API.Services.Interfaces;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Persistence.Helpers;
 
 namespace API.Controllers;
 
@@ -18,11 +19,16 @@ public class TicketSolutionController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
     [HttpGet]
-    public async Task<IActionResult> GetSolutions()
+    public async Task<IActionResult> GetSolutions(
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
     {
         try
         {
             var result = await _ticketSolutionService.Get(CurrentUserID);
+            var pageResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
             return Ok(result);
         }
         catch (Exception ex)
