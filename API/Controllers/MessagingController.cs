@@ -16,21 +16,6 @@ public class MessagingController : BaseController
     }
 
     [Authorize]
-    [HttpPost("send-notification")]
-    public async Task<IActionResult> SendNotification([FromBody] SendNotificationRequest model)
-    {
-        try
-        {
-            await _messagingService.SendNotification(model.Message!, CurrentUserID);
-            return Ok("Send Notification Successfully");
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetNotifications()
     {
@@ -46,12 +31,46 @@ public class MessagingController : BaseController
     }
 
     [Authorize]
-    [HttpPatch]
-    public async Task<IActionResult> MarkAsRead()
+    [HttpPost("send-notification")]
+    public async Task<IActionResult> SendNotification([FromBody] SendNotificationRequest model)
     {
         try
         {
-            await _messagingService.MarkAsRead(CurrentUserID);
+            await _messagingService.SendNotification("ITSDS", model.Message!, CurrentUserID);
+            return Ok("Send Notification Successfully");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> MarkAsRead(int id)
+    {
+        try
+        {
+            await _messagingService.MarkAsRead(id);
+            return Ok("Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpPatch("read-all")]
+    public async Task<IActionResult> ReadAll()
+    {
+        try
+        {
+            await _messagingService.MarkAsReadAll(CurrentUserID);
             return Ok("Successfully");
         }
         catch (Exception ex)
@@ -69,7 +88,7 @@ public class MessagingController : BaseController
             await _messagingService.GetToken(CurrentUserID, model.Token);
             return Ok("Get token successfully");
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return BadRequest(ex.Message);
         }

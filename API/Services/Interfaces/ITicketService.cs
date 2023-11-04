@@ -19,6 +19,7 @@ public interface ITicketService
     Task<Ticket> CreateByCustomer(int userId, CreateTicketCustomerRequest model);
     Task<Ticket> UpdateByCustomer(int id, UpdateTicketCustomerRequest model);
     Task<Ticket> CreateByManager(CreateTicketManagerRequest model);
+    Task<Ticket> UpdateByTechnician(int id, TechnicianAddDetailRequest model);
     Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model);
     Task Remove(int id);
     Task<bool> IsTicketAssigned(int ticketId);

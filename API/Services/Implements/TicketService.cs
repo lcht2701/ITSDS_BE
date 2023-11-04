@@ -130,17 +130,17 @@ public class TicketService : ITicketService
         var result =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
                 new string[] { "Requester", "Service", "Category", "Mode" }) ?? throw new KeyNotFoundException();
-        ;
-        var entity = _mapper.Map<GetTicketResponse>(result);
-        var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == entity.Id);
+        var entity = _mapper.Map<Ticket, GetTicketResponse>(result);
+        DataResponse.CleanNullableDateTime(entity);
+        var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id), new string[] { "Team", "Technician" });
         if (ass != null)
         {
             var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
             entity.Assignment = assMapping;
         }
-        DataResponse.CleanNullableDateTime(entity);
         return entity;
     }
+
 
     public async Task<List<GetTicketResponse>> GetByUser(int userId)
     {
@@ -224,6 +224,15 @@ public class TicketService : ITicketService
     }
 
     public async Task<Ticket> UpdateByCustomer(int id, UpdateTicketCustomerRequest model)
+    {
+        var target =
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException();
+        var result = _mapper.Map(model, target);
+        await _ticketRepository.UpdateAsync(result);
+        return result;
+    }
+
+    public async Task<Ticket> UpdateByTechnician(int id, TechnicianAddDetailRequest model)
     {
         var target =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException();
