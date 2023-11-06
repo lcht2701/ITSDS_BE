@@ -17,7 +17,7 @@ public class TeamMemberController : BaseController
         _teamMemberService = teamMemberService;
     }
 
-    [Authorize(Roles = Roles.MANAGER)]
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpGet("{teamId}")]
     public async Task<IActionResult> GetTeamMembersByTeam(int teamId)
     {
