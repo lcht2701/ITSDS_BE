@@ -44,9 +44,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
-builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IModeService, ModeService>();
-builder.Services.AddScoped<IMessagingService, MessagingService>();
 builder.Services.AddScoped<IServicePackService, ServicePackService>();
 builder.Services.AddScoped<IServiceService, ServiceService>();
 builder.Services.AddScoped<ITeamMemberService, TeamMemberService>();
@@ -55,7 +53,12 @@ builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ITicketSolutionService, TicketSolutionService>();
 builder.Services.AddScoped<ITicketTaskService, TicketTaskService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IFirebaseService, FirebaseService>();
+
+builder.Services.AddTransient<IDashboardService, DashboardService>();
+builder.Services.AddTransient<IMailService, MailService>();
+builder.Services.AddTransient<IMessagingService, MessagingService>();
+builder.Services.AddTransient<IFirebaseService, FirebaseService>();
+
 builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>());
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddEndpointsApiExplorer();

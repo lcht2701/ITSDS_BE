@@ -37,4 +37,10 @@
 		<ProjectReference Include="..\Persistence\Persistence.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="DTOs\Responses\Dashboards\Contracts\" />
+	  <Folder Include="DTOs\Responses\Dashboards\Assignments\" />
+	  <Folder Include="DTOs\Responses\Dashboards\TicketTasks\" />
+	</ItemGroup>
+
 </Project>

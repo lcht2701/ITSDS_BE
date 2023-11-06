@@ -1,10 +1,6 @@
 ﻿using API.Services.Interfaces;
-using Domain.Application.AppConfig;
 using Domain.Entities.Mails;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System.Net.Http;
 
 namespace API.Controllers;
 
