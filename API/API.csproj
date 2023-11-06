@@ -10,6 +10,17 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="DTOs\Responses\Dashboards\Contracts\**" />
+	  <Compile Remove="DTOs\Responses\Dashboards\TicketTasks\**" />
+	  <Content Remove="DTOs\Responses\Dashboards\Contracts\**" />
+	  <Content Remove="DTOs\Responses\Dashboards\TicketTasks\**" />
+	  <EmbeddedResource Remove="DTOs\Responses\Dashboards\Contracts\**" />
+	  <EmbeddedResource Remove="DTOs\Responses\Dashboards\TicketTasks\**" />
+	  <None Remove="DTOs\Responses\Dashboards\Contracts\**" />
+	  <None Remove="DTOs\Responses\Dashboards\TicketTasks\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="12.0.1" />
 		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
 		<PackageReference Include="AutoWrapper.Core" Version="4.5.1" />
@@ -35,12 +46,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Persistence\Persistence.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="DTOs\Responses\Dashboards\Contracts\" />
-	  <Folder Include="DTOs\Responses\Dashboards\Assignments\" />
-	  <Folder Include="DTOs\Responses\Dashboards\TicketTasks\" />
 	</ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿namespace API.DTOs.Responses.Dashboards.Tickets
 {
-    public class ManagerTicketModel
+    public class CustomerTicketDashboard
     {
         public int TotalTicket { get; set; }
         public int TotalOpenTicket { get; set; }

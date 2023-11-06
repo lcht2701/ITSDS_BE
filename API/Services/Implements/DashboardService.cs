@@ -18,9 +18,9 @@ public class DashboardService : IDashboardService
         _assignmentRepository = assignmentRepository;
     }
 
-    public async Task<CustomerTicketModel> GetCustomerTicketDashboard(int userId)
+    public async Task<CustomerTicketDashboard> GetCustomerTicketDashboard(int userId)
     {
-        CustomerTicketModel model = new();
+        CustomerTicketDashboard model = new();
         try
         {
             model.TotalTicket = (await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId))).Count;
@@ -38,9 +38,9 @@ public class DashboardService : IDashboardService
         return model;
     }
 
-    public async Task<TechnicianTicketModel> GetTechnicianTicketDashboard(int userId)
+    public async Task<TechnicianTicketDashboard> GetTechnicianTicketDashboard(int userId)
     {
-        TechnicianTicketModel model = new();
+        TechnicianTicketDashboard model = new();
         try
         {
             var ticketIds = (await _assignmentRepository.WhereAsync(x => x.TechnicianId.Equals(userId))).Select(x => x.TicketId);
@@ -58,9 +58,9 @@ public class DashboardService : IDashboardService
         return model;
     }
 
-    public async Task<ManagerTicketModel> GetManagerTicketDashboard()
+    public async Task<ManagerTicketDashboard> GetManagerTicketDashboard()
     {
-        ManagerTicketModel model = new();
+        ManagerTicketDashboard model = new();
         try
         {
             model.TotalTicket = (await _ticketRepository.ToListAsync()).Count;

@@ -5,9 +5,9 @@ namespace API.Services.Interfaces;
 public interface IDashboardService
 {
     //Ticket
-    Task<CustomerTicketModel> GetCustomerTicketDashboard(int userId);
-    Task<TechnicianTicketModel> GetTechnicianTicketDashboard(int userId);
-    Task<ManagerTicketModel> GetManagerTicketDashboard();
+    Task<CustomerTicketDashboard> GetCustomerTicketDashboard(int userId);
+    Task<TechnicianTicketDashboard> GetTechnicianTicketDashboard(int userId);
+    Task<ManagerTicketDashboard> GetManagerTicketDashboard();
     //Assignment
 
     //Ticket Task
