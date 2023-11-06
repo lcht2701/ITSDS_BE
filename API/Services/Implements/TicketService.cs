@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Requests.Tickets;
+using API.DTOs.Responses.Assignments;
 using API.DTOs.Responses.Tickets;
 using API.Services.Interfaces;
 using AutoMapper;
@@ -65,7 +66,7 @@ public class TicketService : ITicketService
         return response;
     }
 
-    public async Task<List<GetTicketStatusesRequest>> GetTicketStatuses()
+    public Task<List<GetTicketStatusesRequest>> GetTicketStatuses()
     {
         var enumValues = Enum.GetValues(typeof(TicketStatus))
             .Cast<TicketStatus>()
@@ -77,7 +78,7 @@ public class TicketService : ITicketService
             })
             .ToList();
 
-        return enumValues;
+        return Task.FromResult(enumValues);
     }
 
     //For Technician
@@ -88,7 +89,7 @@ public class TicketService : ITicketService
         var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
             new string[] { "Requester", "Service", "Category", "Mode" });
         var filterResult = result.Where(x =>
-            IsTicketDone(x) == false);
+            IsTicketDone(x.Id) == false);
 
         // Map the tickets to response entities
         var response = filterResult.Select(ticket =>
@@ -110,7 +111,7 @@ public class TicketService : ITicketService
         var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
             new string[] { "Requester", "Service", "Category", "Mode" });
         var filterResult = result.Where(x =>
-            IsTicketDone(x) == true);
+            IsTicketDone(x.Id) == true);
 
         // Map the tickets to response entities
         var response = filterResult.Select(ticket =>
@@ -129,11 +130,17 @@ public class TicketService : ITicketService
         var result =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
                 new string[] { "Requester", "Service", "Category", "Mode" }) ?? throw new KeyNotFoundException();
-        ;
-        var entity = _mapper.Map<GetTicketResponse>(result);
+        var entity = _mapper.Map<Ticket, GetTicketResponse>(result);
         DataResponse.CleanNullableDateTime(entity);
+        var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id), new string[] { "Team", "Technician" });
+        if (ass != null)
+        {
+            var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
+            entity.Assignment = assMapping;
+        }
         return entity;
     }
+
 
     public async Task<List<GetTicketResponse>> GetByUser(int userId)
     {
@@ -154,7 +161,7 @@ public class TicketService : ITicketService
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
             new string[] { "Requester", "Service", "Category", "Mode" });
 
-        var filteredResult = result.Where(x => !IsTicketDone(x));
+        var filteredResult = result.Where(x => !IsTicketDone(x.Id));
 
         var response = filteredResult.Select(ticket =>
             {
@@ -173,7 +180,7 @@ public class TicketService : ITicketService
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
             new string[] { "Requester", "Service", "Category", "Mode" });
 
-        var filteredResult = result.Where(x => IsTicketDone(x));
+        var filteredResult = result.Where(x => IsTicketDone(x.Id));
 
         var response = filteredResult.Select(ticket =>
             {
@@ -225,8 +232,18 @@ public class TicketService : ITicketService
         return result;
     }
 
-    public bool IsTicketDone(Ticket ticket)
+    public async Task<Ticket> UpdateByTechnician(int id, TechnicianAddDetailRequest model)
     {
+        var target =
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException();
+        var result = _mapper.Map(model, target);
+        await _ticketRepository.UpdateAsync(result);
+        return result;
+    }
+
+    public bool IsTicketDone(int ticketId)
+    {
+        var ticket = _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId).Result;
         return ticket.TicketStatus is TicketStatus.Closed or TicketStatus.Cancelled;
     }
 
@@ -251,7 +268,7 @@ public class TicketService : ITicketService
                 x.TaskStatus != TicketTaskStatus.Cancelled);
         }
 
-        string jobId = null;
+        string? jobId = null;
 
         if (ticket.TicketStatus == TicketStatus.Closed || ticket.TicketStatus == TicketStatus.Cancelled)
         {
@@ -329,7 +346,7 @@ public class TicketService : ITicketService
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
                      throw new KeyNotFoundException();
         if (ticket.RequesterId == userId &&
-            (ticket.TicketStatus == TicketStatus.Open || ticket.TicketStatus == TicketStatus.Assigned))
+            ticket.TicketStatus == TicketStatus.Open)
         {
             ticket.TicketStatus = TicketStatus.Cancelled;
             await _ticketRepository.UpdateAsync(ticket);
@@ -338,6 +355,23 @@ public class TicketService : ITicketService
         {
             throw new BadRequestException(
                 "Cancellation of the ticket is not allowed once it has entered the processing state");
+        }
+    }
+
+    public async Task CloseTicket(int ticketId, int userId)
+    {
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
+                     throw new KeyNotFoundException();
+        if (ticket.RequesterId == userId &&
+            ticket.TicketStatus == TicketStatus.Resolved)
+        {
+            ticket.TicketStatus = TicketStatus.Closed;
+            await _ticketRepository.UpdateAsync(ticket);
+        }
+        else
+        {
+            throw new BadRequestException(
+                "If the ticket is not resolved, it cannot be closed");
         }
     }
 

@@ -17,7 +17,11 @@ namespace API.DTOs.Responses.Assignments
 
         public string? TechnicianFullName => $"{Technician?.FirstName} {Technician?.LastName}";
 
-        public string? TeamName => $"{Team?.Name}";
+        public string? TechnicianEmail => Technician?.Email;
+
+        public string? TechnicianPhoneNumber => Technician?.PhoneNumber;
+
+        public string? TeamName => Team?.Name;
 
         [JsonIgnore]
         public virtual User? Technician { get; set; }

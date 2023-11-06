@@ -16,6 +16,8 @@ public class GetTicketSolutionResponse : IMapFrom<TicketSolution>
 
     public int? OwnerId { get; set; }
 
+    public int? CreatedById { get; set; }
+
     public DateTime? ReviewDate { get; set; }
 
     public DateTime? ExpiredDate { get; set; }
@@ -34,7 +36,9 @@ public class GetTicketSolutionResponse : IMapFrom<TicketSolution>
 
     public DateTime? ModifiedAt { get; set; }
 
-    public virtual User Owner { get; set; }
+    public virtual User? Owner { get; set; }
 
-    public virtual Category Category { get; set; }
+    public virtual User? CreatedBy { get; set; }
+
+    public virtual Category? Category { get; set; }
 }

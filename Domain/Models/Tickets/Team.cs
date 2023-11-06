@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Domain.Models.Contracts;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Domain.Models.Contracts;
 
 namespace Domain.Models.Tickets;
 

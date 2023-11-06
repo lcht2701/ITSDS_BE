@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231102060214_addReplyToFeedback")]
+    partial class addReplyToFeedback
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -810,9 +812,6 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedById")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
@@ -846,8 +845,6 @@ namespace Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("CreatedById");
 
                     b.HasIndex("DeletedAt");
 
@@ -1209,17 +1206,11 @@ namespace Persistence.Migrations
                         .WithMany("TicketSolutions")
                         .HasForeignKey("CategoryId");
 
-                    b.HasOne("Domain.Models.User", "CreatedBy")
-                        .WithMany()
-                        .HasForeignKey("CreatedById");
-
                     b.HasOne("Domain.Models.User", "Owner")
                         .WithMany("TicketSolutions")
                         .HasForeignKey("OwnerId");
 
                     b.Navigation("Category");
-
-                    b.Navigation("CreatedBy");
 
                     b.Navigation("Owner");
                 });

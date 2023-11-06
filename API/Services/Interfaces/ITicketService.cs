@@ -19,13 +19,15 @@ public interface ITicketService
     Task<Ticket> CreateByCustomer(int userId, CreateTicketCustomerRequest model);
     Task<Ticket> UpdateByCustomer(int id, UpdateTicketCustomerRequest model);
     Task<Ticket> CreateByManager(CreateTicketManagerRequest model);
+    Task<Ticket> UpdateByTechnician(int id, TechnicianAddDetailRequest model);
     Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model);
     Task Remove(int id);
     Task<bool> IsTicketAssigned(int ticketId);
-    bool IsTicketDone(Ticket ticket);
+    bool IsTicketDone(int ticketId);
     Task UpdateTicketStatus(int ticketId, TicketStatus newStatus);
     Task ModifyTicketStatus(int ticketId, TicketStatus newStatus);
     Task CancelTicket(int ticketId, int userId);
+    Task CloseTicket(int ticketId, int userId);
     //Background jobs
     Task AssignSupportJob(int ticketId);
     Task CancelAssignSupportJob(string jobId, int ticketId);

@@ -3,10 +3,8 @@ using API.DTOs.Responses.TicketSolutions;
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Constants.Enums;
-using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
-using Org.BouncyCastle.Ocsp;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 
@@ -31,7 +29,7 @@ public class TicketSolutionService : ITicketSolutionService
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
 
         var result = await _solutionRepository
-            .GetAsync(navigationProperties: new string[] { "Category", "Owner" });
+            .GetAsync(navigationProperties: new string[] { "Category", "Owner", "CreatedBy" });
 
         if (user.Role == Role.Customer)
         {
@@ -52,14 +50,15 @@ public class TicketSolutionService : ITicketSolutionService
     public async Task<object> GetById(int id)
     {
         var result = await _solutionRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
-            new string[] { "Category", "Owner" }) ?? throw new KeyNotFoundException();
+            new string[] { "Category", "Owner", "CreatedBy" }) ?? throw new KeyNotFoundException();
         var response = _mapper.Map(result, new GetTicketSolutionResponse());
         return response;
     }
 
-    public async Task Create(CreateTicketSolutionRequest model)
+    public async Task Create(CreateTicketSolutionRequest model, int createdById)
     {
         var entity = _mapper.Map(model, new TicketSolution());
+        entity.CreatedById = createdById;
         await _solutionRepository.CreateAsync(entity);
     }
 
@@ -96,7 +95,10 @@ public class TicketSolutionService : ITicketSolutionService
 
     public async Task SubmitForApproval(int solutionId)
     {
-        //handle later
+        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ??
+                     throw new KeyNotFoundException();
+        target.IsApproved = !target.IsApproved;
+        await _solutionRepository.UpdateAsync(target);
     }
 
     public async Task ChangePublic(int solutionId)
