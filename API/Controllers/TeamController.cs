@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using System.Linq;
 
 namespace API.Controllers;
 
@@ -29,7 +28,7 @@ public class TeamController : BaseController
         return Ok(result);
     }
 
-    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
+    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpGet]
     public async Task<IActionResult> GetTeams(
     [FromQuery] string? filter,
@@ -43,7 +42,7 @@ public class TeamController : BaseController
     }
 
 
-    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
+    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpGet("my-teams")]
     public async Task<IActionResult> GetTeamsByManager()
     {
@@ -51,7 +50,7 @@ public class TeamController : BaseController
         return result.Count == 0 ? Ok(result) : Ok("You are currently not managing any team");
     }
 
-    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
+    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpGet("{teamId}")]
     public async Task<IActionResult> GetTeamById(int teamId)
     {
