@@ -42,7 +42,7 @@ public class TeamMemberService : ITeamMemberService
         return (List<User>)users;
     }
 
-    public async Task Assign(AssignMemberToTeamRequest model)
+    public async Task Assign(AddMemberToTeamRequest model)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.MemberId)) ??
                    throw new KeyNotFoundException("User is not exist");

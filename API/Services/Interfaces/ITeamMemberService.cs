@@ -7,7 +7,7 @@ namespace API.Services.Interfaces
     {
         Task<List<User>> GetMembersNotInTeam(int teamId);
         Task<List<User>> GetByTeam(int teamId);
-        Task Assign(AssignMemberToTeamRequest model);
+        Task Assign(AddMemberToTeamRequest model);
         Task Update(int memberId, UpdateTeamMemberRequest model);
         Task Transfer(int memberId, int newTeamId);
         Task Remove(int memberId);

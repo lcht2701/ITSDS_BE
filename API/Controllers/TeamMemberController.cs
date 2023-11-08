@@ -58,7 +58,7 @@ public class TeamMemberController : BaseController
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpPost("assign")]
-    public async Task<IActionResult> AssignMemberToTeam([FromBody] AssignMemberToTeamRequest model)
+    public async Task<IActionResult> AssignMemberToTeam([FromBody] AddMemberToTeamRequest model)
     {
         try
         {

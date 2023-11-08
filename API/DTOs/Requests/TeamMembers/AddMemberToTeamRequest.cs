@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs.Requests.TeamMembers
 {
-    public class AssignMemberToTeamRequest : IMapTo<TeamMember>
+    public class AddMemberToTeamRequest : IMapTo<TeamMember>
     {
         [Required]
         public int MemberId { get; set; }

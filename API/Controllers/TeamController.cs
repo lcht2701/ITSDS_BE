@@ -1,22 +1,23 @@
 ﻿using API.DTOs.Requests.Teams;
+using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Exceptions;
+using Domain.Customs;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
-using Persistence.Repositories.Interfaces;
+using System.Net;
 
 namespace API.Controllers;
 
 [Route("/v1/itsds/team")]
 public class TeamController : BaseController
 {
-    private readonly IRepositoryBase<Team> _teamRepository;
+    private readonly ITeamService _teamService;
 
-    public TeamController(IRepositoryBase<Team> teamRepository)
+    public TeamController(ITeamService teamService)
     {
-        _teamRepository = teamRepository;
+        _teamService = teamService;
     }
 
     [Authorize]
@@ -24,8 +25,14 @@ public class TeamController : BaseController
 
     public async Task<IActionResult> GetAllTeam()
     {
-        var result = await _teamRepository.ToListAsync();
-        return Ok(result);
+        try
+        {
+            return Ok(await _teamService.Get());
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER},{Roles.TECHNICIAN}")]
@@ -36,55 +43,105 @@ public class TeamController : BaseController
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 5)
     {
-        var teams = await _teamRepository.ToListAsync();
-        var pagedResponse = teams.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-        return Ok(pagedResponse);
+        try
+        {
+            var teams = await _teamService.Get();
+            var pagedResponse = teams.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
 
-    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet("my-teams")]
     public async Task<IActionResult> GetTeamsByManager()
     {
-        var result = await _teamRepository.WhereAsync(x => x.ManagerId.Equals(CurrentUserID));
-        return result.Count == 0 ? Ok(result) : Ok("You are currently not managing any team");
+        try
+        {
+            var result = await _teamService.GetByManager(CurrentUserID);
+            return result.Count == 0 ? Ok(result) : Ok("You are currently not managing any team");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpGet("{teamId}")]
     public async Task<IActionResult> GetTeamById(int teamId)
     {
-        var result = await _teamRepository.FoundOrThrow(x => x.Id.Equals(teamId), new BadRequestException("Team not found"));
-        return Ok(result);
+        try
+        {
+            var result = await _teamService.GetById(teamId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpPost]
     public async Task<IActionResult> CreateTeam([FromBody] CreateTeamRequest model)
     {
-        var entity = Mapper.Map(model, new Team());
-        entity.IsActive = true;
-        await _teamRepository.CreateAsync(entity);
-        return Ok();
+        try
+        {
+            var result = await _teamService.Create(model);
+            return Ok(new { Message = "Team Created Successfully", Data = result });
+
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpPut("{teamId}")]
-    public async Task<IActionResult> UpdateTeam(int teamId, [FromBody] UpdateTeamRequest req)
+    public async Task<IActionResult> UpdateTeam(int teamId, [FromBody] UpdateTeamRequest model)
     {
-        var target = await _teamRepository.FoundOrThrow(c => c.Id.Equals(teamId), new BadRequestException("Team not found"));
-        Team entity = Mapper.Map(req, target);
-        await _teamRepository.UpdateAsync(entity);
-        return Accepted("Update Successfully");
+        try
+        {
+            var result = await _teamService.Update(teamId, model);
+            return Ok(new { Message = "Team Updated Successfully", Data = result });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpDelete("{teamId}")]
     public async Task<IActionResult> DeleteTeam(int teamId)
     {
-        var target = await _teamRepository.FoundOrThrow(c => c.Id.Equals(teamId), new BadRequestException("Team not found"));
-        await _teamRepository.SoftDeleteAsync(target);
-        return Ok("Delete Successfully");
+        try
+        {
+            await _teamService.Remove(teamId);
+            return Ok("Team Removed Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
 }
