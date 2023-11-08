@@ -12,9 +12,9 @@ public class CompanyMemberController : BaseController
 {
     private readonly ICompanyMemberService _companyMemberService;
 
-    public CompanyMemberController(ICompanyMemberService companyMemberService) 
+    public CompanyMemberController(ICompanyMemberService companyMemberService)
     {
-        _companyMemberService = companyMemberService; 
+        _companyMemberService = companyMemberService;
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
@@ -62,8 +62,8 @@ public class CompanyMemberController : BaseController
     {
         try
         {
-            await _companyMemberService.Add(model);
-            return Ok("Added Successfully");
+            var result = await _companyMemberService.Add(model);
+            return Ok(new { Message = "Member Added Successfully", Data = result });
         }
         catch (KeyNotFoundException ex)
         {
@@ -85,8 +85,8 @@ public class CompanyMemberController : BaseController
     {
         try
         {
-            await _companyMemberService.Update(memberId, model);
-            return Ok("Updated Successfully");
+            var result = await _companyMemberService.Update(memberId, model);
+            return Ok(new { Message = "Member Updated Successfully", Data = result });
         }
         catch (KeyNotFoundException ex)
         {
@@ -105,7 +105,7 @@ public class CompanyMemberController : BaseController
         try
         {
             await _companyMemberService.Remove(memberId);
-            return Ok("Successfully");
+            return Ok("Removed Successfully");
         }
         catch (KeyNotFoundException ex)
         {

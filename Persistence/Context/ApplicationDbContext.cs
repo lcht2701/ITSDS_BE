@@ -30,6 +30,7 @@ namespace Persistence.Context
         //Contract
         public virtual DbSet<Company>? Companies { get; set; }
         public virtual DbSet<CompanyMember>? CompanyMembers { get; set; }
+        public virtual DbSet<Renewal>? Renewals { get; set; }
         public virtual DbSet<Contract>? Contracts { get; set; }
         public virtual DbSet<ContractDetail>? ContractDetails { get; set; }
         public virtual DbSet<Payment>? Payments { get; set; }

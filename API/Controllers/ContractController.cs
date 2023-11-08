@@ -1,82 +1,194 @@
 ﻿
 using API.DTOs.Requests.Contracts;
+using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Exceptions;
-using Domain.Models.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
-using Persistence.Repositories.Interfaces;
 
-namespace API.Controllers
+namespace API.Controllers;
+
+[Route("/v1/itsds/contract")]
+public class ContractController : BaseController
 {
-    [Route("/v1/itsds/contract")]
-    public class ContractController : BaseController
+    private readonly IContractService _contractService;
+
+    public ContractController(IContractService contractService)
     {
-        private readonly IRepositoryBase<Contract> _contractRepository;
-
-        public ContractController(IRepositoryBase<Contract> contractRepository)
-        {
-            _contractRepository = contractRepository;
-        }
-
-        [Authorize]
-        [HttpGet("all")]
-
-        public async Task<IActionResult> GetAllContract()
-        {
-            var result = await _contractRepository.ToListAsync();
-            return Ok(result);
-        }
-
-        [Authorize(Roles = Roles.ACCOUNTANT)]
-        [HttpGet]
-        public async Task<IActionResult> GetContracts(
-        [FromQuery] string? filter,
-        [FromQuery] string? sort,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 5)
-        {
-            var result = await _contractRepository.ToListAsync();
-            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(pagedResponse);
-        }
-
-        [Authorize(Roles = Roles.ACCOUNTANT)]
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetContractById(int id)
-        {
-            var result = await _contractRepository.FoundOrThrow(u => u.Id.Equals(id), new NotFoundException("Contract is not found"));
-            return Ok(result);
-        }
-
-        [Authorize(Roles = Roles.ACCOUNTANT)]
-        [HttpPost]
-        public async Task<IActionResult> CreateContract([FromBody] CreateContractRequest model)
-        {
-            var entity = Mapper.Map(model, new Contract());
-            await _contractRepository.CreateAsync(entity);
-            return Ok(entity);
-        }
-
-        [Authorize(Roles = Roles.ACCOUNTANT)]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateContract(int id, [FromBody] UpdateContractRequest req)
-        {
-            var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("Contract not found"));
-            Contract entity = Mapper.Map(req, target);
-            await _contractRepository.UpdateAsync(entity);
-            return Accepted("Update Successfully");
-        }
-
-        [Authorize(Roles = Roles.ACCOUNTANT)]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteContract(int id)
-        {
-            var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("Contract not found"));
-            await _contractRepository.SoftDeleteAsync(target);
-            return Ok("Delete Successfully");
-        }
-
+        _contractService = contractService;
     }
+
+    [Authorize]
+    [HttpGet("all")]
+
+    public async Task<IActionResult> GetAllContract()
+    {
+        var result = await _contractService.Get();
+        return Ok(result);
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpGet]
+    public async Task<IActionResult> GetContracts(
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5)
+    {
+        var result = await _contractService.Get();
+        var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+        return Ok(pagedResponse);
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpGet("child")]
+    public async Task<IActionResult> GetChildContracts(int contractId)
+    {
+        try
+        {
+            var result = await _contractService.GetChildContracts(contractId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpGet("renew")]
+    public async Task<IActionResult> GetRenewals(int contractId)
+    {
+        try
+        {
+            var result = await _contractService.GetContractRenewals(contractId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.ACCOUNTANT}")]
+    [HttpGet("accountant")]
+    public async Task<IActionResult> GetByAccountant()
+    {
+        try
+        {
+            var result = await _contractService.GetByAccountant(CurrentUserID);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpGet("company/{companyId}")]
+    public async Task<IActionResult> GetByCompany(int companyId)
+    {
+        try
+        {
+            var result = await _contractService.GetByCompany(companyId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetContractById(int id)
+    {
+        try
+        {
+            var result = await _contractService.GetById(id);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpPost]
+    public async Task<IActionResult> CreateContract([FromBody] CreateContractRequest model)
+    {
+        try
+        {
+            var result = await _contractService.Create(model);
+            return Ok(new { Message = "Contract Created Successfully", Data = result });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateContract(int id, [FromBody] UpdateContractRequest model)
+    {
+        try
+        {
+            var result = await _contractService.Update(id, model);
+            return Ok(new { Message = "Contract Updated Successfully", Data = result });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteContract(int id)
+    {
+        try
+        {
+            await _contractService.Remove(id);
+            return Ok("Contract Removed Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpPut("{contractId}/renew")]
+    public async Task<IActionResult> RenewContract(int contractId, [FromBody] RenewContractRequest model)
+    {
+        try
+        {
+            var result = await _contractService.RenewContract(contractId, model);
+            return Ok(new { Message = "Contract Renewed Successfully", Data = result });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 }

@@ -7,13 +7,25 @@ namespace API.DTOs.Requests.Contracts
 {
     public class UpdateContractRequest : IMapTo<Contract>
     {
-        public string AttachmentURl { get; set; }
-
         [Required]
-        public int Duration { get; set; }
-        [Required]
-        public double InitialValue { get; set; }
+        public string? Name { get; set; }
 
+        public string? Description { get; set; }
 
+        public double? Value { get; set; }
+
+        [Required(ErrorMessage = "StartDate is required")]
+        public DateTime StartDate { get; set; }
+
+        [Required(ErrorMessage = "StartDate is required")]
+        public DateTime? EndDate { get; set; }
+
+        [Required(ErrorMessage = "An employee is required to manage the contract")]
+        public int? AccountantId { get; set; }
+
+        [Required(ErrorMessage = "Company is required")]
+        public int CompanyId { get; set; }
+
+        public string? AttachmentURl { get; set; }
     }
 }

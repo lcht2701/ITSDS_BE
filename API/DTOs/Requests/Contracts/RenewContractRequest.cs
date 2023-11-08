@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs.Requests.Contracts
 {
-    public class CreateContractRequest : IMapTo<Contract>
+    public class RenewContractRequest : IMapTo<Contract>
     {
         [Required]
         public string? Name { get; set; }
@@ -19,15 +19,9 @@ namespace API.DTOs.Requests.Contracts
         [Required(ErrorMessage = "StartDate is required")]
         public DateTime EndDate { get; set; }
 
-        public int? ParentContractId { get; set; }
-        
         [Required(ErrorMessage = "An employee is required to manage the contract")]
         public int AccountantId { get; set; }
 
-        [Required(ErrorMessage = "Company is required")]
-        public int CompanyId { get; set; }
-
         public string? AttachmentURl { get; set; }
-
     }
 }
