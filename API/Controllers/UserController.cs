@@ -19,7 +19,7 @@ public class UserController : BaseController
         _firebaseService = firebaseService;
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}")]
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}, {Roles.TECHNICIAN}")]
     [HttpGet("all")]
 
     public async Task<IActionResult> GetAllUsers()
