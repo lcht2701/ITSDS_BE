@@ -82,8 +82,8 @@ public class TicketTaskService : ITicketTaskService
         else
         {
             var taskList = new List<TicketTask>();
-            var assignments = await _assignmentRepository
-                .WhereAsync(x => x.TechnicianId == userId);
+            var assignments = (await _assignmentRepository
+                .WhereAsync(x => x.TechnicianId == userId));
 
             var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
 
@@ -101,6 +101,15 @@ public class TicketTaskService : ITicketTaskService
             }
             response = _mapper.Map<List<GetTicketTaskResponse>>(taskList);
         }
+        return response;
+    }
+
+    public async Task<GetTicketTaskResponse> GetById(int id)
+    {
+        var result = await _taskRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
+            new string[] { "Technician", "CreateBy", "Team", "Ticket" }) ?? throw new KeyNotFoundException("Task is not exist");
+        var response = _mapper.Map(result, new GetTicketTaskResponse());
+        DataResponse.CleanNullableDateTime(response);
         return response;
     }
 

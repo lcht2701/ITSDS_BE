@@ -10,6 +10,7 @@ namespace API.Services.Interfaces
         Task<List<GetTicketTaskResponse>> Get(int ticketId);
         Task<List<GetTicketTaskResponse>> GetActiveTasks(int userId, int? ticketId);
         Task<List<GetTicketTaskResponse>> GetInActiveTasks(int userId, int? ticketId);
+        Task<GetTicketTaskResponse> GetById(int id);
         Task Create(CreateTicketTaskRequest model, int createdBy);
         Task Update(int taskId, UpdateTicketTaskRequest model);
         Task Remove(int taskId);
