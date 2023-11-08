@@ -62,7 +62,7 @@ public class TeamMemberController : BaseController
     {
         try
         {
-            await _teamMemberService.Assign(model);
+            await _teamMemberService.Add(model);
             return Ok("Assigned Successfully");
         }
         catch (KeyNotFoundException ex)
