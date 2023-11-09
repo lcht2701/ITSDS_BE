@@ -74,6 +74,32 @@ public class ContractService : IContractService
         await _contractRepository.SoftDeleteAsync(target);
     }
 
+    public async Task<List<Renewal>> GetContractRenewals(int contractId)
+    {
+        var result = (await _renewalRepository.WhereAsync(x => x.ContractId.Equals(contractId), new string[] { "RenewedBy", "Contract" })).ToList();
+        return result;
+    }
+
+    public async Task<Renewal> RenewContract(int contractId, RenewContractRequest model, int userId)
+    {
+        var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(contractId), new NotFoundException("Contract is not exist"));
+        Contract entity = _mapper.Map(model, target);
+        SetContractStatus(entity);
+        entity.IsRenewed = true;
+        Renewal newRenewal = new()
+        {
+            ContractId = entity.Id,
+            Description = entity.Description,
+            FromDate = entity.StartDate,
+            ToDate = entity.EndDate,
+            Value = entity.Value,
+            RenewedDate = DateTime.Now,
+            RenewedById = userId
+        };
+        await _renewalRepository.CreateAsync(newRenewal);
+        return newRenewal;
+    }
+
     private static void SetContractStatus(Contract entity)
     {
         if (entity.StartDate < DateTime.Now)
@@ -88,31 +114,5 @@ public class ContractService : IContractService
         {
             entity.Status = ContractStatus.Expired;
         }
-    }
-
-    public async Task<List<Renewal>> GetContractRenewals(int contractId)
-    {
-        var result = (await _renewalRepository.WhereAsync(x => x.ContractId.Equals(contractId), new string[] { "Accountant", "Company" })).ToList();
-        return result;
-    }
-
-    public async Task<Renewal> RenewContract(int contractId, RenewContractRequest model)
-    {
-        var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(contractId), new NotFoundException("Contract is not exist"));
-        Contract entity = _mapper.Map(model, target);
-        SetContractStatus(entity);
-        entity.IsRenewed = true;
-        Renewal newRenewal = new()
-        {
-            ContractId = entity.Id,
-            Description = entity.Description,
-            FromDate = entity.StartDate,
-            ToDate = entity.EndDate,
-            Value = entity.Value,
-            RenewedDate = DateTime.Now,
-            RenewedById = entity.AccountantId
-        };
-        await _renewalRepository.CreateAsync(newRenewal);
-        return newRenewal;
     }
 }

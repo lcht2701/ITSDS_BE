@@ -178,7 +178,7 @@ public class ContractController : BaseController
     {
         try
         {
-            var result = await _contractService.RenewContract(contractId, model);
+            var result = await _contractService.RenewContract(contractId, model, CurrentUserID);
             return Ok(new { Message = "Contract Renewed Successfully", Data = result });
         }
         catch (KeyNotFoundException ex)

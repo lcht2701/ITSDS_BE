@@ -14,6 +14,6 @@ namespace API.Services.Interfaces
         Task<Contract> Update(int id, UpdateContractRequest model);
         Task Remove(int id);
         Task<List<Renewal>> GetContractRenewals(int contractId);
-        Task<Renewal> RenewContract(int contractId, RenewContractRequest model);
+        Task<Renewal> RenewContract(int contractId, RenewContractRequest model, int userId);
     }
 }
