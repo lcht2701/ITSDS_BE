@@ -1,82 +1,115 @@
 ﻿using API.DTOs.Requests.ServicePacks;
-using API.DTOs.Requests.Services;
-using AutoMapper;
+using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Exceptions;
 using Domain.Models.Contracts;
+using Google.Api.Gax.Grpc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
-using Persistence.Repositories.Interfaces;
 
-namespace API.Controllers
+namespace API.Controllers;
+
+[Route("/v1/itsds/servicepack")]
+public class ServicePackController : BaseController
 {
-    [Route("/v1/itsds/servicepack")]
-    public class ServicePackController : BaseController
+    private readonly IServicePackService _servicePackService;
+
+    public ServicePackController(IServicePackService servicePackService)
     {
-        private readonly IRepositoryBase<ServicePack> _servicePackRepository;
+        _servicePackService = servicePackService;
+    }
 
-        public ServicePackController(IRepositoryBase<ServicePack> servicePackRepository)
+    [Authorize]
+    [HttpGet("all")]
+
+    public async Task<IActionResult> GetAllServicePack()
+    {
+        return Ok(await _servicePackService.Get());
+    }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetServicePack(
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5)
+    {
+        var result = await _servicePackService.Get();
+        var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+        return Ok(pagedResponse);
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetServicePackById(int id)
+    {
+        try
         {
-            _servicePackRepository = servicePackRepository;
-        }
-
-        [Authorize]
-        [HttpGet("all")]
-
-        public async Task<IActionResult> GetAllServicePack()
-        {
-            var result = await _servicePackRepository.ToListAsync();
+            var result = await _servicePackService.GetById(id);
             return Ok(result);
         }
-
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetServicePack(
-        [FromQuery] string? filter,
-        [FromQuery] string? sort,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 5)
+        catch (KeyNotFoundException ex)
         {
-            var result = await _servicePackRepository.ToListAsync();
-            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(pagedResponse);
+            return NotFound(ex.Message);
         }
-
-        [Authorize(Roles = Roles.MANAGER)]
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetServicePackById(int id)
+        catch (Exception ex)
         {
-            var result = await _servicePackRepository.FirstOrDefaultAsync(u => u.Id.Equals(id));
-            return result != null ? Ok(result) : throw new BadRequestException("Service Pack is not found");
+            return BadRequest(ex.Message);
         }
+    }
 
-        [Authorize(Roles = Roles.MANAGER)]
-        [HttpPost]
-        public async Task<IActionResult> CreateServicePack([FromBody] CreateServicePackRequest model)
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpPost]
+    public async Task<IActionResult> CreateServicePack([FromBody] CreateServicePackRequest model)
+    {
+        try
         {
-            var entity = Mapper.Map(model, new ServicePack());
-            await _servicePackRepository.CreateAsync(entity);
-            return Ok(entity);
+            var result = await _servicePackService.Create(model);
+            return Ok(new { Message = "Service Pack Added Successfully", Data = result });
         }
-
-        [Authorize(Roles = Roles.MANAGER)]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateServicePack(int id, [FromBody] UpdateServicePackRequest req)
+        catch (Exception ex)
         {
-            var target = await _servicePackRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service Pack not found"));
-            ServicePack entity = Mapper.Map(req, target);
-            await _servicePackRepository.UpdateAsync(entity);
-            return Accepted("Update Successfully");
+            return BadRequest(ex.Message);
         }
+    }
 
-        [Authorize(Roles = Roles.MANAGER)]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteServicePack(int id)
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateServicePack(int id, [FromBody] UpdateServicePackRequest model)
+    {
+        try
         {
-            var target = await _servicePackRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service Pack not found"));
-            await _servicePackRepository.SoftDeleteAsync(target);
-            return Ok("Delete Successfully");
+            var result = await _servicePackService.Update(id, model);
+            return Ok(new { Message = "Service Pack Updated Successfully", Data = result });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteServicePack(int id)
+    {
+        try
+        {
+            await _servicePackService.Remove(id);
+            return Ok("Service Pack Removed Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
         }
     }
 }

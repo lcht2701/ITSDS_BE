@@ -1,10 +1,5 @@
 ﻿using Domain.Models.Tickets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Domain.Models.Contracts
 {
@@ -13,7 +8,8 @@ namespace Domain.Models.Contracts
         public Service()
         {
             Tickets = new HashSet<Ticket>();
-            ContractDetails = new HashSet<ContractDetail>();
+            ContractServices = new HashSet<ContractService>();
+            ServiceServicePacks = new HashSet<ServiceServicePack>();
         }
 
         public string? Description { get; set; }
@@ -22,13 +18,12 @@ namespace Domain.Models.Contracts
 
         public string? Amount { get; set; }
 
-        public int? ServicePackId { get; set; }
-
-        public virtual ServicePack? ServicePack { get; set; }
         [JsonIgnore]
         public virtual ICollection<Ticket>? Tickets { get; set; }
         [JsonIgnore]
-        public virtual ICollection<ContractDetail>? ContractDetails { get; set; }
+        public virtual ICollection<ServiceServicePack>? ServiceServicePacks { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<ContractService>? ContractServices { get; set; }
 
     }
 }

@@ -32,11 +32,12 @@ namespace Persistence.Context
         public virtual DbSet<CompanyMember>? CompanyMembers { get; set; }
         public virtual DbSet<Renewal>? Renewals { get; set; }
         public virtual DbSet<Contract>? Contracts { get; set; }
-        public virtual DbSet<ContractDetail>? ContractDetails { get; set; }
+        public virtual DbSet<ContractService>? ContractServices { get; set; }
         public virtual DbSet<Payment>? Payments { get; set; }
         public virtual DbSet<PaymentTerm>? PaymentTerms { get; set; }
         public virtual DbSet<Service>? Services { get; set; }
         public virtual DbSet<ServicePack>? ServicePacks { get; set; }
+        public virtual DbSet<ServiceServicePack>? ServiceServicePacks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

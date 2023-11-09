@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace Domain.Models.Contracts
 {
@@ -11,14 +6,14 @@ namespace Domain.Models.Contracts
     {
         public ServicePack()
         {
-            ContractDetails = new HashSet<ContractDetail>();
+            ServiceServicePacks = new HashSet<ServiceServicePack>();
         }
+
         public string? Description { get; set; }
+
         public string? Price { get; set; }
 
         [JsonIgnore]
-        public virtual ICollection<Service>? Services { get; set; }
-        [JsonIgnore]
-        public virtual ICollection<ContractDetail>? ContractDetails { get; set; }
+        public virtual ICollection<ServiceServicePack>? ServiceServicePacks { get; set; }
     }
 }
