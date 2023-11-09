@@ -85,7 +85,7 @@ public class ContractService : IContractService
         var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(contractId), new NotFoundException("Contract is not exist"));
         Contract entity = _mapper.Map(model, target);
         SetContractStatus(entity);
-        entity.IsRenewed = true;
+        entity.IsRenewed = entity.IsRenewed == false ? true : entity.IsRenewed;
         Renewal newRenewal = new()
         {
             ContractId = entity.Id,
