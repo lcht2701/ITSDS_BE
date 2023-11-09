@@ -55,6 +55,7 @@ builder.Services.AddScoped<ITicketTaskService, TicketTaskService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ICompanyMemberService, CompanyMemberService>();
+builder.Services.AddScoped<IServiceServicePackService, ServiceServicePackService>();
 
 builder.Services.AddTransient<IDashboardService, DashboardService>();
 builder.Services.AddTransient<IMailService, MailService>();
