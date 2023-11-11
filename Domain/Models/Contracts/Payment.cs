@@ -17,7 +17,7 @@ namespace Domain.Models.Contracts
 
         public DateTime? PaymentEnd { get; set; }
 
-        public string? PaymentStatus { get; set; }
+        public bool? IsFullyPaid { get; set; }
 
         public DateTime? PaymentFinishTime { get; set; }
 
@@ -26,6 +26,7 @@ namespace Domain.Models.Contracts
         public int? ContractId { get; set; }
 
         public virtual Contract? Contract { get; set; }
+
         [JsonIgnore]
         public virtual ICollection<PaymentTerm>? PaymentTerms { get; set; }
     }
