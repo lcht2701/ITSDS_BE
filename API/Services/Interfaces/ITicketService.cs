@@ -13,7 +13,7 @@ public interface ITicketService
     Task<List<GetTicketResponse>> GetTicketAvailable(int userId);
     Task<List<GetTicketResponse>> GetAssignedTickets(int userId);
     Task<List<GetTicketResponse>> GetCompletedAssignedTickets(int userId);
-    Task<List<GetTicketStatusesRequest>> GetTicketStatuses();
+    Task<List<GetTicketStatusesResponse>> GetTicketStatuses();
     Task<object> GetTicketLog(int id);
     Task<GetTicketResponse> GetById(int id);
     Task<Ticket> CreateByCustomer(int userId, CreateTicketCustomerRequest model);

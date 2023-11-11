@@ -1,5 +1,4 @@
 ﻿using API.Mappings;
-using Domain.Constants;
 using Domain.Models.Contracts;
 using System.ComponentModel.DataAnnotations;
 

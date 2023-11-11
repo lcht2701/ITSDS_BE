@@ -16,7 +16,6 @@ public class User : BaseEntity
         Assignments = new HashSet<Assignment>();
         TicketSolutions = new HashSet<TicketSolution>();
     }
-
     public string? FirstName { get; set; }
 
     public string? LastName { get; set; }

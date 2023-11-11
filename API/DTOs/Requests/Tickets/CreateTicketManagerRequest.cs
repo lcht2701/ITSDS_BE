@@ -7,10 +7,8 @@ namespace API.DTOs.Requests.Tickets
 {
     public class CreateTicketManagerRequest : IMapTo<Ticket>
     {
-        [Required]
         public int? RequesterId { get; set; }
 
-        [Required]
         public string? Title { get; set; }
 
         public string? Description { get; set; }
@@ -26,7 +24,7 @@ namespace API.DTOs.Requests.Tickets
         public Priority? Priority { get; set; }
 
         public Impact? Impact { get; set; }
-        
+
         public string? ImpactDetail { get; set; }
 
         public Urgency? Urgency { get; set; }

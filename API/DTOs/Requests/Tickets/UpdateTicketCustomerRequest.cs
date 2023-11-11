@@ -7,7 +7,6 @@ namespace API.DTOs.Requests.Tickets
 {
     public class UpdateTicketCustomerRequest : IMapTo<Ticket>
     {
-        [Required]
         public string? Title { get; set; }
 
         public string? Description { get; set; }

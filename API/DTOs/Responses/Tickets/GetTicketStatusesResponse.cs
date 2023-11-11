@@ -1,6 +1,6 @@
-﻿namespace API.DTOs.Requests.Tickets
+﻿namespace API.DTOs.Responses.Tickets
 {
-    public class GetTicketStatusesRequest
+    public class GetTicketStatusesResponse
     {
         public int Id { get; set; }
         public string StatusName { get; set; }

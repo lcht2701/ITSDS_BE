@@ -4,6 +4,7 @@ using API.Services.Interfaces;
 using API.Utils;
 using Domain.Application.AppConfig;
 using FirebaseAdmin;
+using FluentValidation.AspNetCore;
 using Google.Apis.Auth.OAuth2;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -56,13 +57,15 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ICompanyMemberService, CompanyMemberService>();
 builder.Services.AddScoped<IServiceServicePackService, ServiceServicePackService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 builder.Services.AddTransient<IDashboardService, DashboardService>();
 builder.Services.AddTransient<IMailService, MailService>();
 builder.Services.AddTransient<IMessagingService, MessagingService>();
 builder.Services.AddTransient<IFirebaseService, FirebaseService>();
 
-builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>());
+builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>())
+                .AddFluentValidation(c => c.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly()));
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.Configure<FormOptions>(options =>

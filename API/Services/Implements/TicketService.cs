@@ -66,12 +66,12 @@ public class TicketService : ITicketService
         return response;
     }
 
-    public Task<List<GetTicketStatusesRequest>> GetTicketStatuses()
+    public Task<List<GetTicketStatusesResponse>> GetTicketStatuses()
     {
         var enumValues = Enum.GetValues(typeof(TicketStatus))
             .Cast<TicketStatus>()
             .Where(status => status != TicketStatus.Cancelled && status != TicketStatus.Closed)
-            .Select(status => new GetTicketStatusesRequest
+            .Select(status => new GetTicketStatusesResponse
             {
                 Id = (int)status,
                 StatusName = DataResponse.GetEnumDescription((Enum?)status)
