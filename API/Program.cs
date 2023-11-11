@@ -46,7 +46,6 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<IModeService, ModeService>();
-builder.Services.AddScoped<IServicePackService, ServicePackService>();
 builder.Services.AddScoped<IServiceService, ServiceService>();
 builder.Services.AddScoped<ITeamMemberService, TeamMemberService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
@@ -56,7 +55,6 @@ builder.Services.AddScoped<ITicketTaskService, TicketTaskService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ICompanyMemberService, CompanyMemberService>();
-builder.Services.AddScoped<IServiceServicePackService, ServiceServicePackService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 builder.Services.AddTransient<IDashboardService, DashboardService>();

@@ -36,8 +36,6 @@ namespace Persistence.Context
         public virtual DbSet<Payment>? Payments { get; set; }
         public virtual DbSet<PaymentTerm>? PaymentTerms { get; set; }
         public virtual DbSet<Service>? Services { get; set; }
-        public virtual DbSet<ServicePack>? ServicePacks { get; set; }
-        public virtual DbSet<ServiceServicePack>? ServiceServicePacks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

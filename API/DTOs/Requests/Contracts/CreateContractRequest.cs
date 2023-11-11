@@ -29,5 +29,6 @@ namespace API.DTOs.Requests.Contracts
 
         public string? AttachmentURl { get; set; }
 
+        public List<int>? ServiceIds { get; set; }
     }
 }

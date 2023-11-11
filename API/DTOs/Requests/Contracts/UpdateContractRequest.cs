@@ -26,5 +26,7 @@ namespace API.DTOs.Requests.Contracts
         public int CompanyId { get; set; }
 
         public string? AttachmentURl { get; set; }
+
+        public List<int>? ServiceIds { get; set; }
     }
 }

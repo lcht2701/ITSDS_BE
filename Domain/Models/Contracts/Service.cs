@@ -9,7 +9,6 @@ namespace Domain.Models.Contracts
         {
             Tickets = new HashSet<Ticket>();
             ContractServices = new HashSet<ContractService>();
-            ServiceServicePacks = new HashSet<ServiceServicePack>();
         }
 
         public string? Description { get; set; }
@@ -20,8 +19,6 @@ namespace Domain.Models.Contracts
 
         [JsonIgnore]
         public virtual ICollection<Ticket>? Tickets { get; set; }
-        [JsonIgnore]
-        public virtual ICollection<ServiceServicePack>? ServiceServicePacks { get; set; }
         [JsonIgnore]
         public virtual ICollection<ContractService>? ContractServices { get; set; }
 
