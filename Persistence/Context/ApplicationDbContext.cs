@@ -2,7 +2,6 @@
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace Persistence.Context
 {
@@ -32,7 +31,7 @@ namespace Persistence.Context
         public virtual DbSet<CompanyMember>? CompanyMembers { get; set; }
         public virtual DbSet<Renewal>? Renewals { get; set; }
         public virtual DbSet<Contract>? Contracts { get; set; }
-        public virtual DbSet<ContractService>? ContractServices { get; set; }
+        public virtual DbSet<ServiceContract>? ServiceContracts { get; set; }
         public virtual DbSet<Payment>? Payments { get; set; }
         public virtual DbSet<PaymentTerm>? PaymentTerms { get; set; }
         public virtual DbSet<Service>? Services { get; set; }

@@ -1,8 +1,8 @@
 ﻿namespace Domain.Models.Contracts
 {
-    public partial class ContractService : BaseEntity
+    public partial class ServiceContract : BaseEntity
     {
-        public ContractService()
+        public ServiceContract()
         {
         }
         public int? ContractId { get; set; }
