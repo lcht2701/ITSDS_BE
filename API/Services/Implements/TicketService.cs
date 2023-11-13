@@ -252,6 +252,10 @@ public class TicketService : ITicketService
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
                      throw new KeyNotFoundException();
         ticket.TicketStatus = newStatus;
+        if (newStatus == TicketStatus.Cancelled ||  newStatus == TicketStatus.Closed)
+        {
+            ticket.CompletedTime = DateTime.Now;
+        }
         await _ticketRepository.UpdateAsync(ticket);
     }
 
@@ -349,6 +353,7 @@ public class TicketService : ITicketService
             ticket.TicketStatus == TicketStatus.Open)
         {
             ticket.TicketStatus = TicketStatus.Cancelled;
+            ticket.CompletedTime = DateTime.Now;
             await _ticketRepository.UpdateAsync(ticket);
         }
         else
@@ -366,6 +371,7 @@ public class TicketService : ITicketService
             ticket.TicketStatus == TicketStatus.Resolved)
         {
             ticket.TicketStatus = TicketStatus.Closed;
+            ticket.CompletedTime = DateTime.Now;
             await _ticketRepository.UpdateAsync(ticket);
         }
         else
