@@ -11,7 +11,7 @@
 
         public string? Description { get; set; }
 
-        public string? TermAmount { get; set; }
+        public double? TermAmount { get; set; }
 
         public DateTime? TermStart { get; set; }
 

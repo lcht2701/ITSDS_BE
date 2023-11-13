@@ -13,6 +13,8 @@ namespace Domain.Models.Contracts
 
         public string? PaymentType { get; set; }
 
+        public bool? IsMultiplePayment { get; set; }
+
         public DateTime? PaymentStart { get; set; }
 
         public DateTime? PaymentEnd { get; set; }

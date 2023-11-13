@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Requests.Payments;
+using API.DTOs.Requests.PaymentTerms;
 using Domain.Models.Contracts;
 
 namespace API.Services.Interfaces;
@@ -14,6 +15,7 @@ public interface IPaymentService
     Task Remove(int id);
     //Payment Terms
     Task<List<PaymentTerm>> GetPaymentTerms(int paymentId);
-    Task<List<PaymentTerm>> UpdatePaymentTerm(int paymentId);
-    Task<List<PaymentTerm>> RemovePaymentTerm(int paymentId);
+    Task<List<PaymentTerm>> CreatePaymentTerm(CreatePaymentTermRequest model);
+    Task<PaymentTerm> UpdatePaymentTerm(int paymentId, UpdatePaymentTermRequest model);
+    Task RemovePaymentTerm(int paymentId);
 }
