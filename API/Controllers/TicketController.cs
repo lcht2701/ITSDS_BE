@@ -8,10 +8,8 @@ using Domain.Models.Tickets;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace API.Controllers;
 
@@ -21,8 +19,8 @@ public class TicketController : BaseController
     private readonly IAuditLogService _auditLogService;
     private readonly ITicketService _ticketService;
     private readonly IMessagingService _messagingService;
-    private readonly IRepositoryBase<Ticket> _ticketRepository;
     private readonly IRepositoryBase<User> _userRepository;
+    private readonly IRepositoryBase<Ticket> _ticketRepository;
     private readonly IRepositoryBase<Assignment> _assignmentRepository;
 
     public TicketController(IAuditLogService auditLogService, ITicketService ticketService, IMessagingService messagingService, IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Assignment> assignmentRepository)
@@ -196,14 +194,7 @@ public class TicketController : BaseController
                 await _messagingService.SendNotification("ITSDS", $"New ticket [{model.Title}] has been created by [{currentUser.Username}]", managerId);
             }
             #endregion
-            //Chỉnh lại tgian hẹn giờ sau
-            string jobId = BackgroundJob.Schedule(
-                () => _ticketService.AssignSupportJob(entity.Id),
-                TimeSpan.FromMinutes(10));
-            RecurringJob.AddOrUpdate(
-                jobId + "_Cancellation",
-                () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
-                "*/5 * * * * *"); //Every 5 secs
+            ScheduleAutoAssign(entity);
             return Ok("Ticket created and scheduled for assignment.");
         }
         catch (Exception ex)
@@ -211,6 +202,7 @@ public class TicketController : BaseController
             return BadRequest(ex.Message);
         }
     }
+
 
     [Authorize(Roles = Roles.CUSTOMER)]
     [HttpPut("customer/{ticketId}")]
@@ -272,14 +264,7 @@ public class TicketController : BaseController
             }
             else
             {
-                //Chỉnh lại tgian hẹn giờ sau
-                string jobId = BackgroundJob.Schedule(
-                    () => _ticketService.AssignSupportJob(entity.Id),
-                    TimeSpan.FromMinutes(10));
-                RecurringJob.AddOrUpdate(
-                    jobId + "_Cancellation",
-                    () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
-                    "*/5 * * * * *"); //Every 5
+                ScheduleAutoAssign(entity);
                 return Ok("Ticket created and scheduled for assignment.");
             }
         }
@@ -410,7 +395,6 @@ public class TicketController : BaseController
             await _ticketService.ModifyTicketStatus(ticketId, newStatus);
             var updated = await _ticketService.GetById(ticketId);
             await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
-            //Send Notification
             #region Notification
             if (updated.RequesterId != null)
             {
@@ -528,11 +512,19 @@ public class TicketController : BaseController
             return BadRequest(ex.Message);
         }
     }
-
+    private void ScheduleAutoAssign(Ticket entity)
+    {
+        string jobId = BackgroundJob.Schedule(
+                        () => _ticketService.AssignSupportJob(entity.Id),
+                        TimeSpan.FromMinutes(10));
+        RecurringJob.AddOrUpdate(
+            jobId + "_Cancellation",
+            () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
+            "*/5 * * * * *"); //Every 5 secs
+    }
     private async Task<List<int>> GetManagerIdsList()
     {
-        var managers = await _userRepository.WhereAsync(x => x.Role == Role.Manager);
-        var managerIds = managers.Select(x => x.Id).ToList();
+        var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
         return managerIds;
     }
     private async Task<int?> GetTechnicianAssigned(int ticketId)

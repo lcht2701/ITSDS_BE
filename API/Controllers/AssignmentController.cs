@@ -1,8 +1,12 @@
 ﻿using API.DTOs.Requests.Assignments;
 using API.Services.Interfaces;
 using Domain.Exceptions;
+using Domain.Models;
+using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Ocsp;
+using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
 
@@ -11,10 +15,16 @@ namespace API.Controllers;
 public class AssignmentController : BaseController
 {
     private readonly IAssignmentService _assignmentService;
+    private readonly IMessagingService _messagingService;
+    private readonly IRepositoryBase<User> _userRepository;
+    private readonly IRepositoryBase<Ticket> _ticketRepository;
 
-    public AssignmentController(IAssignmentService assignmentService)
+    public AssignmentController(IAssignmentService assignmentService, IMessagingService messagingService, IRepositoryBase<User> userRepository, IRepositoryBase<Ticket> ticketRepository)
     {
         _assignmentService = assignmentService;
+        _messagingService = messagingService;
+        _userRepository = userRepository;
+        _ticketRepository = ticketRepository;
     }
 
     [Authorize]
@@ -103,6 +113,22 @@ public class AssignmentController : BaseController
         try
         {
             await _assignmentService.Assign(ticketId, req);
+            #region Notification
+            var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId);
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned",
+                    CurrentUserID);
+            if (req.TechnicianId != null)
+            {
+                await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned to you",
+                    (int)req.TechnicianId);
+            }
+            if (ticket.RequesterId != null)
+            {
+                await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned!",
+                    (int)ticket.RequesterId);
+            }
+
+            #endregion
             return Ok("Assigned Ticket Successfully");
         }
         catch (KeyNotFoundException ex)
@@ -128,6 +154,22 @@ public class AssignmentController : BaseController
         try
         {
             await _assignmentService.Update(ticketId, req);
+            #region Notification
+            var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId);
+            await _messagingService.SendNotification("ITSDS", $"Ticket Assignment for [{ticket.Title}] has been updated",
+                    CurrentUserID);
+            if (req.TechnicianId != null)
+            {
+                await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned to you",
+                    (int)req.TechnicianId);
+            }
+            if (ticket.RequesterId != null)
+            {
+                await _messagingService.SendNotification("ITSDS", $"Ticket Assignment for [{ticket.Title}] has been updated",
+                    (int)ticket.RequesterId);
+            }
+
+            #endregion
             return Ok("Updated Successfully");
         }
         catch (KeyNotFoundException ex)
@@ -153,6 +195,16 @@ public class AssignmentController : BaseController
         try
         {
             await _assignmentService.Remove(ticketId);
+            #region Notification
+            var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId);
+            await _messagingService.SendNotification("ITSDS", $"Ticket Assignment for [{ticket.Title}] has been removed",
+                    CurrentUserID);
+            if (ticket.RequesterId != null)
+            {
+                await _messagingService.SendNotification("ITSDS", $"Ticket Assignment for [{ticket.Title}] has been removed",
+                    (int)ticket.RequesterId);
+            }
+            #endregion
             return Ok("Removed Successfully.");
         }
         catch (KeyNotFoundException)

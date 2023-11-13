@@ -24,9 +24,7 @@ public class MessagingService : IMessagingService
 
     public async Task SendNotification(string title, string message, int userId)
     {
-        var tokenModel = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId);
-        string? token = tokenModel?.Token;
-
+        var token = (await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId)).Token;
         var entity = new Messaging()
         {
             Title = title,
