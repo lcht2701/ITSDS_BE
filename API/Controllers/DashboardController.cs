@@ -16,7 +16,7 @@ public class DashboardController : BaseController
     }
 
     [Authorize(Roles = Roles.CUSTOMER)]
-    [HttpGet("ticket/customer")]
+    [HttpGet("customer/ticket")]
     public async Task<IActionResult> GetCustomerTicketDashboard()
     {
         var dashboard = await _dashboardService.GetCustomerTicketDashboard(CurrentUserID);
@@ -24,7 +24,7 @@ public class DashboardController : BaseController
     }
 
     [Authorize(Roles = Roles.TECHNICIAN)]
-    [HttpGet("ticket/technician")]
+    [HttpGet("technician/ticket")]
     public async Task<IActionResult> GetTechnicianTicketDashboard()
     {
         var dashboard = await _dashboardService.GetTechnicianTicketDashboard(CurrentUserID);
@@ -32,10 +32,42 @@ public class DashboardController : BaseController
     }
 
     [Authorize(Roles = Roles.MANAGER)]
-    [HttpGet("ticket/manager")]
+    [HttpGet("manager/ticket")]
     public async Task<IActionResult> GetManagerTicketDashboard()
     {
         var dashboard = await _dashboardService.GetManagerTicketDashboard();
+        return Ok(dashboard);
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("manager/ticket/category")]
+    public async Task<IActionResult> GetManagerTicketDashboardByCategory()
+    {
+        var dashboard = await _dashboardService.GetManagerTicketsByCategory();
+        return Ok(dashboard);
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("manager/ticket/priority")]
+    public async Task<IActionResult> GetManagerTicketDashboardByPriority()
+    {
+        var dashboard = await _dashboardService.GetManagerTicketsByPriority();
+        return Ok(dashboard);
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("manager/ticket/mode")]
+    public async Task<IActionResult> GetManagerTicketDashboardByMode()
+    {
+        var dashboard = await _dashboardService.GetManagerTicketsByMode();
+        return Ok(dashboard);
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("manager/ticket/service")]
+    public async Task<IActionResult> GetManagerTicketDashboardByService()
+    {
+        var dashboard = await _dashboardService.GetManagerTicketsByService();
         return Ok(dashboard);
     }
 }

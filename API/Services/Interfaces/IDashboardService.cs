@@ -10,7 +10,10 @@ public interface IDashboardService
     Task<CustomerTicketDashboard> GetCustomerTicketDashboard(int userId);
     Task<TechnicianTicketDashboard> GetTechnicianTicketDashboard(int userId);
     Task<ManagerTicketDashboard> GetManagerTicketDashboard();
-    Task<ManagerTicketsByCategory> GetManagerTicketsByCategory();
+    Task<ManagerTicketsDashboardTable> GetManagerTicketsByCategory();
+    Task<ManagerTicketsDashboardTable> GetManagerTicketsByPriority();
+    Task<ManagerTicketsDashboardTable> GetManagerTicketsByMode();
+    Task<ManagerTicketsDashboardTable> GetManagerTicketsByService();
     //Assignment
 
     //Ticket Task

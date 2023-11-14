@@ -1,11 +1,11 @@
 ﻿namespace API.DTOs.Responses.Dashboards.Managers.Tickets;
 
-public class ManagerTicketsByCategory
+public class ManagerTicketsDashboardTable
 {
-    public List<TicketCategoryLine>? TicketCategoryLines { get; set; }
-    public TicketCategoryTotal? Total { get; set; }
+    public List<DashboardTableRow>? Rows { get; set; }
+    public DashboardTableTotal? Total { get; set; }
 }
-public class TicketCategoryLine
+public class DashboardTableRow
 {
     public string? LineName { get; set; }
 
@@ -16,7 +16,7 @@ public class TicketCategoryLine
     public int CancelledTicketsCount { get; set; }
 }
 
-public class TicketCategoryTotal
+public class DashboardTableTotal
 {
 
     public int TotalOnGoingTickets { get; set; }
