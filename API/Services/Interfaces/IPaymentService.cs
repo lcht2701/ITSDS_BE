@@ -13,9 +13,11 @@ public interface IPaymentService
     Task<Payment> Create(CreatePaymentRequest model);
     Task<Payment> Update(int id, UpdatePaymentRequest model);
     Task Remove(int id);
+    Task ClosePayment(int id);
     //Payment Terms
     Task<List<PaymentTerm>> GetPaymentTerms(int paymentId);
-    Task<List<PaymentTerm>> CreatePaymentTerm(CreatePaymentTermRequest model);
+    Task<List<PaymentTerm>> GeneratePaymentTerms(int paymentId);
     Task<PaymentTerm> UpdatePaymentTerm(int paymentId, UpdatePaymentTermRequest model);
     Task RemovePaymentTerm(int paymentId);
+    Task<bool> SendPaymentNotification(int termId);
 }

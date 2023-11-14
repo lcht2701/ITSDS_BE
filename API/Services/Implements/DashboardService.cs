@@ -1,4 +1,6 @@
-﻿using API.DTOs.Responses.Dashboards.Tickets;
+﻿using API.DTOs.Responses.Dashboards.Customers;
+using API.DTOs.Responses.Dashboards.Managers.Tickets;
+using API.DTOs.Responses.Dashboards.Technicians;
 using API.Services.Interfaces;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
@@ -11,11 +13,13 @@ public class DashboardService : IDashboardService
 {
     private readonly IRepositoryBase<Ticket> _ticketRepository;
     private readonly IRepositoryBase<Assignment> _assignmentRepository;
+    private readonly IRepositoryBase<Category> _categoryRepository;
 
-    public DashboardService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository)
+    public DashboardService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<Category> categoryRepository)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
+        _categoryRepository = categoryRepository;
     }
 
     public async Task<CustomerTicketDashboard> GetCustomerTicketDashboard(int userId)
@@ -76,5 +80,32 @@ public class DashboardService : IDashboardService
             throw new ServerFailureException(ex.Message);
         }
         return model;
+    }
+
+    public async Task<ManagerTicketsByCategory> GetManagerTicketsByCategory()
+    {
+        ManagerTicketsByCategory data = new();
+        var categoryList = await _categoryRepository.ToListAsync();
+
+        List<TicketCategoryLine> lines = new();
+        foreach (var category in categoryList)
+        {
+            lines.Add(new TicketCategoryLine
+            {
+                LineName = category.Name!,
+                OnGoingTicketsCount = (await _ticketRepository.WhereAsync(x => x.CategoryId == category.Id
+                                                                            && (x.TicketStatus.Equals(TicketStatus.Assigned)
+                                                                                || x.TicketStatus.Equals(TicketStatus.InProgress)
+                                                                                || x.TicketStatus.Equals(TicketStatus.Resolved))
+                                                                            )).Count,
+                ClosedTicketsCount = (await _ticketRepository.WhereAsync(x => x.CategoryId == category.Id && x.TicketStatus.Equals(TicketStatus.Closed))).Count,
+                CancelledTicketsCount = (await _ticketRepository.WhereAsync(x => x.CategoryId == category.Id && x.TicketStatus.Equals(TicketStatus.Cancelled))).Count,
+
+            });
+        }
+
+        TicketCategoryTotal total = new();
+
+        return data;
     }
 }

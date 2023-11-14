@@ -7,15 +7,13 @@ public class UpdatePaymentRequest : IMapTo<Payment>
 {
     public string? Description { get; set; }
 
-    public string? PaymentType { get; set; }
+    public int NumberOfTerms { get; set; }
 
-    public bool? IsMultiplePayment { get; set; }
+    public DateTime FirstDateOfPayment { get; set; }
 
-    public DateTime? PaymentStart { get; set; }
+    public int Duration { get; set; }
 
-    public DateTime? PaymentEnd { get; set; }
-
-    public bool? IsFullyPaid { get; set; }
+    public double InitialPaymentAmount { get; set; }
 
     public string? Note { get; set; }
 }

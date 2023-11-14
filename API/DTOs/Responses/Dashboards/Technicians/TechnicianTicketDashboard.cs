@@ -1,4 +1,4 @@
-﻿namespace API.DTOs.Responses.Dashboards.Tickets
+﻿namespace API.DTOs.Responses.Dashboards.Technicians
 {
     public class TechnicianTicketDashboard
     {

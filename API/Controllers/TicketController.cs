@@ -406,10 +406,6 @@ public class TicketController : BaseController
             {
                 case Role.Technician:
                     await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated", CurrentUserID);
-                    foreach (var managerId in await GetManagerIdsList())
-                    {
-                        await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated", managerId);
-                    }
                     break;
                 case Role.Manager:
                     var technicianId = await GetTechnicianAssigned(ticketId);
@@ -417,13 +413,13 @@ public class TicketController : BaseController
                     {
                         await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated", (int)technicianId);
                     }
-                    foreach (var managerId in await GetManagerIdsList())
-                    {
-                        await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated", managerId);
-                    }
                     break;
             }
-            
+            foreach (var managerId in await GetManagerIdsList())
+            {
+                await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated", managerId);
+            }
+
             #endregion
             return Ok("Status Updated Successfully");
         }
