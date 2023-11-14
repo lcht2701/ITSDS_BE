@@ -70,4 +70,36 @@ public class DashboardController : BaseController
         var dashboard = await _dashboardService.GetManagerTicketsByService();
         return Ok(dashboard);
     }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("manager/ticket/this-week")]
+    public async Task<IActionResult> GetCreatedTicketThisWeek()
+    {
+        var dashboard = await _dashboardService.GetTicketDashboardByWeek(DateTime.Now);
+        return Ok(dashboard);
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("manager/ticket/last-week")]
+    public async Task<IActionResult> GetCreatedTicketLastWeek()
+    {
+        var dashboard = await _dashboardService.GetTicketDashboardByWeek(DateTime.Now.AddDays(-7));
+        return Ok(dashboard);
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("manager/ticket/this-month")]
+    public async Task<IActionResult> GetCreatedTicketThisMonth()
+    {
+        var dashboard = await _dashboardService.GetTicketDashboardByMonth(DateTime.Now);
+        return Ok(dashboard);
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("manager/ticket/last-month")]
+    public async Task<IActionResult> GetCreatedTicketLastMonth()
+    {
+        var dashboard = await _dashboardService.GetTicketDashboardByMonth(DateTime.Now.AddMonths(-1));
+        return Ok(dashboard);
+    }
 }

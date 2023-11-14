@@ -8,6 +8,7 @@ using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using System.Globalization;
 
 namespace API.Services.Implements;
 
@@ -132,8 +133,8 @@ public class DashboardService : IDashboardService
             {
                 LineName = DataResponse.GetEnumDescription(item),
                 OnGoingTicketsCount = (await _ticketRepository.WhereAsync(x => x.Priority == item && (
-                                                                            x.TicketStatus.Equals(TicketStatus.Assigned) || 
-                                                                            x.TicketStatus.Equals(TicketStatus.InProgress) || 
+                                                                            x.TicketStatus.Equals(TicketStatus.Assigned) ||
+                                                                            x.TicketStatus.Equals(TicketStatus.InProgress) ||
                                                                             x.TicketStatus.Equals(TicketStatus.Resolved)
                                                                             ))).Count,
                 ClosedTicketsCount = (await _ticketRepository.WhereAsync(x => x.Priority == item && x.TicketStatus.Equals(TicketStatus.Closed))).Count,
@@ -221,5 +222,80 @@ public class DashboardService : IDashboardService
             Rows = rows.ToList(),
             Total = total,
         };
+    }
+
+    public async Task<List<DashboardTableRow>> GetTicketDashboardByWeek(DateTime currentDate)
+    {
+        DayOfWeek currentDayOfWeek = currentDate.DayOfWeek;
+        int daysUntilMonday = ((int)DayOfWeek.Tuesday - (int)currentDayOfWeek - 7) % 7;
+        DateTime startOfLastWeek = currentDate.AddDays(daysUntilMonday).Date;
+        DateTime endOfLastWeek = startOfLastWeek.AddDays(6);
+
+        var result = (await _ticketRepository
+            .WhereAsync(x => x.CreatedAt >= startOfLastWeek && x.CreatedAt <= endOfLastWeek))
+            .GroupBy(x => x.CreatedAt?.DayOfWeek)
+            .OrderBy(group => group.Key)  // Order by DayOfWeek with Monday first
+            .Select(group => new DashboardTableRow
+            {
+                LineName = group.Key.ToString(),
+                OnGoingTicketsCount = group.Count(x =>
+                    x.TicketStatus == TicketStatus.Assigned ||
+                    x.TicketStatus == TicketStatus.InProgress ||
+                    x.TicketStatus == TicketStatus.Resolved),
+                ClosedTicketsCount = group.Count(x => x.TicketStatus == TicketStatus.Closed),
+                CancelledTicketsCount = group.Count(x => x.TicketStatus == TicketStatus.Cancelled)
+            })
+            .ToList();
+
+        var allDays = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>();
+        var resultWithAllDays = allDays
+            .Select(day => result.FirstOrDefault(r => r.LineName == day.ToString()) ?? new DashboardTableRow
+            {
+                LineName = day.ToString(),
+                OnGoingTicketsCount = 0,
+                ClosedTicketsCount = 0,
+                CancelledTicketsCount = 0
+            })
+            .ToList();
+
+        return resultWithAllDays;
+    }
+
+    public async Task<List<DashboardTableRow>> GetTicketDashboardByMonth(DateTime currentDate)
+    {
+        DateTime startOfMonth = new DateTime(currentDate.Year, currentDate.Month, 1);
+        DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+        var allTicketsInMonth = (await _ticketRepository
+             .WhereAsync(t => t.CreatedAt >= startOfMonth && t.CreatedAt <= endOfMonth))
+             .ToList();
+
+        var ticketTotalsByWeek = allTicketsInMonth
+            .GroupBy(t => (t.CreatedAt.Value - startOfMonth).Days / 7 + 1)
+            .Select(group => new DashboardTableRow
+            {
+                LineName = $"Week {group.Key}",
+                OnGoingTicketsCount = group.Count(t => t.TicketStatus.Equals(TicketStatus.Assigned) ||
+                                                        t.TicketStatus.Equals(TicketStatus.InProgress) ||
+                                                        t.TicketStatus.Equals(TicketStatus.Resolved)),
+                ClosedTicketsCount = group.Count(t => t.TicketStatus == TicketStatus.Closed),
+                CancelledTicketsCount = group.Count(t => t.TicketStatus == TicketStatus.Cancelled)
+            })
+            .OrderBy(group => group.LineName)  // Order by week name
+            .ToList();
+
+        // Ensure all 5 weeks are included
+        var allWeeks = Enumerable.Range(1, 5);
+        var resultWithAllWeeks = allWeeks
+            .Select(week => ticketTotalsByWeek.FirstOrDefault(r => r.LineName == $"Week {week}") ?? new DashboardTableRow
+            {
+                LineName = $"Week {week}",
+                OnGoingTicketsCount = 0,
+                ClosedTicketsCount = 0,
+                CancelledTicketsCount = 0
+            })
+            .ToList();
+
+        return resultWithAllWeeks;
     }
 }
