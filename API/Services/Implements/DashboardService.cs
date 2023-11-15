@@ -1,14 +1,18 @@
-﻿using API.DTOs.Responses.Dashboards.Customers;
+﻿using API.DTOs.Responses.Dashboards.Admins;
+using API.DTOs.Responses.Dashboards.Customers;
 using API.DTOs.Responses.Dashboards.Managers.Tickets;
 using API.DTOs.Responses.Dashboards.Technicians;
 using API.Services.Interfaces;
+using AutoMapper;
+using Domain.Constants;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
+using Domain.Models;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using System.Globalization;
+using System.Collections.Generic;
 
 namespace API.Services.Implements;
 
@@ -19,14 +23,22 @@ public class DashboardService : IDashboardService
     private readonly IRepositoryBase<Category> _categoryRepository;
     private readonly IRepositoryBase<Mode> _modeRepository;
     private readonly IRepositoryBase<Service> _serviceRepository;
+    private readonly IRepositoryBase<User> _userRepository;
+    private readonly IRepositoryBase<Team> _teamRepository;
+    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
+    private readonly IMapper _mapper;
 
-    public DashboardService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<Category> categoryRepository, IRepositoryBase<Mode> modeRepository, IRepositoryBase<Service> serviceRepository)
+    public DashboardService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<Category> categoryRepository, IRepositoryBase<Mode> modeRepository, IRepositoryBase<Service> serviceRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IMapper mapper)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
         _categoryRepository = categoryRepository;
         _modeRepository = modeRepository;
         _serviceRepository = serviceRepository;
+        _userRepository = userRepository;
+        _teamRepository = teamRepository;
+        _teamMemberRepository = teamMemberRepository;
+        _mapper = mapper;
     }
 
     public async Task<CustomerTicketDashboard> GetCustomerTicketDashboard(int userId)
@@ -125,7 +137,7 @@ public class DashboardService : IDashboardService
 
     public async Task<ManagerTicketsDashboardTable> GetManagerTicketsByPriority()
     {
-        var list = Enum.GetValues(typeof(Priority)).Cast<Priority>().ToList(); ;
+        var list = Enum.GetValues(typeof(Priority)).Cast<Priority>().ToList();
         List<DashboardTableRow> rows = new();
         foreach (var item in list)
         {
@@ -298,4 +310,122 @@ public class DashboardService : IDashboardService
 
         return resultWithAllWeeks;
     }
+
+    #region User Dashboard
+    public async Task<List<UserCreatedDashboardData>> GetRecentCreatedUser(int amount)
+    {
+        var list = (await _userRepository.ToListAsync())
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(amount);
+        List<UserCreatedDashboardData> result = new();
+        foreach (var item in list)
+        {
+            result.Add(new UserCreatedDashboardData()
+            {
+                Username = item.Username,
+                Role = DataResponse.GetEnumDescription(item.Role),
+                CreatedAt = item.CreatedAt
+            });
+        }
+        return result;
+    }
+
+    public async Task<List<UserUpdatedDashboardData>> GetRecentUpdatedUser(int amount)
+    {
+        var list = (await _userRepository.ToListAsync())
+               .OrderByDescending(x => x.ModifiedAt)
+               .Take(amount);
+        List<UserUpdatedDashboardData> result = new();
+        foreach (var item in list)
+        {
+            result.Add(new UserUpdatedDashboardData()
+            {
+                Username = item.Username,
+                Role = DataResponse.GetEnumDescription(item.Role),
+                ModifiedAt = item.ModifiedAt
+            });
+        }
+        return result;
+    }
+
+    public async Task<UserActiveDashboardData> GetActiveUserCount()
+    {
+        UserActiveDashboardData data = new()
+        {
+            ActiveUserCount = (await _userRepository.WhereAsync(x => x.IsActive == true)).Count,
+            InactiveUserCount = (await _userRepository.WhereAsync(x => x.IsActive == false)).Count
+        };
+        return data;
+    }
+
+    public async Task<UserRolesCountDashboard> GetUserRoleCount()
+    {
+        var roles = Enum.GetValues(typeof(Role)).Cast<Role>().ToList();
+        List<UserCountDashboard> data = new();
+        foreach (Role role in roles)
+        {
+            data.Add(new UserCountDashboard()
+            {
+                Row = DataResponse.GetEnumDescription(role),
+                Amount = (await _userRepository.WhereAsync(x => x.Role == role)).Count
+            });
+        }
+        var total = data.Sum(x => x.Amount);
+        return new UserRolesCountDashboard
+        {
+            data = data,
+            Total = total
+        };
+    }
+    #endregion
+
+    #region Team Dashboard
+    public async Task<TeamMemberDashboardData> GetTeamMemberCount()
+    {
+        var teams = await _teamRepository.ToListAsync();
+        List<TeamMemberCountData> data = new();
+        foreach (Team team in teams)
+        {
+            data.Add(new TeamMemberCountData()
+            {
+                Name = team.Name,
+                NumberOfMembers = (await _teamMemberRepository.WhereAsync(x => x.TeamId == team.Id)).Count
+            });
+        }
+        var total = data.Sum(x => x.NumberOfMembers);
+        return new TeamMemberDashboardData
+        {
+            data = data,
+            TotalCount = (int)total!
+        };
+    }
+
+    public async Task<TeamActiveDashboardData> GetActiveTeamCount()
+    {
+        TeamActiveDashboardData data = new()
+        {
+            ActiveTeamCount = (await _teamRepository.WhereAsync(x => x.IsActive == true)).Count,
+            InactiveTeamCount = (await _userRepository.WhereAsync(x => x.IsActive == false)).Count
+        };
+        return data;
+    }
+
+    public async Task<List<TeamCreatedDashboardData>> GetRecentCreatedTeam(int amount)
+    {
+        var list = (await _teamRepository.ToListAsync())
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(amount);
+        var result = _mapper.Map(list, new List<TeamCreatedDashboardData>());
+        return result;
+    }
+
+    public async Task<List<TeamUpdatedDashboardData>> GetRecentUpdatedTeam(int amount)
+    {
+        var list = (await _teamRepository.ToListAsync())
+                .OrderByDescending(x => x.ModifiedAt)
+                .Take(amount);
+        var result = _mapper.Map(list, new List<TeamUpdatedDashboardData>());
+        return result;
+    }
+    #endregion
 }

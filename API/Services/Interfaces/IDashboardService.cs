@@ -1,7 +1,7 @@
-﻿using API.DTOs.Responses.Dashboards.Customers;
+﻿using API.DTOs.Responses.Dashboards.Admins;
+using API.DTOs.Responses.Dashboards.Customers;
 using API.DTOs.Responses.Dashboards.Managers.Tickets;
 using API.DTOs.Responses.Dashboards.Technicians;
-using Domain.Models.Tickets;
 
 namespace API.Services.Interfaces;
 
@@ -22,4 +22,17 @@ public interface IDashboardService
     //Ticket Task
 
     //Contract
+
+    //User
+    Task<List<UserCreatedDashboardData>> GetRecentCreatedUser(int amount);
+    Task<List<UserUpdatedDashboardData>> GetRecentUpdatedUser(int amount);
+    Task<UserActiveDashboardData> GetActiveUserCount();
+    Task<UserRolesCountDashboard> GetUserRoleCount();
+
+    //Team
+    Task<TeamActiveDashboardData> GetActiveTeamCount();
+    Task<TeamMemberDashboardData> GetTeamMemberCount();
+    Task<List<TeamCreatedDashboardData>> GetRecentCreatedTeam(int amount);
+    Task<List<TeamUpdatedDashboardData>> GetRecentUpdatedTeam(int amount);
+
 }

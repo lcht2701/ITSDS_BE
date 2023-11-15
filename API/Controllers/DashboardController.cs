@@ -102,4 +102,69 @@ public class DashboardController : BaseController
         var dashboard = await _dashboardService.GetTicketDashboardByMonth(DateTime.Now.AddMonths(-1));
         return Ok(dashboard);
     }
+
+    [Authorize]
+    [HttpGet("user/recent-created")]
+    public async Task<IActionResult> GetRecentCreatedUser(int amount)
+    {
+        var dashboard = await _dashboardService.GetRecentCreatedUser(amount);
+        return Ok(dashboard);
+    }
+
+    [Authorize]
+    [HttpGet("user/recent-updated")]
+    public async Task<IActionResult> GetRecentUpdatedUser(int amount)
+    {
+        var dashboard = await _dashboardService.GetRecentUpdatedUser(amount);
+        return Ok(dashboard);
+    }
+
+    [Authorize]
+    [HttpGet("user/active-count")]
+    public async Task<IActionResult> GetActiveUserCount()
+    {
+        var dashboard = await _dashboardService.GetActiveUserCount();
+        return Ok(dashboard);
+    }
+
+    [Authorize]
+    [HttpGet("user/role-count")]
+    public async Task<IActionResult> GetUserRoleCount()
+    {
+        var dashboard = await _dashboardService.GetUserRoleCount();
+        return Ok(dashboard);
+    }
+
+    [Authorize]
+    [HttpGet("team/recent-created")]
+    public async Task<IActionResult> GetRecentCreatedTeam(int amount)
+    {
+        var dashboard = await _dashboardService.GetRecentCreatedTeam(amount);
+        return Ok(dashboard);
+    }
+
+    [Authorize]
+    [HttpGet("team/recent-updated")]
+    public async Task<IActionResult> GetRecentUpdatedTeam(int amount)
+    {
+        var dashboard = await _dashboardService.GetRecentUpdatedTeam(amount);
+        return Ok(dashboard);
+    }
+
+    [Authorize]
+    [HttpGet("team/active-count")]
+    public async Task<IActionResult> GetActiveTeamCount()
+    {
+        var dashboard = await _dashboardService.GetActiveTeamCount();
+        return Ok(dashboard);
+    }
+
+    [Authorize]
+    [HttpGet("team/member-count")]
+    public async Task<IActionResult> GetTeamMemberCount()
+    {
+        var dashboard = await _dashboardService.GetTeamMemberCount();
+        return Ok(dashboard);
+    }
+
 }
