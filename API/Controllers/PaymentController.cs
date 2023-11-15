@@ -35,7 +35,7 @@ public class PaymentController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpGet]
-    public async Task<IActionResult> GetTeams(
+    public async Task<IActionResult> Get(
     [FromQuery] string? filter,
     [FromQuery] string? sort,
     [FromQuery] int page = 1,

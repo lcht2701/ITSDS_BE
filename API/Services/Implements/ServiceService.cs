@@ -25,7 +25,7 @@ public class ServiceService : IServiceService
 
     public async Task<Service> GetById(int id)
     {
-        var result = await _serviceRepository.FirstOrDefaultAsync(u => u.Id.Equals(id), new string[] { "ServicePack" }) ?? throw new KeyNotFoundException("Service is not exist");
+        var result = await _serviceRepository.FirstOrDefaultAsync(u => u.Id.Equals(id)) ?? throw new KeyNotFoundException("Service is not exist");
         return result;
     }
 

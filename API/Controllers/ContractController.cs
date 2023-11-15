@@ -1,5 +1,6 @@
 ﻿
 using API.DTOs.Requests.Contracts;
+using API.DTOs.Requests.ServiceContracts;
 using API.Services.Interfaces;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
@@ -12,10 +13,12 @@ namespace API.Controllers;
 public class ContractController : BaseController
 {
     private readonly IContractService _contractService;
+    private readonly IServiceContractService _serviceContractService;
 
-    public ContractController(IContractService contractService)
+    public ContractController(IContractService contractService, IServiceContractService serviceContractService)
     {
         _contractService = contractService;
+        _serviceContractService = serviceContractService;
     }
 
     [Authorize]
@@ -180,6 +183,63 @@ public class ContractController : BaseController
         {
             var result = await _contractService.RenewContract(contractId, model, CurrentUserID);
             return Ok(new { Message = "Contract Renewed Successfully", Data = result });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpGet("services")]
+    public async Task<IActionResult> GetServiceOfContract(int contractId)
+    {
+        try
+        {
+            var result = await _serviceContractService.Get(contractId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpGet("services/{id}")]
+    public async Task<IActionResult> GetServiceDetail(int id)
+    {
+        try
+        {
+            var result = await _serviceContractService.GetById(id);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpPut("services/modify")]
+    public async Task<IActionResult> ModifyServicesInContract(ModifyServicesInContract model)
+    {
+        try
+        {
+            var result = await _serviceContractService.ModifyServices(model);
+            return Ok(result);
         }
         catch (KeyNotFoundException ex)
         {

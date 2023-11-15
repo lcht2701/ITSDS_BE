@@ -60,17 +60,6 @@ public class ContractService : IContractService
         SetContractStatus(entity);
         entity.IsRenewed = false;
         await _contractRepository.CreateAsync(entity);
-        if (model.ServiceIds != null)
-        {
-            foreach (var serviceId in model.ServiceIds)
-            {
-                await _serviceContractRepository.CreateAsync(new ServiceContract()
-                {
-                    ContractId = entity.Id,
-                    ServiceId = serviceId
-                });
-            }
-        }
         return entity;
     }
 
@@ -81,42 +70,8 @@ public class ContractService : IContractService
         SetContractStatus(entity);
         await _contractRepository.UpdateAsync(entity);
         var relatedServices = await _serviceContractRepository.WhereAsync(x => x.ContractId == entity.Id);
-
-        if (model.ServiceIds != null)
-        {
-            var existingServiceIds = relatedServices.Select(x => (int)x.ServiceId).ToList();
-
-            // Remove services that are no longer associated with the contract
-            var servicesToRemove = relatedServices.Where(rs => !model.ServiceIds.Contains((int)rs.ServiceId)).ToList();
-            foreach (var serviceToRemove in servicesToRemove)
-            {
-                await _serviceContractRepository.DeleteAsync(serviceToRemove);
-            }
-
-            // Add new services that are not in the existing list
-            var servicesToAdd = model.ServiceIds.Except(existingServiceIds).ToList();
-            foreach (var serviceId in servicesToAdd)
-            {
-                await _serviceContractRepository.CreateAsync(new ServiceContract()
-                {
-                    ContractId = entity.Id,
-                    ServiceId = serviceId
-                });
-            }
-        }
-        else
-        {
-            // Remove all related services if model.ServiceIds is null
-            foreach (var relatedService in relatedServices)
-            {
-                await _serviceContractRepository.DeleteAsync(relatedService);
-            }
-        }
         return entity;
     }
-
-
-
 
     public async Task Remove(int id)
     {
