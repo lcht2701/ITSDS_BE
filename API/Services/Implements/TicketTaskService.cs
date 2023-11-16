@@ -154,9 +154,13 @@ public class TicketTaskService : ITicketTaskService
         var target = await _taskRepository.FirstOrDefaultAsync(c => c.Id.Equals(taskId)) ??
                      throw new KeyNotFoundException();
         target.TaskStatus = newStatus;
-        if (newStatus == TicketTaskStatus.InProgress && target.ActualStartTime == null)
+        if (newStatus == TicketTaskStatus.InProgress)
         {
-            target.ActualStartTime = DateTime.Now;
+            if (target.ActualStartTime == null)
+            {
+                target.ActualStartTime = DateTime.Now;
+            }
+            target.ActualEndTime = null;
         }
         else if (newStatus == TicketTaskStatus.Completed || newStatus == TicketTaskStatus.Cancelled)
         {
