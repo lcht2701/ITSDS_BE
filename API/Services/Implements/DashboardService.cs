@@ -1,10 +1,11 @@
-﻿using API.DTOs.Responses.Dashboards.Admins;
+﻿using API.DTOs.Responses.Dashboards.Accountants;
+using API.DTOs.Responses.Dashboards.Admins;
 using API.DTOs.Responses.Dashboards.Customers;
+using API.DTOs.Responses.Dashboards.Managers;
 using API.DTOs.Responses.Dashboards.Managers.Tickets;
 using API.DTOs.Responses.Dashboards.Technicians;
 using API.Services.Interfaces;
 using AutoMapper;
-using Domain.Constants;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
@@ -12,7 +13,6 @@ using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using System.Collections.Generic;
 
 namespace API.Services.Implements;
 
@@ -26,9 +26,12 @@ public class DashboardService : IDashboardService
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IRepositoryBase<Team> _teamRepository;
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
+    private readonly IRepositoryBase<Contract> _contractRepository;
+    private readonly IRepositoryBase<Payment> _paymentRepository;
+    private readonly IRepositoryBase<PaymentTerm> _termRepository;
     private readonly IMapper _mapper;
 
-    public DashboardService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<Category> categoryRepository, IRepositoryBase<Mode> modeRepository, IRepositoryBase<Service> serviceRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IMapper mapper)
+    public DashboardService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<Category> categoryRepository, IRepositoryBase<Mode> modeRepository, IRepositoryBase<Service> serviceRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Payment> paymentRepository, IRepositoryBase<PaymentTerm> termRepository, IMapper mapper)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -38,6 +41,9 @@ public class DashboardService : IDashboardService
         _userRepository = userRepository;
         _teamRepository = teamRepository;
         _teamMemberRepository = teamMemberRepository;
+        _contractRepository = contractRepository;
+        _paymentRepository = paymentRepository;
+        _termRepository = termRepository;
         _mapper = mapper;
     }
 
@@ -426,6 +432,50 @@ public class DashboardService : IDashboardService
                 .Take(amount);
         var result = _mapper.Map(list, new List<TeamUpdatedDashboardData>());
         return result;
+    }
+    #endregion
+
+    #region Contract Dashboard
+    public async Task<AccountantDashboard> GetAccountantDashboard(int userId)
+    {
+        var contracts = await _contractRepository.WhereAsync(x => x.AccountantId == userId);
+        var payments = await _paymentRepository.WhereAsync(x => contracts.Select(x => x.Id).Contains((int)x.ContractId!));
+        var terms = await _termRepository.WhereAsync(x => payments.Select(x => x.Id).Contains((int)x.PaymentId!));
+        AccountantDashboard dashboard = new()
+        {
+            TotalContractCount = contracts.Count,
+            ContractPaymentDoneCount = payments.Where(x => x.IsFullyPaid == true).Count(),
+            ContractPaymentNotDoneCount = payments.Where(x => x.IsFullyPaid == false).Count(),
+            ContractTermDoneCount = terms.Where(x => x.IsPaid == true).Count(),
+            ContractTermNotDoneCount = terms.Where(x => x.IsPaid == false).Count(),
+        };
+        return dashboard;
+    }
+
+    public async Task<AccountantContractDashboard> GetAccountantContractDashboard(int userId)
+    {
+        var contracts = await _contractRepository.WhereAsync(x => x.AccountantId == userId);
+        AccountantContractDashboard dashboard = new()
+        {
+            PendingContractCount = contracts.Where(x => x.Status == ContractStatus.Pending).Count(),
+            ActiveContractCount = contracts.Where(x => x.Status == ContractStatus.Active).Count(),
+            InActiveContractCount = contracts.Where(x => x.Status == ContractStatus.Inactive).Count(),
+            ExpiredContractCount = contracts.Where(x => x.Status == ContractStatus.Expired).Count()
+        };
+        return dashboard;
+    }
+
+    public async Task<ManagerContractDashboard> GetManagerContractDashboard()
+    {
+        var contracts = await _contractRepository.ToListAsync();
+        ManagerContractDashboard dashboard = new()
+        {
+            PendingContractCount = contracts.Where(x => x.Status == ContractStatus.Pending).Count(),
+            ActiveContractCount = contracts.Where(x => x.Status == ContractStatus.Active).Count(),
+            InActiveContractCount = contracts.Where(x => x.Status == ContractStatus.Inactive).Count(),
+            ExpiredContractCount = contracts.Where(x => x.Status == ContractStatus.Expired).Count()
+        };
+        return dashboard;
     }
     #endregion
 }

@@ -1,5 +1,7 @@
-﻿using API.DTOs.Responses.Dashboards.Admins;
+﻿using API.DTOs.Responses.Dashboards.Accountants;
+using API.DTOs.Responses.Dashboards.Admins;
 using API.DTOs.Responses.Dashboards.Customers;
+using API.DTOs.Responses.Dashboards.Managers;
 using API.DTOs.Responses.Dashboards.Managers.Tickets;
 using API.DTOs.Responses.Dashboards.Technicians;
 
@@ -17,11 +19,11 @@ public interface IDashboardService
     Task<ManagerTicketsDashboardTable> GetManagerTicketsByService();
     Task<List<DashboardTableRow>> GetTicketDashboardByWeek(DateTime currentDate);
     Task<List<DashboardTableRow>> GetTicketDashboardByMonth(DateTime currentDate);
-    //Assignment
-
-    //Ticket Task
 
     //Contract
+    Task<AccountantDashboard> GetAccountantDashboard(int userId);
+    Task<AccountantContractDashboard> GetAccountantContractDashboard(int userId);
+    Task<ManagerContractDashboard> GetManagerContractDashboard();
 
     //User
     Task<List<UserCreatedDashboardData>> GetRecentCreatedUser(int amount);

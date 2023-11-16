@@ -40,6 +40,14 @@ public class DashboardController : BaseController
     }
 
     [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("manager/contract")]
+    public async Task<IActionResult> GetManagerContractDashboard()
+    {
+        var dashboard = await _dashboardService.GetManagerContractDashboard();
+        return Ok(dashboard);
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
     [HttpGet("manager/ticket/category")]
     public async Task<IActionResult> GetManagerTicketDashboardByCategory()
     {
@@ -103,7 +111,7 @@ public class DashboardController : BaseController
         return Ok(dashboard);
     }
 
-    [Authorize]
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpGet("user/recent-created")]
     public async Task<IActionResult> GetRecentCreatedUser(int amount)
     {
@@ -111,7 +119,7 @@ public class DashboardController : BaseController
         return Ok(dashboard);
     }
 
-    [Authorize]
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpGet("user/recent-updated")]
     public async Task<IActionResult> GetRecentUpdatedUser(int amount)
     {
@@ -119,7 +127,7 @@ public class DashboardController : BaseController
         return Ok(dashboard);
     }
 
-    [Authorize]
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpGet("user/active-count")]
     public async Task<IActionResult> GetActiveUserCount()
     {
@@ -127,7 +135,7 @@ public class DashboardController : BaseController
         return Ok(dashboard);
     }
 
-    [Authorize]
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpGet("user/role-count")]
     public async Task<IActionResult> GetUserRoleCount()
     {
@@ -135,7 +143,7 @@ public class DashboardController : BaseController
         return Ok(dashboard);
     }
 
-    [Authorize]
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpGet("team/recent-created")]
     public async Task<IActionResult> GetRecentCreatedTeam(int amount)
     {
@@ -143,7 +151,7 @@ public class DashboardController : BaseController
         return Ok(dashboard);
     }
 
-    [Authorize]
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpGet("team/recent-updated")]
     public async Task<IActionResult> GetRecentUpdatedTeam(int amount)
     {
@@ -151,7 +159,7 @@ public class DashboardController : BaseController
         return Ok(dashboard);
     }
 
-    [Authorize]
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpGet("team/active-count")]
     public async Task<IActionResult> GetActiveTeamCount()
     {
@@ -159,11 +167,27 @@ public class DashboardController : BaseController
         return Ok(dashboard);
     }
 
-    [Authorize]
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpGet("team/member-count")]
     public async Task<IActionResult> GetTeamMemberCount()
     {
         var dashboard = await _dashboardService.GetTeamMemberCount();
+        return Ok(dashboard);
+    }
+
+    [Authorize(Roles = Roles.ACCOUNTANT)]
+    [HttpGet("accountant/contract")]
+    public async Task<IActionResult> GetAccountantDashboard()
+    {
+        var dashboard = await _dashboardService.GetAccountantDashboard(CurrentUserID);
+        return Ok(dashboard);
+    }
+
+    [Authorize(Roles = Roles.ACCOUNTANT)]
+    [HttpGet("accountant/contract/status")]
+    public async Task<IActionResult> GetAccountantContractDashboard()
+    {
+        var dashboard = await _dashboardService.GetAccountantContractDashboard(CurrentUserID);
         return Ok(dashboard);
     }
 
