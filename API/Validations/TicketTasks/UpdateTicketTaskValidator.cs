@@ -27,10 +27,6 @@ namespace API.Validations.TicketTasks
                 .IsInEnum().When(x => x.Priority != null)
                 .WithMessage("Priority is required.");
 
-            RuleFor(x => x.ScheduledStartTime)
-                .GreaterThan(DateTime.Now).When(x => x.ScheduledStartTime != null)
-                .WithMessage("Scheduled start time should be in the future.");
-
             RuleFor(x => x.ScheduledEndTime)
                 .GreaterThan(x => x.ScheduledStartTime).When(x => x.ScheduledEndTime != null)
                 .WithMessage("Scheduled end time should be greater than start time.");
