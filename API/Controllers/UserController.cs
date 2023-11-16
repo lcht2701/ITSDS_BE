@@ -20,7 +20,7 @@ public class UserController : BaseController
     }
 
     #region Selection List By Roles
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}, {Roles.TECHNICIAN}")]
+    [Authorize(Roles = Roles.ITSDSEmployees)]
     [HttpGet("list/managers")]
     public async Task<IActionResult> GetManagers()
     {
@@ -35,7 +35,7 @@ public class UserController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}, {Roles.TECHNICIAN}")]
+    [Authorize(Roles = Roles.ITSDSEmployees)]
     [HttpGet("list/accountants")]
     public async Task<IActionResult> GetAccountants()
     {
@@ -50,7 +50,7 @@ public class UserController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}, {Roles.TECHNICIAN}")]
+    [Authorize(Roles = Roles.ITSDSEmployees)]
     [HttpGet("list/customers")]
     public async Task<IActionResult> GetCustomers()
     {
@@ -65,7 +65,7 @@ public class UserController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}, {Roles.TECHNICIAN}")]
+    [Authorize(Roles = Roles.ITSDSEmployees)]
     [HttpGet("list/admins")]
     public async Task<IActionResult> GetAdmins()
     {
@@ -80,7 +80,7 @@ public class UserController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}, {Roles.TECHNICIAN}")]
+    [Authorize(Roles = Roles.ITSDSEmployees)]
     [HttpGet("list/technicians")]
     public async Task<IActionResult> GetTechnicians()
     {
