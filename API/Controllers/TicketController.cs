@@ -291,10 +291,9 @@ public class TicketController : BaseController
                     (int)model.RequesterId);
             }
             var technicianId = await GetTechnicianAssigned(ticketId);
-            if (technicianId != null)
+            if (technicianId != 0)
             {
-                await _messagingService.SendNotification("ITSDS", $"Ticket [{model.Title}] has been updated",
-                    (int)technicianId);
+                await _messagingService.SendNotification("ITSDS", $"Ticket [{model.Title}] has been updated", technicianId);
             }
             foreach (var managerId in await GetManagerIdsList())
             {
@@ -334,10 +333,9 @@ public class TicketController : BaseController
                     (int)updated.RequesterId);
             }
             var technicianId = await GetTechnicianAssigned(ticketId);
-            if (technicianId != null)
+            if (technicianId != 0)
             {
-                await _messagingService.SendNotification("ITSDS", $"Ticket [{updated.Title}] has been updated",
-                    (int)technicianId);
+                await _messagingService.SendNotification("ITSDS", $"Ticket [{updated.Title}] has been updated", technicianId);
             }
             foreach (var managerId in await GetManagerIdsList())
             {
@@ -391,9 +389,8 @@ public class TicketController : BaseController
     {
         try
         {
-            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
-            await _ticketService.ModifyTicketStatus(ticketId, newStatus);
-            var updated = await _ticketService.GetById(ticketId);
+            Ticket? original = (Ticket?)await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            var updated = await _ticketService.ModifyTicketStatus(ticketId, newStatus);
             await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
             #region Notification
             if (updated.RequesterId != null)
@@ -409,7 +406,7 @@ public class TicketController : BaseController
                     break;
                 case Role.Manager:
                     var technicianId = await GetTechnicianAssigned(ticketId);
-                    if (technicianId != null)
+                    if (technicianId != 0)
                     {
                         await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated", (int)technicianId);
                     }
@@ -445,9 +442,8 @@ public class TicketController : BaseController
     {
         try
         {
-            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
-            await _ticketService.CancelTicket(ticketId, CurrentUserID);
-            var updated = await _ticketService.GetById(ticketId);
+            Ticket? original = (Ticket?)await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            var updated = await _ticketService.CancelTicket(ticketId, CurrentUserID);
             await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
             #region Notification
             var currentUser = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUserID));
@@ -479,15 +475,14 @@ public class TicketController : BaseController
     {
         try
         {
-            var original = await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
-            await _ticketService.CloseTicket(ticketId, CurrentUserID);
-            var updated = await _ticketService.GetById(ticketId);
+            Ticket? original = (Ticket?)await _auditLogService.GetOriginalModel(ticketId, Tables.TICKET);
+            var updated = await _ticketService.CloseTicket(ticketId, CurrentUserID);
             await _auditLogService.TrackUpdated(original, updated, CurrentUserID, ticketId, Tables.TICKET);
             #region Notification
             var currentUser = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUserID));
             await _messagingService.SendNotification("ITSDS", $"Ticket [{updated.Title}] has been closed", CurrentUserID);
             var technicianId = await GetTechnicianAssigned(ticketId);
-            await _messagingService.SendNotification("ITSDS", $"Ticket [{updated.Title}] has been closed", (int)technicianId);
+            if (technicianId != 0) await _messagingService.SendNotification("ITSDS", $"Ticket [{updated.Title}] has been closed", technicianId);
             foreach (var managerId in await GetManagerIdsList())
             {
                 await _messagingService.SendNotification("ITSDS", $"Ticket [{updated.Title}] has been closed", managerId);
@@ -523,14 +518,16 @@ public class TicketController : BaseController
         var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
         return managerIds;
     }
-    private async Task<int?> GetTechnicianAssigned(int ticketId)
+    private async Task<int> GetTechnicianAssigned(int ticketId)
     {
-        int? technicianId = null;
         var assignment = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticketId);
-        if (assignment != null)
+        if (assignment.TechnicianId != null)
         {
-            technicianId = assignment.TechnicianId;
+            return (int)assignment.TechnicianId;
         }
-        return technicianId;
+        else
+        {
+            return 0;
+        }
     }
 }

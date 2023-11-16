@@ -18,57 +18,37 @@ public class MessagingService : IMessagingService
 
     public async Task<List<Messaging>> GetNotification(int userId)
     {
-        var result = await _messagingRepository.GetAsync(x => x.UserId == userId);
-        return (List<Messaging>)result;
+        var result = (await _messagingRepository.WhereAsync(x => x.UserId == userId)).OrderByDescending(x => x.CreatedAt).ToList();
+        return result;
     }
 
     public async Task SendNotification(string title, string message, int userId)
     {
-        var token = (await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId)).Token;
-        var entity = new Messaging()
+        await _messagingRepository.CreateAsync(new Messaging()
         {
             Title = title,
             Body = message,
             UserId = userId,
             IsRead = false
-        };
+        }); 
 
-        if (!string.IsNullOrEmpty(token))
+        var model = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId);
+        if (model == null || string.IsNullOrEmpty(model.Token))
         {
-            var notification = new Message()
-            {
-                Notification = new Notification
-                {
-                    Title = title,
-                    Body = message,
-                },
-                Token = token
-            };
-
-            var messaging = FirebaseMessaging.DefaultInstance;
-            try
-            {
-                var result = await messaging.SendAsync(notification);
-                if (result != null)
-                {
-                    // The notification was sent successfully.
-                    // You can handle the success as needed.
-                }
-                else
-                {
-                    // Handle the case where FCM SendAsync didn't return a result.
-                    // Log an error or handle it as needed.
-                }
-            }
-            catch (Exception ex)
-            {
-                // Handle any exceptions that may occur when sending the notification.
-                // Log the exception or take appropriate action.
-            }
+            return;
         }
 
-        // Create the notification record in the database, even if the token is missing.
-        await _messagingRepository.CreateAsync(entity);
+        var notification = new Message()
+        {
+            Notification = new Notification
+            {
+                Title = title,
+                Body = message,
+            },
+            Token = model.Token
+        };
+        var messaging = FirebaseMessaging.DefaultInstance;
+        var result = await messaging.SendAsync(notification);
     }
 
     public async Task SendNotifications(string title, string message, List<int> userIds)

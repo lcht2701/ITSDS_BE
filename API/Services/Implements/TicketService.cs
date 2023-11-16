@@ -247,19 +247,20 @@ public class TicketService : ITicketService
         return ticket.TicketStatus is TicketStatus.Closed or TicketStatus.Cancelled;
     }
 
-    public async Task UpdateTicketStatus(int ticketId, TicketStatus newStatus)
+    public async Task<Ticket> UpdateTicketStatus(int ticketId, TicketStatus newStatus)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
                      throw new KeyNotFoundException();
         ticket.TicketStatus = newStatus;
-        if (newStatus == TicketStatus.Cancelled ||  newStatus == TicketStatus.Closed)
+        if (newStatus == TicketStatus.Cancelled || newStatus == TicketStatus.Closed)
         {
             ticket.CompletedTime = DateTime.Now;
         }
         await _ticketRepository.UpdateAsync(ticket);
+        return ticket;
     }
 
-    public async Task ModifyTicketStatus(int ticketId, TicketStatus newStatus)
+    public async Task<Ticket> ModifyTicketStatus(int ticketId, TicketStatus newStatus)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
                      throw new KeyNotFoundException();
@@ -330,6 +331,7 @@ public class TicketService : ITicketService
             default:
                 throw new BadRequestException();
         }
+        return ticket;
     }
 
     private string AutoCloseBackgroundService(Ticket ticket)
@@ -345,7 +347,7 @@ public class TicketService : ITicketService
         return jobId;
     }
 
-    public async Task CancelTicket(int ticketId, int userId)
+    public async Task<Ticket> CancelTicket(int ticketId, int userId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
                      throw new KeyNotFoundException();
@@ -361,9 +363,10 @@ public class TicketService : ITicketService
             throw new BadRequestException(
                 "Cancellation of the ticket is not allowed once it has entered the processing state");
         }
+        return ticket;
     }
 
-    public async Task CloseTicket(int ticketId, int userId)
+    public async Task<Ticket> CloseTicket(int ticketId, int userId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
                      throw new KeyNotFoundException();
@@ -379,6 +382,7 @@ public class TicketService : ITicketService
             throw new BadRequestException(
                 "If the ticket is not resolved, it cannot be closed");
         }
+        return ticket;
     }
 
     //Background Services
