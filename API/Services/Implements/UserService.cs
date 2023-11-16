@@ -219,4 +219,29 @@ public class UserService : IUserService
             // You can choose to create a new document or handle the error as needed.
         }
     }
+
+    public async Task<List<User>> GetManagers()
+    {
+        return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Manager))).ToList();
+    }
+
+    public async Task<List<User>> GetTechnicians()
+    {
+        return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Technician))).ToList();
+    }
+
+    public async Task<List<User>> GetCustomers()
+    {
+        return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Customer))).ToList();
+    }
+
+    public async Task<List<User>> GetAdmins()
+    {
+        return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Admin))).ToList();
+    }
+
+    public async Task<List<User>> GetAccountants()
+    {
+        return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Accountant))).ToList();
+    }
 }
