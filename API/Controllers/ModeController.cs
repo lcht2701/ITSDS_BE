@@ -75,7 +75,6 @@ namespace API.Controllers
             {
                 return BadRequest(ex.Message);
             }
-
         }
 
         [Authorize(Roles = Roles.ADMIN)]

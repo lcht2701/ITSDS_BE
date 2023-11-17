@@ -1,30 +1,21 @@
 ﻿using API.DTOs.Requests.Categories;
-using API.DTOs.Requests.Contracts;
-using API.DTOs.Requests.Teams;
+using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Constants.Enums;
 using Domain.Exceptions;
-using Domain.Models;
-using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Utilities.IO;
 using Persistence.Helpers;
-using Persistence.Repositories.Interfaces;
-using System.Diagnostics.Contracts;
 
 namespace API.Controllers
 {
     [Route("/v1/itsds/category")]
     public class CategoryController : BaseController
     {
-        private readonly IRepositoryBase<Category> _categoryRepository;
-        private readonly IRepositoryBase<User> _userrepository;
+        private readonly ICategoryService _categoryService;
 
-        public CategoryController(IRepositoryBase<Category> categoryRepository, IRepositoryBase<User> userrepository)
+        public CategoryController(ICategoryService categoryService)
         {
-            _categoryRepository = categoryRepository;
-            _userrepository = userrepository;
+            _categoryService = categoryService;
         }
 
         [Authorize]
@@ -32,7 +23,7 @@ namespace API.Controllers
 
         public async Task<IActionResult> GetAllCategory()
         {
-            var result = await _categoryRepository.ToListAsync();
+            var result = await _categoryService.Get();
             return Ok(result);
         }
 
@@ -44,7 +35,7 @@ namespace API.Controllers
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 5)
         {
-            var result = await _categoryRepository.ToListAsync();
+            var result = await _categoryService.Get();
             var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
             return Ok(pagedResponse);
         }
@@ -53,52 +44,88 @@ namespace API.Controllers
         [HttpGet("{categoryId}")]
         public async Task<IActionResult> GetCategoryById(int categoryId)
         {
-            var result = await _categoryRepository.FirstOrDefaultAsync(x => x.Id.Equals(categoryId), new string[] { "AssignedTechnical" });
-            return result != null ? Ok(result) : throw new BadRequestException("Category not found.");
+            try
+            {
+                var result = await _categoryService.GetById(categoryId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Authorize(Roles = Roles.MANAGER)]
         [HttpPost]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoriesRequest model)
         {
-            if (model.AssignedTechnicalId != null)
+            try
             {
-                User user = await _userrepository.FoundOrThrow(x => x.Id.Equals(model.AssignedTechnicalId), new BadRequestException("User not found"));
-                if (user.Role != Role.Technician)
+                var entity = await _categoryService.Create(model);
+                return Ok(new
                 {
-                    throw new BadRequestException("Cannot assign this user.");
-                }
+                    Message = "Category Created Successfully",
+                    Data = entity
+                });
             }
-            var entity = Mapper.Map(model, new Category());
-            await _categoryRepository.CreateAsync(entity);
-            return Ok();
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Authorize(Roles = Roles.MANAGER)]
         [HttpPut("{categoryId}")]
-        public async Task<IActionResult> UpdateCategory(int categoryId, [FromBody] UpdateCategoriesRequest req)
+        public async Task<IActionResult> UpdateCategory(int categoryId, [FromBody] UpdateCategoriesRequest model)
         {
-            if (req.AssignedTechnicalId != null)
+            try
             {
-                User user = await _userrepository.FoundOrThrow(x => x.Id.Equals(req.AssignedTechnicalId), new BadRequestException("User not found"));
-                if (user.Role != Role.Technician)
+                var entity = await _categoryService.Update(categoryId, model);
+                return Ok(new
                 {
-                    throw new BadRequestException("Cannot assign this user.");
-                }
+                    Message = "Category Updated Successfully",
+                    Data = entity
+                });
             }
-            var target = await _categoryRepository.FoundOrThrow(c => c.Id.Equals(categoryId), new BadRequestException("Category not found"));
-            Category entity = Mapper.Map(req, target);
-            await _categoryRepository.UpdateAsync(entity);
-            return Accepted("Update Successfully");
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Authorize(Roles = Roles.MANAGER)]
         [HttpDelete("{categoryId}")]
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {
-            var target = await _categoryRepository.FoundOrThrow(c => c.Id.Equals(categoryId), new BadRequestException("Category not found"));
-            await _categoryRepository.SoftDeleteAsync(target);
-            return Ok("Delete Successfully");
+            try
+            {
+                await _categoryService.Remove(categoryId);
+                return Ok("Category Deleted Successfully");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }
