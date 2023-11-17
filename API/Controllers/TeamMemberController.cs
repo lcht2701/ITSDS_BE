@@ -4,6 +4,7 @@ using Domain.Constants;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Persistence.Helpers;
 
 namespace API.Controllers;
 
@@ -17,13 +18,33 @@ public class TeamMemberController : BaseController
         _teamMemberService = teamMemberService;
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
-    [HttpGet("{teamId}")]
-    public async Task<IActionResult> GetTeamMembersByTeam(int teamId)
+    [Authorize(Roles = $"{Roles.MANAGER}")]
+    [HttpGet]
+    public async Task<IActionResult> Get(
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5)
     {
         try
         {
-            var members = await _teamMemberService.GetByTeam(teamId);
+            var members = await _teamMemberService.Get();
+            var pagedResponse = members.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpGet("{teamId}")]
+    public async Task<IActionResult> GetMembersInTeam(int teamId)
+    {
+        try
+        {
+            var members = await _teamMemberService.GetMembersInTeam(teamId);
             return Ok(members);
         }
         catch (KeyNotFoundException)
@@ -35,10 +56,10 @@ public class TeamMemberController : BaseController
             return BadRequest(ex.Message);
         }
     }
-    
+
     [Authorize(Roles = Roles.MANAGER)]
     [HttpGet("select-list")]
-    public async Task<IActionResult> GetSelectList(int teamId)
+    public async Task<IActionResult> GetMembersNotInTeam(int teamId)
     {
         try
         {
@@ -48,6 +69,25 @@ public class TeamMemberController : BaseController
         catch (KeyNotFoundException)
         {
             return NotFound("Team is not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpGet("get/{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        try
+        {
+            var members = await _teamMemberService.GetById(id);
+            return Ok(members);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {
@@ -81,39 +121,16 @@ public class TeamMemberController : BaseController
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpPut("update")]
-    public async Task<IActionResult> UpdateTeamMember(int memberId, [FromBody] UpdateTeamMemberRequest model)
+    public async Task<IActionResult> UpdateTeamMember(int id, [FromBody] UpdateTeamMemberRequest model)
     {
         try
         {
-            await _teamMemberService.Update(memberId, model);
+            await _teamMemberService.Update(id, model);
             return Ok("Successfully");
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize(Roles = Roles.MANAGER)]
-    [HttpPatch("transfer")]
-    public async Task<IActionResult> TransferTeamMember(int memberId, int newTeamId)
-    {
-        try
-        {
-            await _teamMemberService.Transfer(memberId, newTeamId);
-            return Ok("Successfully");
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (BadRequestException ex)
-        {
-            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
@@ -123,11 +140,11 @@ public class TeamMemberController : BaseController
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpDelete("remove")]
-    public async Task<IActionResult> RemoveTeamMember(int memberId)
+    public async Task<IActionResult> RemoveTeamMember(int id)
     {
         try
         {
-            await _teamMemberService.Remove(memberId);
+            await _teamMemberService.Remove(id);
             return Ok("Successfully");
         }
         catch (KeyNotFoundException ex)

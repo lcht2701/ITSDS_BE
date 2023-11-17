@@ -23,6 +23,19 @@ public class TeamMemberService : ITeamMemberService
         _mapper = mapper;
     }
 
+    public async Task<List<TeamMember>> Get()
+    {
+        var result = await _teamMemberRepository.GetAsync(navigationProperties: new string[] { "Member", "Team" });
+        return result.ToList();
+    }
+
+    public async Task<TeamMember> GetById(int id)
+    {
+        var result = await _teamMemberRepository.FirstOrDefaultAsync(x => x.Id == id, new string[] { "Member", "Team" })
+            ?? throw new KeyNotFoundException("Team Member is not exist");
+        return result;
+    }
+
     public async Task<List<User>> GetMembersNotInTeam(int teamId)
     {
         var teamMembers = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId)) ??
@@ -33,7 +46,7 @@ public class TeamMemberService : ITeamMemberService
         return (List<User>)users;
     }
 
-    public async Task<List<User>> GetByTeam(int teamId)
+    public async Task<List<User>> GetMembersInTeam(int teamId)
     {
         var teamMembers = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId)) ??
                           throw new KeyNotFoundException();
@@ -62,31 +75,17 @@ public class TeamMemberService : ITeamMemberService
         await _teamMemberRepository.CreateAsync(entity);
     }
 
-    public async Task Update(int memberId, UpdateTeamMemberRequest model)
+    public async Task Update(int id, UpdateTeamMemberRequest model)
     {
-        var member = await _teamMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(memberId)) ??
+        var member = await _teamMemberRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ??
                      throw new KeyNotFoundException("Team member is not exist");
         var entity = _mapper.Map(model, member);
         await _teamMemberRepository.UpdateAsync(entity);
     }
 
-    public async Task Transfer(int memberId, int newTeamId)
+    public async Task Remove(int id)
     {
-        var user = await _teamMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(memberId)) ??
-                   throw new KeyNotFoundException("User is currently not a member of any team");
-
-        if (user.TeamId == newTeamId)
-        {
-            throw new BadRequestException("Cannot transfer in the same team");
-        }
-
-        user.TeamId = newTeamId;
-        await _teamMemberRepository.UpdateAsync(user);
-    }
-
-    public async Task Remove(int memberId)
-    {
-        var user = await _teamMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(memberId)) ??
+        var user = await _teamMemberRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ??
                    throw new KeyNotFoundException("User is currently not a member of any team");
         await _teamMemberRepository.DeleteAsync(user);
     }
