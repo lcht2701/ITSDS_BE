@@ -19,19 +19,19 @@ public class TeamService : ITeamService
 
     public async Task<List<Team>> Get()
     {
-        var result = await _teamRepository.ToListAsync();
+        var result = (await _teamRepository.GetAsync(navigationProperties: new string[] { "Manager" })).ToList();
         return result;
     }
 
     public async Task<Team> GetById(int id)
     {
-        var result = await _teamRepository.FoundOrThrow(x => x.Id.Equals(id), new KeyNotFoundException("Team is not exist"));
+        var result = await _teamRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Manager" }) ?? throw new KeyNotFoundException("Team is not exist");
         return result;
     }
 
     public async Task<List<Team>> GetByManager(int managerId)
     {
-        var result = (await _teamRepository.WhereAsync(x => x.ManagerId.Equals(managerId))).ToList();
+        var result = (await _teamRepository.WhereAsync(x => x.ManagerId.Equals(managerId), new string[] { "Manager" })).ToList();
         return result;
     }
 

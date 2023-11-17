@@ -1,12 +1,9 @@
 ﻿using API.DTOs.Requests.Teams;
 using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Customs;
-using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
-using System.Net;
 
 namespace API.Controllers;
 
@@ -27,7 +24,9 @@ public class TeamController : BaseController
     {
         try
         {
-            return Ok(await _teamService.Get());
+            var result = await _teamService.Get();
+            result = result.Where(x => x.IsActive == true).ToList();
+            return Ok(result);
         }
         catch (Exception ex)
         {
