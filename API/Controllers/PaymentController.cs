@@ -197,13 +197,13 @@ public class PaymentController : BaseController
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpDelete("term/{id}")]
-    public async Task<IActionResult> DeleteTerm(int id)
+    [HttpDelete("term/{paymentId}")]
+    public async Task<IActionResult> DeleteTerm(int paymentId)
     {
         try
         {
-            await _paymentService.RemovePaymentTerm(id);
-            return Ok("Payment Term Removed Successfully");
+            await _paymentService.RemovePaymentTerm(paymentId);
+            return Ok("Payment Terms Removed Successfully");
         }
         catch (KeyNotFoundException ex)
         {

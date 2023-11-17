@@ -136,8 +136,11 @@ public class PaymentService : IPaymentService
 
     public async Task RemovePaymentTerm(int paymentId)
     {
-        var target = await _termRepository.FirstOrDefaultAsync(x => x.Id == paymentId) ?? throw new KeyNotFoundException("Payment Term is not exist");
-        await _termRepository.DeleteAsync(target);
+        var terms = await _termRepository.WhereAsync(x => x.PaymentId == paymentId) ?? throw new KeyNotFoundException("Payment Term is not exist");
+        foreach (var term in terms)
+        {
+            await _termRepository.DeleteAsync(term);
+        }
     }
 
     public async Task<bool> SendPaymentNotification(int termId)
