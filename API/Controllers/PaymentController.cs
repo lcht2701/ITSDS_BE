@@ -143,6 +143,25 @@ public class PaymentController : BaseController
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpGet("term")]
+    public async Task<IActionResult> GetPaymentTerms(int paymentId)
+    {
+        try
+        {
+            var result = await _paymentService.GetPaymentTerms(paymentId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpPost("term/{paymentId}")]
     public async Task<IActionResult> CreateTerms(int paymentId)
     {

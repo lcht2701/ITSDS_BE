@@ -56,6 +56,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ICompanyMemberService, CompanyMemberService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IServiceContractService, ServiceContractService>();
 
 builder.Services.AddTransient<IDashboardService, DashboardService>();
 builder.Services.AddTransient<IMailService, MailService>();

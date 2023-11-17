@@ -50,7 +50,7 @@ public class ContractService : IContractService
 
     public async Task<Contract> GetById(int id)
     {
-        Contract result = (Contract)await _contractRepository.WhereAsync(x => x.Id.Equals(id), new string[] { "Accountant", "Company" });
+        Contract result = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Accountant", "Company" }) ?? throw new KeyNotFoundException("Contract is not exist");
         return result;
     }
 
@@ -59,6 +59,12 @@ public class ContractService : IContractService
         var entity = _mapper.Map(model, new Contract());
         SetContractStatus(entity);
         entity.IsRenewed = false;
+        if (model.ParentContractId.HasValue)
+        {
+            var parent = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ParentContractId));
+            bool isValid = ValidateChildContract(entity, parent);
+            if (!isValid) throw new BadRequestException($"Date must be within parent contract: From [{parent.StartDate}] to [{parent.EndDate}]");
+        }
         await _contractRepository.CreateAsync(entity);
         return entity;
     }
@@ -68,6 +74,12 @@ public class ContractService : IContractService
         var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Contract is not exist"));
         Contract entity = _mapper.Map(model, target);
         SetContractStatus(entity);
+        if (model.ParentContractId.HasValue)
+        {
+            var parent = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ParentContractId));
+            bool isValid = ValidateChildContract(entity, parent);
+            if (!isValid) throw new BadRequestException($"The term of the child contract must be within the time range of the parent contract, which is from {parent.StartDate!.Value.Date} to {parent.EndDate!.Value.Date}");
+        }
         await _contractRepository.UpdateAsync(entity);
         var relatedServices = await _serviceContractRepository.WhereAsync(x => x.ContractId == entity.Id);
         return entity;
@@ -92,10 +104,26 @@ public class ContractService : IContractService
 
     public async Task<Renewal> RenewContract(int contractId, RenewContractRequest model, int userId)
     {
-        var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(contractId), new NotFoundException("Contract is not exist"));
+        var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(contractId), new KeyNotFoundException("Contract is not exist"));
+        var renewals = await _renewalRepository.WhereAsync(x => x.ContractId == contractId);
+        if (!renewals.Any())
+        {
+            Renewal firstRenewal = new()
+            {
+                ContractId = target.Id,
+                Description = target.Description,
+                FromDate = target.StartDate,
+                ToDate = target.EndDate,
+                Value = target.Value,
+                RenewedDate = DateTime.Now,
+                RenewedById = userId
+            };
+            await _renewalRepository.CreateAsync(firstRenewal);
+        }
         Contract entity = _mapper.Map(model, target);
         SetContractStatus(entity);
         entity.IsRenewed = entity.IsRenewed == false ? true : entity.IsRenewed;
+        await _contractRepository.UpdateAsync(entity);
         Renewal newRenewal = new()
         {
             ContractId = entity.Id,
@@ -124,5 +152,14 @@ public class ContractService : IContractService
         {
             entity.Status = ContractStatus.Expired;
         }
+    }
+    private static bool ValidateChildContract(Contract child, Contract parent)
+    {
+        bool isValid = false;
+        if (child.StartDate >= parent.StartDate || child.EndDate <= parent.EndDate)
+        {
+            isValid = true;
+        }
+        return isValid;
     }
 }
