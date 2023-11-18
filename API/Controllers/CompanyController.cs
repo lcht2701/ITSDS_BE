@@ -28,7 +28,7 @@ public class CompanyController : BaseController
     {
         try
         {
-            return Ok(await _companyService.Get());
+            return Ok((await _companyService.Get()).Where(x => x.IsActive == true));
         }
         catch (Exception ex)
         {
