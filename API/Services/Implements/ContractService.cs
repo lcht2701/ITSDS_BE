@@ -5,7 +5,6 @@ using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models.Contracts;
 using Persistence.Repositories.Interfaces;
-using System.Linq;
 
 namespace API.Services.Implements;
 
@@ -27,6 +26,12 @@ public class ContractService : IContractService
     public async Task<List<Contract>> Get()
     {
         var result = (await _contractRepository.GetAsync(navigationProperties: new string[] { "Accountant", "Company" })).ToList();
+        return result;
+    }
+
+    public async Task<List<Contract>> GetParentContracts()
+    {
+        var result = (await _contractRepository.WhereAsync(x => x.ParentContractId == null, new string[] { "Accountant", "Company" })).ToList();
         return result;
     }
 

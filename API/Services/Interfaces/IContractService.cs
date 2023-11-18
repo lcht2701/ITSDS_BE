@@ -6,6 +6,7 @@ namespace API.Services.Interfaces
     public interface IContractService
     {
         Task<List<Contract>> Get();
+        Task<List<Contract>> GetParentContracts();
         Task<List<Contract>> GetChildContracts(int contractId);
         Task<List<Contract>> GetByCompany(int companyId);
         Task<List<Contract>> GetByAccountant(int userId);

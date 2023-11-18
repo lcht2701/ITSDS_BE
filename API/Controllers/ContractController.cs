@@ -30,6 +30,15 @@ public class ContractController : BaseController
         return Ok(result);
     }
 
+    [Authorize]
+    [HttpGet("parent-contracts")]
+
+    public async Task<IActionResult> GetParentContracts()
+    {
+        var result = await _contractService.GetParentContracts();
+        return Ok(result);
+    }
+
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpGet]
     public async Task<IActionResult> GetContracts(
