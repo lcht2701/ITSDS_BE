@@ -41,6 +41,7 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : BaseEntity
     
     public async Task SoftDeleteAsync(T entity)
     {
+        _context.Attach(entity).State = EntityState.Modified;
         entity.DeletedAt = DateTime.Now;
         await _context.SaveChangesAsync();
     }

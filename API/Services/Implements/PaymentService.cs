@@ -186,7 +186,7 @@ public class PaymentService : IPaymentService
 
             return true;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Exception Details
             return false;

@@ -206,7 +206,7 @@ public class TicketService : ITicketService
 
     public async Task Remove(int id)
     {
-        var target = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id));
+        var target = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Ticket is not exist");
         await _ticketRepository.SoftDeleteAsync(target);
     }
 

@@ -27,13 +27,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     var connectionString = configuration.GetConnectionString("DefaultConnection");
     options.UseSqlServer(connectionString);
 });
+
 builder.Services.AddHangfire(config => config
         .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
         .UseSimpleAssemblyNameTypeSerializer()
         .UseRecommendedSerializerSettings()
         .UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
 builder.Services.AddHangfireServer();
-
 
 // Add services to the container.
 builder.Services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
@@ -57,11 +57,10 @@ builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ICompanyMemberService, CompanyMemberService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IServiceContractService, ServiceContractService>();
-
-builder.Services.AddTransient<IDashboardService, DashboardService>();
-builder.Services.AddTransient<IMailService, MailService>();
-builder.Services.AddTransient<IMessagingService, MessagingService>();
-builder.Services.AddTransient<IFirebaseService, FirebaseService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IMailService, MailService>();
+builder.Services.AddScoped<IMessagingService, MessagingService>();
+builder.Services.AddScoped<IFirebaseService, FirebaseService>();
 
 builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>())
                 .AddFluentValidation(c => c.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly()));
@@ -140,10 +139,12 @@ builder.Services.AddCors(options =>
 
 FirebaseApp.Create(new AppOptions()
 {
-    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-twxch-bd8d0b1075.json")),
+    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-twxch-b0200036bb.json")),
 });
-Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-twxch-bd8d0b1075.json"));
 
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-twxch-b0200036bb.json"));
+
+builder.Services.AddLogging();
 
 var app = builder.Build();
 

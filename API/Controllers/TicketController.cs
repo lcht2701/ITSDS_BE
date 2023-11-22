@@ -184,17 +184,24 @@ public class TicketController : BaseController
     {
         try
         {
-            var entity = await _ticketService.CreateByCustomer(CurrentUserID, model);
+            Ticket entity = await _ticketService.CreateByCustomer(CurrentUserID, model);
             await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
             #region Notification
-            var currentUser = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUserID));
             await _messagingService.SendNotification("ITSDS", $"Ticket [{model.Title}] has been created and scheduled for assignment", CurrentUserID);
             foreach (var managerId in await GetManagerIdsList())
             {
-                await _messagingService.SendNotification("ITSDS", $"New ticket [{model.Title}] has been created by [{currentUser.Username}]", managerId);
+                await _messagingService.SendNotification("ITSDS", $"New ticket [{model.Title}] has been created", managerId);
             }
             #endregion
-            ScheduleAutoAssign(entity);
+            #region Background Job for auto assign
+            string jobId = BackgroundJob.Schedule(
+                        () => _ticketService.AssignSupportJob(entity.Id),
+                        TimeSpan.FromMinutes(10));
+            RecurringJob.AddOrUpdate(
+                jobId + "_Cancellation",
+                () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
+                "*/5 * * * * *"); //Every 5 secs
+            #endregion
             return Ok("Ticket created and scheduled for assignment.");
         }
         catch (Exception ex)
@@ -222,10 +229,6 @@ public class TicketController : BaseController
             }
             #endregion
             return Ok("Update Successfully");
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(ex.Message);
         }
         catch (KeyNotFoundException)
         {
@@ -264,7 +267,15 @@ public class TicketController : BaseController
             }
             else
             {
-                ScheduleAutoAssign(entity);
+                #region Background Job for auto assign
+                string jobId = BackgroundJob.Schedule(
+                            () => _ticketService.AssignSupportJob(entity.Id),
+                            TimeSpan.FromMinutes(10));
+                RecurringJob.AddOrUpdate(
+                    jobId + "_Cancellation",
+                    () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
+                    "*/5 * * * * *"); //Every 5 secs
+                #endregion
                 return Ok("Ticket created and scheduled for assignment.");
             }
         }
@@ -364,10 +375,8 @@ public class TicketController : BaseController
     {
         try
         {
-            await _ticketService.Remove(ticketId);
             var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId);
             #region Notification
-            var currentUser = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUserID));
             await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been removed", CurrentUserID);
             if (ticket.RequesterId != null)
             {
@@ -375,6 +384,7 @@ public class TicketController : BaseController
                     (int)ticket.RequesterId);
             }
             #endregion
+            await _ticketService.Remove(ticketId);
             return Ok("Removed Successfully");
         }
         catch (Exception ex)
@@ -503,16 +513,7 @@ public class TicketController : BaseController
             return BadRequest(ex.Message);
         }
     }
-    private void ScheduleAutoAssign(Ticket entity)
-    {
-        string jobId = BackgroundJob.Schedule(
-                        () => _ticketService.AssignSupportJob(entity.Id),
-                        TimeSpan.FromMinutes(10));
-        RecurringJob.AddOrUpdate(
-            jobId + "_Cancellation",
-            () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
-            "*/5 * * * * *"); //Every 5 secs
-    }
+
     private async Task<List<int>> GetManagerIdsList()
     {
         var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();

@@ -11,9 +11,9 @@ namespace API.DTOs.Requests.Tickets
 
         public string? Description { get; set; }
 
-        public Priority? Priority { get; set; }
-
         public int? CategoryId { get; set; }
+
+        public Priority? Priority { get; set; }
 
         public string? AttachmentUrl { get; set; }
     }
