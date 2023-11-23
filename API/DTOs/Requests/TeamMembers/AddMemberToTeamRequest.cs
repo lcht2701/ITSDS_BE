@@ -7,10 +7,8 @@ namespace API.DTOs.Requests.TeamMembers
 {
     public class AddMemberToTeamRequest : IMapTo<TeamMember>
     {
-        [Required]
         public int MemberId { get; set; }
 
-        [Required]
         public int TeamId { get; set; }
 
         public string Expertises { get; set; }

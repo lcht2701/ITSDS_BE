@@ -2,6 +2,7 @@
 using API.DTOs.Requests.Contracts;
 using API.DTOs.Requests.ServiceContracts;
 using API.Services.Interfaces;
+using API.Validations.ServiceContracts;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -243,7 +244,7 @@ public class ContractController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpPut("services/modify")]
-    public async Task<IActionResult> ModifyServicesInContract(ModifyServicesInContract model)
+    public async Task<IActionResult> ModifyServicesInContract(ModifyServicesInContractValidator model)
     {
         try
         {

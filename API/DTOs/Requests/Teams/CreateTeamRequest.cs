@@ -6,7 +6,6 @@ namespace API.DTOs.Requests.Teams
 {
     public class CreateTeamRequest : IMapTo<Team>
     {
-        [Required]
         public string Name { get; set; }
 
         public int ManagerId { get; set; }

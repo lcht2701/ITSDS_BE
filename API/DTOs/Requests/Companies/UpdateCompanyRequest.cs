@@ -1,24 +1,16 @@
 ﻿using API.Mappings;
 using Domain.Models.Contracts;
-using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs.Requests.Companies;
 
 public class UpdateCompanyRequest : IMapTo<Company>
 {
-    [Required]
     public string? CompanyName { get; set; }
 
-    [Required]
-    [MinLength(10), MaxLength(13)]
     public string? TaxCode { get; set; }
 
-    [Required]
-    [Phone]
     public string? PhoneNumber { get; set; }
 
-    [Required]
-    [EmailAddress]
     public string? Email { get; set; }
 
     public string? Website { get; set; }

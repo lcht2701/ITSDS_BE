@@ -63,6 +63,10 @@ public class PaymentController : BaseController
             var result = await _paymentService.GetByContract(contractId);
             return Ok(result);
         }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);

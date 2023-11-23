@@ -1,6 +1,5 @@
 ﻿using API.DTOs.Requests.Tickets;
 using FluentValidation;
-using System.ComponentModel.DataAnnotations;
 
 namespace API.Validations.Tickets
 {

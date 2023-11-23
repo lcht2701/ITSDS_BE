@@ -15,7 +15,7 @@ namespace Domain.Models.Contracts
 
         public string? Type { get; set; }
 
-        public string? Amount { get; set; }
+        public double? Amount { get; set; }
 
         [JsonIgnore]
         public virtual ICollection<Ticket>? Tickets { get; set; }

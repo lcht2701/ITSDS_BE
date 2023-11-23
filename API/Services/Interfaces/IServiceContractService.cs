@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Requests.ServiceContracts;
+using API.Validations.ServiceContracts;
 using Domain.Models.Contracts;
 using X.PagedList;
 
@@ -8,6 +9,6 @@ namespace API.Services.Interfaces
     {
         Task<List<ServiceContract>> Get(int contractId);
         Task<ServiceContract> GetById(int id);
-        Task<List<ServiceContract>> ModifyServices(ModifyServicesInContract model);
+        Task<List<ServiceContract>> ModifyServices(ModifyServicesInContractValidator model);
     }
 }

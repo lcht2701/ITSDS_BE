@@ -38,12 +38,12 @@ public class PaymentService : IPaymentService
 
     public async Task<Payment> GetByContract(int contractId)
     {
-        return await _paymentRepository.FirstOrDefaultAsync(x => x.ContractId == contractId);
+        return await _paymentRepository.FirstOrDefaultAsync(x => x.ContractId == contractId) ?? throw new KeyNotFoundException("Payment is not exist");
     }
 
     public async Task<Payment> GetById(int id)
     {
-        return await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id);
+        return await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id) ?? throw new KeyNotFoundException("Payment is not exist");
     }
 
     public async Task<List<PaymentTerm>> GetPaymentTerms(int paymentId)

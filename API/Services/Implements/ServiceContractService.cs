@@ -1,5 +1,6 @@
 ﻿using API.DTOs.Requests.ServiceContracts;
 using API.Services.Interfaces;
+using API.Validations.ServiceContracts;
 using Domain.Models.Contracts;
 using Persistence.Repositories.Interfaces;
 
@@ -25,7 +26,7 @@ public class ServiceContractService : IServiceContractService
         return result;
     }
 
-    public async Task<List<ServiceContract>> ModifyServices(ModifyServicesInContract model)
+    public async Task<List<ServiceContract>> ModifyServices(ModifyServicesInContractValidator model)
     {
         List<ServiceContract> result = new();
         var relatedServices = await _repo.GetAsync(x => x.ContractId.Equals(model.ContractId));
