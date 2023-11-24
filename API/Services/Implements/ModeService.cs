@@ -1,9 +1,7 @@
 ﻿using API.DTOs.Requests.Modes;
 using API.Services.Interfaces;
 using AutoMapper;
-using Domain.Exceptions;
 using Domain.Models.Tickets;
-using Org.BouncyCastle.Ocsp;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
