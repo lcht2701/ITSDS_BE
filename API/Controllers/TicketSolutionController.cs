@@ -1,6 +1,5 @@
 ﻿using API.DTOs.Requests.TicketSolutions;
 using API.Services.Interfaces;
-using Azure;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

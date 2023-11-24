@@ -82,10 +82,8 @@ public class TicketTaskService : ITicketTaskService
         else
         {
             var taskList = new List<TicketTask>();
-            var assignments = (await _assignmentRepository
-                .WhereAsync(x => x.TechnicianId == userId));
-
-            var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
+            var ticketIds = (await _assignmentRepository
+                .WhereAsync(x => x.TechnicianId == userId)).Select(assignment => assignment.TicketId);
 
             var ticketList = await _ticketRepository
                 .WhereAsync(ticket => ticketIds.Contains(ticket.Id) &&
