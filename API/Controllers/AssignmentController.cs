@@ -5,7 +5,6 @@ using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Ocsp;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
@@ -96,9 +95,9 @@ public class AssignmentController : BaseController
             var result = await _assignmentService.GetById(id);
             return Ok(result);
         }
-        catch (KeyNotFoundException)
+        catch (KeyNotFoundException ex)
         {
-            return NotFound("Assignment is not exist");
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {
@@ -207,9 +206,9 @@ public class AssignmentController : BaseController
             #endregion
             return Ok("Removed Successfully.");
         }
-        catch (KeyNotFoundException)
+        catch (KeyNotFoundException ex)
         {
-            return NotFound("Assignment is not exist");
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {

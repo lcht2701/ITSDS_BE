@@ -110,8 +110,9 @@ public class AssignmentService : IAssignmentService
         }
         else
         {
-            var teamMembers = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId));
-            var userIds = teamMembers.Select(tm => tm.MemberId).ToList();
+            var userIds = (await _teamMemberRepository.WhereAsync(
+                u => u.TeamId.Equals(teamId)))
+                .Select(tm => tm.MemberId).ToList();
             users = (List<User>)await _userRepository.WhereAsync(u => userIds.Contains(u.Id) && u.Role == Role.Technician);
         }
 
@@ -142,7 +143,7 @@ public class AssignmentService : IAssignmentService
 
     public async Task<object> GetById(int id)
     {
-        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Team", "Technician" }) ?? throw new KeyNotFoundException();
+        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Team", "Technician" }) ?? throw new KeyNotFoundException("Assignment is not exist");
         var response = _mapper.Map<GetAssignmentResponse>(entity);
         return response;
     }
@@ -174,7 +175,8 @@ public class AssignmentService : IAssignmentService
                 TeamId = model.TeamId
             };
             await _assignmentRepository.CreateAsync(assignment);
-            await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
+            if (ticket.TicketStatus == TicketStatus.Open)
+                await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
         }
     }
 
@@ -223,7 +225,7 @@ public class AssignmentService : IAssignmentService
 
     public async Task Remove(int ticketId)
     {
-        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(ticketId)) ?? throw new KeyNotFoundException();
+        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(ticketId)) ?? throw new KeyNotFoundException("Assignment is not exist");
         await _assignmentRepository.SoftDeleteAsync(entity);
     }
 
