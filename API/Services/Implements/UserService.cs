@@ -220,6 +220,7 @@ public class UserService : IUserService
         }
     }
 
+    #region Selection List By Roles
     public async Task<List<User>> GetManagers()
     {
         return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Manager))).ToList();
@@ -244,4 +245,5 @@ public class UserService : IUserService
     {
         return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Accountant))).ToList();
     }
+    #endregion
 }
