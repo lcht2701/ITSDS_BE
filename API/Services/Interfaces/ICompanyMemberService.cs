@@ -6,7 +6,7 @@ namespace API.Services.Interfaces
 {
     public interface ICompanyMemberService
     {
-        Task<List<CompanyMember>> Get(int companyId);
+        Task<List<CompanyMember>> Get();
         Task<List<User>> GetMemberNotInCompany(int companyId);
         Task<CompanyMember> GetById(int id);
         Task<CompanyMember> Add(AddCompanyMemberRequest model);

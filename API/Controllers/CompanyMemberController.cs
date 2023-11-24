@@ -1,9 +1,11 @@
 ﻿using API.DTOs.Requests.CompanyMembers;
+using API.Services.Implements;
 using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Persistence.Helpers;
 
 namespace API.Controllers;
 
@@ -18,17 +20,18 @@ public class CompanyMemberController : BaseController
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpGet("{companyId}")]
-    public async Task<IActionResult> GetTeamMembersByTeam(int companyId)
+    [HttpGet]
+    public async Task<IActionResult> Get(
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
     {
         try
         {
-            var members = await _companyMemberService.Get(companyId);
-            return Ok(members);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound("Company is not exist");
+            var result = await _companyMemberService.Get();
+            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
         }
         catch (Exception ex)
         {
@@ -55,6 +58,24 @@ public class CompanyMemberController : BaseController
         }
     }
 
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetCategoryById(int id)
+    {
+        try
+        {
+            var result = await _companyMemberService.GetById(id);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpPost()]
