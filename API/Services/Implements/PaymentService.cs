@@ -92,7 +92,7 @@ public class PaymentService : IPaymentService
         }
         else
         {
-            throw new BadRequestException("All Payment Terms need to be updated to Paid in order to close the payment");
+            throw new BadRequestException("All Payment Terms need to be FINISHED in order to close the payment");
         }
         await _paymentRepository.UpdateAsync(target);
     }

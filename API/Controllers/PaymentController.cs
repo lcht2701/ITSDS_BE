@@ -2,6 +2,7 @@
 using API.DTOs.Requests.PaymentTerms;
 using API.Services.Interfaces;
 using Domain.Constants;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
@@ -137,6 +138,29 @@ public class PaymentController : BaseController
             return Ok("Payment Removed Successfully");
         }
         catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> ClosePayment(int id)
+    {
+        try
+        {
+            await _paymentService.ClosePayment(id);
+            return Ok("Payment Closed Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (BadRequestException ex)
         {
             return NotFound(ex.Message);
         }
