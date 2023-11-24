@@ -81,7 +81,7 @@ public class FeedbackService : IFeedbackService
         }
     }
 
-    public async Task Create(CreateFeedbackRequest model, int userId)
+    public async Task<object> Create(CreateFeedbackRequest model, int userId)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
         var solution = await _solutionRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.SolutionId)) ?? throw new KeyNotFoundException("Solution does not exist");
@@ -92,9 +92,10 @@ public class FeedbackService : IFeedbackService
             entity.IsPublic = true;
         }
         await _feedbackRepository.CreateAsync(entity);
+        return entity;
     }
 
-    public async Task CreateReply(CreateReplyRequest model, int userId)
+    public async Task<object> CreateReply(CreateReplyRequest model, int userId)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
         var parentFeedback = await _feedbackRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ParentFeedbackId)) ?? throw new KeyNotFoundException("Parent feedback is not found");
@@ -109,6 +110,7 @@ public class FeedbackService : IFeedbackService
             entity.IsPublic = true;
         }
         await _feedbackRepository.CreateAsync(entity);
+        return entity;
     }
 
     public async Task<object> Update(int id, UpdateFeedbackRequest model, int userId)
