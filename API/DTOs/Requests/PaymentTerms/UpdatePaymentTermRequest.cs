@@ -8,5 +8,7 @@ namespace API.DTOs.Requests.PaymentTerms
         public bool? IsPaid { get; set; }
 
         public string? Note { get; set; }
+
+        public string? AttachmentUrl { get; set; }
     }
 }

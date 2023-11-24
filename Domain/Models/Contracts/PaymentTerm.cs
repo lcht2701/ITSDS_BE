@@ -23,6 +23,8 @@
 
         public string? Note { get; set; }
 
+        public string? AttachmentUrl { get; set; }
+
         public virtual Payment? Payment { get; set; }
     }
 }

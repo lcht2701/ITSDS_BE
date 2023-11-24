@@ -71,11 +71,12 @@ public class MessagingService : IMessagingService
     }
 
 
-    public async Task MarkAsRead(int notificationId)
+    public async Task<Messaging> MarkAsRead(int notificationId)
     {
         var notification = await _messagingRepository.FirstOrDefaultAsync(x => x.Id == notificationId) ?? throw new KeyNotFoundException("Notification is not exist");
         notification.IsRead = true;
         await _messagingRepository.UpdateAsync(notification);
+        return notification;
     }
 
     public async Task MarkAsReadAll(int userId)
@@ -95,7 +96,7 @@ public class MessagingService : IMessagingService
     {
         if (token != null)
         {
-            var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token.Equals(token) && x.UserId.Equals(userId));
+            var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token!.Equals(token) && x.UserId.Equals(userId));
             if (existToken == null)
             {
                 var newToken = new DeviceToken()
@@ -117,7 +118,7 @@ public class MessagingService : IMessagingService
     {
         if (token != null)
         {
-            var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token.Equals(token) && x.UserId.Equals(userId));
+            var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token!.Equals(token) && x.UserId.Equals(userId));
             if (existToken != null)
             {
                 await _tokenRepository.DeleteAsync(existToken);

@@ -6,8 +6,6 @@ using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
-using Hangfire;
-using Microsoft.AspNetCore.Mvc;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;

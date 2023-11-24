@@ -2,6 +2,7 @@
 using API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static Grpc.Core.Metadata;
 
 namespace API.Controllers;
 
@@ -51,8 +52,12 @@ public class MessagingController : BaseController
     {
         try
         {
-            await _messagingService.MarkAsRead(id);
-            return Ok("Successfully");
+            var result = await _messagingService.MarkAsRead(id);
+            return Ok(new
+            {
+                Message = "Mark As Read Successfully",
+                Data = result
+            });
         }
         catch (KeyNotFoundException ex)
         {
