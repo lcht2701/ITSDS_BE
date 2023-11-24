@@ -2,7 +2,6 @@
 using API.DTOs.Requests.Contracts;
 using API.DTOs.Requests.ServiceContracts;
 using API.Services.Interfaces;
-using API.Validations.ServiceContracts;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,15 +30,6 @@ public class ContractController : BaseController
         return Ok(result);
     }
 
-    [Authorize]
-    [HttpGet("parent-contracts")]
-
-    public async Task<IActionResult> GetParentContracts()
-    {
-        var result = await _contractService.GetParentContracts();
-        return Ok(result);
-    }
-
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpGet]
     public async Task<IActionResult> GetContracts(
@@ -51,6 +41,15 @@ public class ContractController : BaseController
         var result = await _contractService.Get();
         var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
         return Ok(pagedResponse);
+    }
+
+    [Authorize]
+    [HttpGet("parent-contracts")]
+
+    public async Task<IActionResult> GetParentContracts()
+    {
+        var result = await _contractService.GetParentContracts();
+        return Ok(result);
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
@@ -224,6 +223,25 @@ public class ContractController : BaseController
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpGet("services/select")]
+    public async Task<IActionResult> GetSeletionList(int contractId)
+    {
+        try
+        {
+            var result = await _serviceContractService.GetServicesList(contractId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpGet("services/{id}")]
     public async Task<IActionResult> GetServiceDetail(int id)
     {
@@ -231,6 +249,40 @@ public class ContractController : BaseController
         {
             var result = await _serviceContractService.GetById(id);
             return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpPost("services")]
+    public async Task<IActionResult> AddServicesToContract(int contractId, List<int> serviceIds)
+    {
+        try
+        {
+            var result = await _serviceContractService.Add(contractId, serviceIds);
+            return Ok(new { Message = "Services Added To Contract Successfully", Data = result });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpPost("services/{id}")]
+    public async Task<IActionResult> RemoveServiceOfContract(int id)
+    {
+        try
+        {
+            await _serviceContractService.Remove(id);
+            return Ok("Services Removed Successfully");
         }
         catch (KeyNotFoundException ex)
         {

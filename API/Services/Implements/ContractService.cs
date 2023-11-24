@@ -83,7 +83,7 @@ public class ContractService : IContractService
         {
             var parent = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ParentContractId));
             bool isValid = ValidateChildContract(entity, parent);
-            if (!isValid) throw new BadRequestException($"The term of the child contract must be within the time range of the parent contract, which is from {parent.StartDate!.Value.Date} to {parent.EndDate!.Value.Date}");
+            if (!isValid) throw new BadRequestException($"Date must be within parent contract: From [{parent.StartDate}] to [{parent.EndDate}]");
         }
         await _contractRepository.UpdateAsync(entity);
         var relatedServices = await _serviceContractRepository.WhereAsync(x => x.ContractId == entity.Id);

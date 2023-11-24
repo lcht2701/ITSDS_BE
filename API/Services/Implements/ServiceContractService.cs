@@ -8,10 +8,12 @@ namespace API.Services.Implements;
 public class ServiceContractService : IServiceContractService
 {
     private readonly IRepositoryBase<ServiceContract> _repo;
+    private readonly IRepositoryBase<Service> _serviceRepo;
 
-    public ServiceContractService(IRepositoryBase<ServiceContract> repo)
+    public ServiceContractService(IRepositoryBase<ServiceContract> repo, IRepositoryBase<Service> serviceRepo)
     {
         _repo = repo;
+        _serviceRepo = serviceRepo;
     }
 
     public async Task<List<ServiceContract>> Get(int contractId)
@@ -64,4 +66,33 @@ public class ServiceContractService : IServiceContractService
         await _repo.CreateAsync(result);
         return result;
     }
+
+    public async Task<List<Service>> GetServicesList(int contractId)
+    {
+        var currentServiceIds = (await _repo.WhereAsync(x => x.ContractId.Equals(contractId))).Select(x => x.ServiceId);
+        var result = (await _serviceRepo.WhereAsync(x => currentServiceIds.Contains(x.Id))).ToList();
+        return result;
+    }
+
+    public async Task<List<ServiceContract>> Add(int contractId, List<int> serviceIds)
+    {
+        List<ServiceContract> result = new();
+        foreach (var serviceId in serviceIds)
+        {
+            result.Add(new ServiceContract()
+            {
+                ContractId = contractId,
+                ServiceId = serviceId
+            });
+        }
+        await _repo.CreateAsync(result);
+        return result;
+    }
+
+    public async Task Remove(int id)
+    {
+        var target = await _repo.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Service is not exist in the contract");
+        await _repo.DeleteAsync(target);
+    }
+
 }

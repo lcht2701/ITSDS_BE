@@ -8,5 +8,8 @@ namespace API.Services.Interfaces
         Task<List<ServiceContract>> Get(int contractId);
         Task<ServiceContract> GetById(int id);
         Task<List<ServiceContract>> ModifyServices(ModifyServicesInContract model);
+        Task<List<Service>> GetServicesList(int contractId);
+        Task<List<ServiceContract>> Add(int contractId, List<int> serviceIds);
+        Task Remove(int id);
     }
 }
