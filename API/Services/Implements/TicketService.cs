@@ -47,7 +47,6 @@ public class TicketService : ITicketService
     public async Task<Ticket> CreateByManager(CreateTicketManagerRequest model)
     {
         Ticket entity = _mapper.Map(model, new Ticket());
-        entity.TicketStatus = TicketStatus.Open;
         await _ticketRepository.CreateAsync(entity);
         return entity;
     }
