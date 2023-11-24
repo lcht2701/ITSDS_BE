@@ -1,6 +1,5 @@
 ﻿using API.Services.Interfaces;
 using Domain.Models;
-using FirebaseAdmin.Messaging;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;

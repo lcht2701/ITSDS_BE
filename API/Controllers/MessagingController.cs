@@ -2,7 +2,6 @@
 using API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static Grpc.Core.Metadata;
 
 namespace API.Controllers;
 
