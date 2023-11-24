@@ -1,13 +1,9 @@
 ﻿using API.DTOs.Requests.Companies;
-using API.DTOs.Requests.Teams;
 using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Customs;
-using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
-using System.Net;
 
 namespace API.Controllers;
 
@@ -46,8 +42,8 @@ public class CompanyController : BaseController
     {
         try
         {
-            var teams = await _companyService.Get();
-            var pagedResponse = teams.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            var companies = await _companyService.Get();
+            var pagedResponse = companies.AsQueryable().GetPagedData(page, pageSize, filter, sort);
             return Ok(pagedResponse);
         }
         catch (Exception ex)
