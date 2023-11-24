@@ -153,9 +153,9 @@ public class TicketController : BaseController
             var result = await _ticketService.GetById(ticketId);
             return Ok(result);
         }
-        catch (KeyNotFoundException)
+        catch (KeyNotFoundException ex)
         {
-            return NotFound("Ticket is not exist");
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {
@@ -313,13 +313,9 @@ public class TicketController : BaseController
             #endregion
             return Ok("Update Successfully");
         }
-        catch (InvalidOperationException ex)
+        catch (KeyNotFoundException ex)
         {
-            return BadRequest(ex.Message);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound("Ticket is not exist");
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {
@@ -355,13 +351,9 @@ public class TicketController : BaseController
             #endregion
             return Ok("Update Successfully");
         }
-        catch (InvalidOperationException ex)
+        catch (KeyNotFoundException ex)
         {
-            return BadRequest(ex.Message);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound("Ticket is not exist");
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {
@@ -386,6 +378,10 @@ public class TicketController : BaseController
             #endregion
             await _ticketService.Remove(ticketId);
             return Ok("Removed Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {
@@ -430,9 +426,9 @@ public class TicketController : BaseController
             #endregion
             return Ok("Status Updated Successfully");
         }
-        catch (KeyNotFoundException)
+        catch (KeyNotFoundException ex)
         {
-            return NotFound("Ticket is not exist");
+            return NotFound(ex.Message);
         }
         catch (BadRequestException ex)
         {
@@ -465,9 +461,9 @@ public class TicketController : BaseController
             #endregion
             return Ok("Ticket Cancelled Successfully");
         }
-        catch (KeyNotFoundException)
+        catch (KeyNotFoundException ex)
         {
-            return NotFound("Ticket is not exist");
+            return NotFound(ex.Message);
         }
         catch (BadRequestException ex)
         {
@@ -500,9 +496,9 @@ public class TicketController : BaseController
             #endregion
             return Ok("Ticket Closed Successfully");
         }
-        catch (KeyNotFoundException)
+        catch (KeyNotFoundException ex)
         {
-            return NotFound("Ticket is not exist");
+            return NotFound(ex.Message);
         }
         catch (BadRequestException ex)
         {

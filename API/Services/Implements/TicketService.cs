@@ -129,7 +129,7 @@ public class TicketService : ITicketService
     {
         var result =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
-                new string[] { "Requester", "Service", "Category", "Mode" }) ?? throw new KeyNotFoundException();
+                new string[] { "Requester", "Service", "Category", "Mode" }) ?? throw new KeyNotFoundException("Ticket is not exist");
         var entity = _mapper.Map<Ticket, GetTicketResponse>(result);
         DataResponse.CleanNullableDateTime(entity);
         var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id), new string[] { "Team", "Technician" });
@@ -213,7 +213,7 @@ public class TicketService : ITicketService
     public async Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model)
     {
         var target =
-            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException();
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Ticket is not exist");
         //if (target.TicketStatus != TicketStatus.Open || target.TicketStatus != TicketStatus.Assigned)
         //{
         //    throw new BadRequestException("Ticket can not be updated when it is being executed");
@@ -235,7 +235,7 @@ public class TicketService : ITicketService
     public async Task<Ticket> UpdateByTechnician(int id, TechnicianAddDetailRequest model)
     {
         var target =
-            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException();
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Ticket is not exist");
         var result = _mapper.Map(model, target);
         await _ticketRepository.UpdateAsync(result);
         return result;
@@ -263,7 +263,7 @@ public class TicketService : ITicketService
     public async Task<Ticket> ModifyTicketStatus(int ticketId, TicketStatus newStatus)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
-                     throw new KeyNotFoundException();
+                     throw new KeyNotFoundException("Ticket is not exist");
         var tasks = await _taskRepository.WhereAsync(x => x.TicketId.Equals(ticket.Id));
         var taskIncompletedCount = 0;
         if (tasks.Count > 0)
@@ -350,7 +350,7 @@ public class TicketService : ITicketService
     public async Task<Ticket> CancelTicket(int ticketId, int userId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
-                     throw new KeyNotFoundException();
+                     throw new KeyNotFoundException("Ticket is not exist");
         if (ticket.RequesterId == userId &&
             ticket.TicketStatus == TicketStatus.Open)
         {
@@ -369,7 +369,7 @@ public class TicketService : ITicketService
     public async Task<Ticket> CloseTicket(int ticketId, int userId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
-                     throw new KeyNotFoundException();
+                     throw new KeyNotFoundException("Ticket is not exist");
         if (ticket.RequesterId == userId &&
             ticket.TicketStatus == TicketStatus.Resolved)
         {
@@ -385,7 +385,7 @@ public class TicketService : ITicketService
         return ticket;
     }
 
-    //Background Services
+    #region Background Services
     public async Task AssignSupportJob(int ticketId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(t => t.Id == ticketId);
@@ -435,7 +435,6 @@ public class TicketService : ITicketService
             // You might want to log this or take other actions
         }
     }
-
     public async Task CancelAssignSupportJob(string jobId, int ticketId)
     {
         if (await IsTicketAssigned(ticketId) == true)
@@ -443,12 +442,10 @@ public class TicketService : ITicketService
             BackgroundJob.Delete(jobId);
         }
     }
-
     public async Task CloseTicketJob(int ticketId)
     {
         await UpdateTicketStatus(ticketId, TicketStatus.Closed);
     }
-
     public async Task CancelCloseTicketJob(string jobId, int ticketId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
@@ -457,6 +454,7 @@ public class TicketService : ITicketService
             BackgroundJob.Delete(jobId);
         }
     }
+    #endregion
 
     private async Task<int> GetNumberOfAssignmentsForTechnician(int technicianId)
     {
