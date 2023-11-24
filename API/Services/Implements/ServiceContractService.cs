@@ -70,7 +70,7 @@ public class ServiceContractService : IServiceContractService
     public async Task<List<Service>> GetServicesList(int contractId)
     {
         var currentServiceIds = (await _repo.WhereAsync(x => x.ContractId.Equals(contractId))).Select(x => x.ServiceId);
-        var result = (await _serviceRepo.WhereAsync(x => currentServiceIds.Contains(x.Id))).ToList();
+        var result = (await _serviceRepo.WhereAsync(x => !currentServiceIds.Contains(x.Id))).ToList();
         return result;
     }
 

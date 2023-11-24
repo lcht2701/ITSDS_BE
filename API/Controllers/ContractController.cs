@@ -242,25 +242,6 @@ public class ContractController : BaseController
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpGet("services/{id}")]
-    public async Task<IActionResult> GetServiceDetail(int id)
-    {
-        try
-        {
-            var result = await _serviceContractService.GetById(id);
-            return Ok(result);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpPost("services")]
     public async Task<IActionResult> AddServicesToContract(int contractId, List<int> serviceIds)
     {
@@ -276,7 +257,7 @@ public class ContractController : BaseController
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpPost("services/{id}")]
+    [HttpDelete("services/{id}")]
     public async Task<IActionResult> RemoveServiceOfContract(int id)
     {
         try
@@ -294,23 +275,42 @@ public class ContractController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpPut("services/modify")]
-    public async Task<IActionResult> ModifyServicesInContract(ModifyServicesInContract model)
-    {
-        try
-        {
-            var result = await _serviceContractService.ModifyServices(model);
-            return Ok(result);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
+    //[Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    //[HttpGet("services/{id}")]
+    //public async Task<IActionResult> GetServiceDetail(int id)
+    //{
+    //    try
+    //    {
+    //        var result = await _serviceContractService.GetById(id);
+    //        return Ok(result);
+    //    }
+    //    catch (KeyNotFoundException ex)
+    //    {
+    //        return NotFound(ex.Message);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return BadRequest(ex.Message);
+    //    }
+    //}
+
+    //[Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    //[HttpPut("services/modify")]
+    //public async Task<IActionResult> ModifyServicesInContract(ModifyServicesInContract model)
+    //{
+    //    try
+    //    {
+    //        var result = await _serviceContractService.ModifyServices(model);
+    //        return Ok(result);
+    //    }
+    //    catch (KeyNotFoundException ex)
+    //    {
+    //        return NotFound(ex.Message);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return BadRequest(ex.Message);
+    //    }
+    //}
 
 }
