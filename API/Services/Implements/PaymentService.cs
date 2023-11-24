@@ -3,6 +3,7 @@ using API.DTOs.Requests.PaymentTerms;
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Application.AppConfig;
+using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using MailKit.Net.Smtp;
@@ -91,7 +92,7 @@ public class PaymentService : IPaymentService
         }
         else
         {
-            throw new BadHttpRequestException("All Payment Terms need to be updated to Paid in order to close the payment");
+            throw new BadRequestException("All Payment Terms need to be updated to Paid in order to close the payment");
         }
         await _paymentRepository.UpdateAsync(target);
     }

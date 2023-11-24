@@ -244,7 +244,7 @@ public class ContractController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpPut("services/modify")]
-    public async Task<IActionResult> ModifyServicesInContract(ModifyServicesInContractValidator model)
+    public async Task<IActionResult> ModifyServicesInContract(ModifyServicesInContract model)
     {
         try
         {

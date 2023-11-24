@@ -9,7 +9,7 @@ namespace API.Validations.ServiceContracts
         public ModifyServicesInContractValidator()
         {
             RuleFor(x => x.ContractId)
-                .NotEmpty().WithMessage("ContractId is required.")
+                .NotEmpty().WithMessage("ContractId is required.");
         }
     }
 }

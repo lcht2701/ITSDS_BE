@@ -92,7 +92,7 @@ public class ContractService : IContractService
 
     public async Task Remove(int id)
     {
-        var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new NotFoundException("Contract is not exist"));
+        var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Contract is not exist"));
         await _contractRepository.SoftDeleteAsync(target);
         var relatedServices = await _serviceContractRepository.WhereAsync(x => x.ContractId == target.Id);
         foreach (var relatedService in relatedServices)

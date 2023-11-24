@@ -7,7 +7,6 @@ using Domain.Models;
 using Domain.Models.Tickets;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using static Grpc.Core.Metadata;
 
 namespace API.Services.Implements;
 
@@ -64,7 +63,6 @@ public class FeedbackService : IFeedbackService
         return response;
     }
 
-
     public async Task<object> GetById(int id)
     {
         var feedback = await _feedbackRepository
@@ -116,7 +114,7 @@ public class FeedbackService : IFeedbackService
     public async Task<object> Update(int id, UpdateFeedbackRequest model, int userId)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
-        var target = await _feedbackRepository.FirstOrDefaultAsync(c => c.Id.Equals(id)) ?? throw new KeyNotFoundException();
+        var target = await _feedbackRepository.FirstOrDefaultAsync(c => c.Id.Equals(id)) ?? throw new KeyNotFoundException("Feedback is not found");
         Feedback entity = _mapper.Map(model, target);
         if (user.Role == Role.Customer)
         {
@@ -128,7 +126,7 @@ public class FeedbackService : IFeedbackService
 
     public async Task Delete(int id)
     {
-        var target = await _feedbackRepository.FirstOrDefaultAsync(c => c.Id.Equals(id)) ?? throw new KeyNotFoundException();
+        var target = await _feedbackRepository.FirstOrDefaultAsync(c => c.Id.Equals(id)) ?? throw new KeyNotFoundException("Feedback is not found");
         if (target.ParentFeedbackId == null)
         {
             var replies = await _feedbackRepository.WhereAsync(x => x.Id.Equals(target.ParentFeedbackId));
