@@ -37,8 +37,7 @@ public class CategoryService : ICategoryService
     {
         if (model.AssignedTechnicalId != null)
         {
-            User user = await _userrepository.FoundOrThrow(x => x.Id.Equals(model.AssignedTechnicalId), new BadRequestException
-                ("Assigned Technical is not exist"));
+            User user = await _userrepository.FoundOrThrow(x => x.Id.Equals(model.AssignedTechnicalId), new KeyNotFoundException("Assigned Technical is not exist"));
             if (user.Role != Role.Technician)
             {
                 throw new BadRequestException("Cannot assign non-technician user.");
@@ -53,7 +52,7 @@ public class CategoryService : ICategoryService
     {
         if (model.AssignedTechnicalId != null)
         {
-            User user = await _userrepository.FoundOrThrow(x => x.Id.Equals(model.AssignedTechnicalId), new BadRequestException("Assigned Technical is not exist"));
+            User user = await _userrepository.FoundOrThrow(x => x.Id.Equals(model.AssignedTechnicalId), new KeyNotFoundException("Assigned Technical is not exist"));
             if (user.Role != Role.Technician)
             {
                 throw new BadRequestException("Cannot assign this user.");

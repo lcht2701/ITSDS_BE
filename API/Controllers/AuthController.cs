@@ -51,7 +51,7 @@ public class AuthController : BaseController
     [HttpPost("login-admin")]
     public async Task<IActionResult> LoginAdmin([FromBody] LoginRequest model)
     {
-        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username!.Equals(model.Username)) ?? throw new BadRequestException("User is not found");
+        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username!.Equals(model.Username)) ?? throw new KeyNotFoundException("User is not found");
         if (user.IsActive == false)
         {
             throw new UnauthorizedException("Your account has been suspended");
@@ -80,7 +80,7 @@ public class AuthController : BaseController
     [HttpPatch("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
     {
-        var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
+        var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID), new KeyNotFoundException("User is not found"));
 
         var passwordHasher = new PasswordHasher<User>();
         var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, req.CurrentPassword) == PasswordVerificationResult.Success;
@@ -122,8 +122,7 @@ public class AuthController : BaseController
         //    GenerateTokenByClaims(claims, DateTime.Now.AddMinutes(120))
         //    );
         return new JwtSecurityTokenHandler().WriteToken(
-            GenerateTokenByClaims(claims, DateTime.Now.AddDays(1))
-            );
+            GenerateTokenByClaims(claims, DateTime.Now.AddDays(1)));
     }
 
     private SecurityToken GenerateTokenByClaims(Claim[] claims, DateTime expires)

@@ -72,6 +72,10 @@ namespace API.Controllers
                     Data = entity
                 });
             }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
             catch (BadRequestException ex)
             {
                 return BadRequest(ex.Message);
