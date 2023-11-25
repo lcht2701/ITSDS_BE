@@ -14,7 +14,7 @@ public class Feedback : BaseEntity
 
     public int? ParentFeedbackId { get; set; }
     
-    public virtual TicketSolution? TicketSolution { get; set; }
+    public virtual TicketSolution? Solution { get; set; }
 
     public virtual User? User { get; set; }
 }
