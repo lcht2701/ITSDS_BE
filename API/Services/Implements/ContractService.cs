@@ -67,6 +67,10 @@ public class ContractService : IContractService
         if (model.ParentContractId.HasValue)
         {
             var parent = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ParentContractId));
+            if (parent.ParentContractId.HasValue)
+            {
+                throw new BadRequestException("Child Contract cannot have more child contracts");
+            }
             bool isValid = ValidateChildContract(entity, parent);
             if (!isValid) throw new BadRequestException($"Date must be within parent contract: From [{parent.StartDate}] to [{parent.EndDate}]");
         }
