@@ -140,8 +140,9 @@ public class TicketTaskController : BaseController
     {
         try
         {
+            var task = await _ticketTaskService.GetById(taskId);
+            await _messagingService.SendNotification("ITSDS", $"Task [{task.Title}] has been removed", CurrentUserID);
             await _ticketTaskService.Remove(taskId);
-            await _messagingService.SendNotification("ITSDS", $"Task has been removed", CurrentUserID);
             return Ok("Deleted Successfully");
         }
         catch (KeyNotFoundException)

@@ -8,10 +8,8 @@ using Domain.Models.Tickets;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Ocsp;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using static Grpc.Core.Metadata;
 
 namespace API.Controllers;
 
@@ -195,6 +193,7 @@ public class TicketController : BaseController
                 await _messagingService.SendNotification("ITSDS", $"New ticket [{model.Title}] has been created", managerId);
             }
             #endregion
+
             #region Background Job for auto assign
             string jobId = BackgroundJob.Schedule(
                         () => _ticketService.AssignSupportJob(entity.Id),
@@ -409,26 +408,26 @@ public class TicketController : BaseController
             #region Notification
             if (updated.RequesterId != null)
             {
-                await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated",
+                await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated to [{DataResponse.GetEnumDescription(updated.TicketStatus)}]",
                     (int)updated.RequesterId);
             }
             var currentUser = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUserID));
             switch (currentUser.Role)
             {
                 case Role.Technician:
-                    await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated", CurrentUserID);
+                    await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated to [{DataResponse.GetEnumDescription(updated.TicketStatus)}]", CurrentUserID);
                     break;
                 case Role.Manager:
                     var technicianId = await GetTechnicianAssigned(ticketId);
                     if (technicianId != 0)
                     {
-                        await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated", (int)technicianId);
+                        await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated to [ {DataResponse.GetEnumDescription(updated.TicketStatus)} ]", (int)technicianId);
                     }
                     break;
             }
             foreach (var managerId in await GetManagerIdsList())
             {
-                await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated", managerId);
+                await _messagingService.SendNotification("ITSDS", $"Status of ticket [{updated.Title}] has been updated to [ {DataResponse.GetEnumDescription(updated.TicketStatus)} ]", managerId);
             }
 
             #endregion
