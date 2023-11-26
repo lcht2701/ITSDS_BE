@@ -37,8 +37,6 @@ namespace Domain.Models.Contracts
 
         public virtual Company? Company { get; set; }
 
-        public virtual Payment? Payment { get; set; }
-
         [JsonIgnore]
         public virtual ICollection<ServiceContract>? ServiceContracts { get; set; }
         [JsonIgnore]

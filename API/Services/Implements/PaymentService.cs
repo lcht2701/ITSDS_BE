@@ -18,17 +18,19 @@ public class PaymentService : IPaymentService
     private readonly IRepositoryBase<Payment> _paymentRepository;
     private readonly IRepositoryBase<PaymentTerm> _termRepository;
     private readonly IRepositoryBase<Contract> _contractRepository;
+    private readonly IRepositoryBase<Company> _companyRepository;
     private readonly IRepositoryBase<User> _userRepository;
     private readonly MailSettings _mailSettings;
     private readonly IMapper _mapper;
 
-    public PaymentService(IOptions<MailSettings> mailSettings, IRepositoryBase<Payment> paymentRepository, IRepositoryBase<PaymentTerm> termRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<User> userRepository, IMapper mapper)
+    public PaymentService(IRepositoryBase<Payment> paymentRepository, IRepositoryBase<PaymentTerm> termRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<User> userRepository, IOptions<MailSettings> mailSettings, IMapper mapper)
     {
-        _mailSettings = mailSettings.Value;
         _paymentRepository = paymentRepository;
         _termRepository = termRepository;
         _contractRepository = contractRepository;
+        _companyRepository = companyRepository;
         _userRepository = userRepository;
+        _mailSettings = mailSettings.Value;
         _mapper = mapper;
     }
 
@@ -144,60 +146,53 @@ public class PaymentService : IPaymentService
         }
     }
 
-    public async Task<bool> SendPaymentNotification(int termId)
+    public async Task SendPaymentNotification(int termId)
     {
+        #region GetDetail
         var term = await _termRepository.FirstOrDefaultAsync(x => x.Id.Equals(termId))
-           ?? throw new KeyNotFoundException("Payment Term is not exist");
+                ?? throw new KeyNotFoundException($"Payment Term with ID {termId} is not exist");
 
-        var payment = await _paymentRepository.FirstOrDefaultAsync(x => x.Id == term.PaymentId)
-                      ?? throw new KeyNotFoundException("Payment is not exist");
+        var payment = await _paymentRepository.FirstOrDefaultAsync(x => x.Id.Equals(term.PaymentId))
+            ?? throw new KeyNotFoundException($"Payment with ID {term.PaymentId} is not exist");
 
-        var contract = await _contractRepository.FirstOrDefaultAsync(x => x.Id == payment.ContractId)
-                       ?? throw new KeyNotFoundException("Contract is not exist");
+        var contract = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(payment.ContractId))
+            ?? throw new KeyNotFoundException($"Contract with ID {payment.ContractId} is not exist");
 
-        var company = contract.Company
-                      ?? throw new KeyNotFoundException("Company not found for the given termId");
+        var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id.Equals(contract.CompanyId))
+            ?? throw new KeyNotFoundException($"Company with ID {contract.CompanyId} is not exist");
 
-        var customerAdmin = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(company.CustomerAdminId));
+        var customerAdmin = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(company.CustomerAdminId))
+            ?? throw new KeyNotFoundException($"Customer Admin not found for the given termId: {termId}");
 
-        try
+        #endregion
+        using (MimeMessage emailMessage = new MimeMessage())
         {
-            using (MimeMessage emailMessage = new MimeMessage())
+            MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
+            emailMessage.From.Add(emailFrom);
+            MailboxAddress emailTo = new MailboxAddress($"{customerAdmin.FirstName} {customerAdmin.LastName}", customerAdmin.Email);
+            emailMessage.To.Add(emailTo);
+
+            emailMessage.Subject = "Payment Term Notification";
+
+            var filePath = Directory.GetCurrentDirectory() + "\\Templates\\PaymentNotification.html";
+
+            string emailTemplateText = File.ReadAllText(filePath);
+
+            emailTemplateText = string.Format(emailTemplateText, company.CompanyName, term.Description, term.TermAmount, term.TermEnd, DateTime.Now.Year.ToString());
+
+            BodyBuilder emailBodyBuilder = new BodyBuilder();
+            emailBodyBuilder.HtmlBody = emailTemplateText;
+            emailBodyBuilder.TextBody = "Plain Text goes here to avoid marked as spam for some email servers.";
+
+            emailMessage.Body = emailBodyBuilder.ToMessageBody();
+
+            using (SmtpClient mailClient = new SmtpClient())
             {
-                MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
-                emailMessage.From.Add(emailFrom);
-
-                string fullName = $"{customerAdmin.FirstName} {customerAdmin.LastName}";
-                MailboxAddress emailTo = new MailboxAddress(fullName, customerAdmin.Email);
-                emailMessage.To.Add(emailTo);
-
-                emailMessage.Subject = "Hello";
-
-                string emailTemplateText = File.ReadAllText(Directory.GetCurrentDirectory() + "\\Templates\\PaymentNotification.html");
-
-                emailTemplateText = string.Format(emailTemplateText, company.CompanyName, term.Description, term.TermAmount, term.TermEnd, DateTime.Now.Year.ToString());
-
-                BodyBuilder emailBodyBuilder = new BodyBuilder();
-                emailBodyBuilder.HtmlBody = emailTemplateText;
-                emailBodyBuilder.TextBody = "Plain Text goes here to avoid marked as spam for some email servers.";
-
-                emailMessage.Body = emailBodyBuilder.ToMessageBody();
-
-                using (SmtpClient mailClient = new SmtpClient())
-                {
-                    await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port, MailKit.Security.SecureSocketOptions.StartTls);
-                    await mailClient.AuthenticateAsync(_mailSettings.SenderEmail, _mailSettings.Password);
-                    await mailClient.SendAsync(emailMessage);
-                    await mailClient.DisconnectAsync(true);
-                }
+                await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port, MailKit.Security.SecureSocketOptions.StartTls);
+                await mailClient.AuthenticateAsync(_mailSettings.SenderEmail, _mailSettings.Password);
+                await mailClient.SendAsync(emailMessage);
+                await mailClient.DisconnectAsync(true);
             }
-
-            return true;
-        }
-        catch (Exception)
-        {
-            // Exception Details
-            return false;
         }
     }
 }

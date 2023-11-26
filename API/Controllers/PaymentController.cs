@@ -251,7 +251,10 @@ public class PaymentController : BaseController
         {
             await _paymentService.SendPaymentNotification(id);
             return Ok("Payment Term Notification Sent Successfully");
-
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {

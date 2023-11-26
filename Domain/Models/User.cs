@@ -1,4 +1,5 @@
 ﻿using Domain.Constants.Enums;
+using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 using System.Text.Json.Serialization;
 

@@ -1,29 +1,19 @@
 ﻿using API.Services.Interfaces;
 using Domain.Application.AppConfig;
 using Domain.Entities.Mails;
-using Domain.Models.Contracts;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
-using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
 
 public class MailService : IMailService
 {
     private readonly MailSettings _mailSettings;
-    private readonly IRepositoryBase<PaymentTerm> _termRepository;
-    private readonly IRepositoryBase<Payment> _paymentRepository;
-    private readonly IRepositoryBase<Contract> _contractRepository;
-    private readonly IRepositoryBase<Company> _companyRepository;
 
-    public MailService(IOptions<MailSettings> mailSettings, IRepositoryBase<PaymentTerm> termRepository, IRepositoryBase<Payment> paymentRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Company> companyRepository)
+    public MailService(IOptions<MailSettings> mailSettings)
     {
         _mailSettings = mailSettings.Value;
-        _termRepository = termRepository;
-        _paymentRepository = paymentRepository;
-        _contractRepository = contractRepository;
-        _companyRepository = companyRepository;
     }
 
     public async Task<bool> SendHTMLMailAsync(HTMLMailData htmlMailData, string filePath)

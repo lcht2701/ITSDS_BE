@@ -37,7 +37,6 @@ builder.Services.AddHangfireServer();
 
 // Add services to the container.
 builder.Services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
-
 builder.Services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>));
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
@@ -57,8 +56,8 @@ builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ICompanyMemberService, CompanyMemberService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IServiceContractService, ServiceContractService>();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IMailService, MailService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IMessagingService, MessagingService>();
 builder.Services.AddScoped<IFirebaseService, FirebaseService>();
 

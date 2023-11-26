@@ -23,9 +23,9 @@ public class MailController : BaseController
 
     [HttpPost]
     [Route("SendHTMLMail")]
-    public Task<bool> SendWelcomeMail(HTMLMailData htmlMailData, string filePath)
+    public Task<bool> SendWelcomeMail(HTMLMailData htmlMailData)
     {
-        filePath = Directory.GetCurrentDirectory() + "\\Templates\\Welcome.html";
+        var filePath = Directory.GetCurrentDirectory() + "\\Templates\\Welcome.html";
         return _mailService.SendHTMLMailAsync(htmlMailData, filePath);
     }
 

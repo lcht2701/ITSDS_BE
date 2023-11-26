@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Domain.Models.Contracts
 {
@@ -27,6 +26,8 @@ namespace Domain.Models.Contracts
         public DateTime? PaymentFinishTime { get; set; }
 
         public string? Note { get; set; }
+
+        public virtual Contract? Contract { get; set; }
 
         [JsonIgnore]
         public virtual ICollection<PaymentTerm>? PaymentTerms { get; set; }

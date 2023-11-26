@@ -19,5 +19,5 @@ public interface IPaymentService
     Task<List<PaymentTerm>> GeneratePaymentTerms(int paymentId);
     Task<PaymentTerm> UpdatePaymentTerm(int paymentId, UpdatePaymentTermRequest model);
     Task RemovePaymentTerm(int paymentId);
-    Task<bool> SendPaymentNotification(int termId);
+    Task SendPaymentNotification(int termId);
 }
