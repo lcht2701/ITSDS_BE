@@ -9,8 +9,10 @@ using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
 using Hangfire;
+using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using static Grpc.Core.Metadata;
 
 namespace API.Services.Implements;
 
@@ -21,17 +23,17 @@ public class TicketService : ITicketService
     private readonly IRepositoryBase<TicketTask> _taskRepository;
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IAuditLogService _auditLogService;
+    private readonly IMessagingService _messagingService;
     private readonly IMapper _mapper;
 
-    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository,
-        IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository,
-        IAuditLogService auditLogService, IMapper mapper)
+    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository, IAuditLogService auditLogService, IMessagingService messagingService, IMapper mapper)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
         _taskRepository = taskRepository;
         _userRepository = userRepository;
         _auditLogService = auditLogService;
+        _messagingService = messagingService;
         _mapper = mapper;
     }
 
@@ -339,11 +341,34 @@ public class TicketService : ITicketService
         string jobId = BackgroundJob.Schedule(
             () => CloseTicketJob(ticket.Id),
             TimeSpan.FromDays(2));
+        BackgroundJob.ContinueJobWith(
+                jobId, () => SendNotificationAfterCloseTicket(ticket));
         RecurringJob.AddOrUpdate(
             jobId + "_Cancellation",
             () => CancelCloseTicketJob(jobId, ticket.Id),
             "*/5 * * * * *"); //Every 5
         return jobId;
+    }
+
+    [NonAction]
+    public async Task SendNotificationAfterCloseTicket(Ticket ticket)
+    {
+        var techinicianId = (await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticket.Id)).TechnicianId;
+        if (techinicianId != null)
+        {
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been closed",
+                (int)techinicianId);
+        }
+        if (ticket.RequesterId != null)
+        {
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been closed",
+                (int)ticket.RequesterId);
+        }
+        foreach (var managerId in await GetManagerIdsList())
+        {
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been closed",
+                managerId);
+        }
     }
 
     public async Task<Ticket> CancelTicket(int ticketId, int userId)
@@ -463,4 +488,10 @@ public class TicketService : ITicketService
         var result = await _assignmentRepository.WhereAsync(x => x.TechnicianId == technicianId);
         return result.Count;
     }
+    private async Task<List<int>> GetManagerIdsList()
+    {
+        var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
+        return managerIds;
+    }
+
 }
