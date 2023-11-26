@@ -165,7 +165,7 @@ public class ContractService : IContractService
     private static bool ValidateChildContract(Contract child, Contract parent)
     {
         bool isValid = false;
-        if (child.StartDate >= parent.StartDate || child.EndDate <= parent.EndDate)
+        if (child.StartDate >= parent.StartDate && child.EndDate <= parent.EndDate)
         {
             isValid = true;
         }
