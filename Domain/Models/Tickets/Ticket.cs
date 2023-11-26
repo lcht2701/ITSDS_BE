@@ -13,6 +13,8 @@ public partial class Ticket : BaseEntity
     }
     public int? RequesterId { get; set; }
 
+    public int? CreatedById { get; set; }
+
     public string? Title { get; set; }
 
     public string? Description { get; set; }
@@ -44,6 +46,8 @@ public partial class Ticket : BaseEntity
     public string? AttachmentUrl { get; set; }
 
     public virtual User? Requester { get; set; }
+
+    public virtual User? CreatedBy { get; set; }
 
     public virtual Service? Service { get; set; }
 

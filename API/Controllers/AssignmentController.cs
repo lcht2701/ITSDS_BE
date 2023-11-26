@@ -123,7 +123,7 @@ public class AssignmentController : BaseController
             }
             if (ticket.RequesterId != null)
             {
-                await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned!",
+                await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned",
                     (int)ticket.RequesterId);
             }
 

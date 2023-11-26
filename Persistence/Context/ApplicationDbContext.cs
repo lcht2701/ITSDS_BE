@@ -43,6 +43,11 @@ namespace Persistence.Context
                     .WithMany()
                     .HasForeignKey(ts => ts.CreatedById);
 
+            builder.Entity<Ticket>()
+                .HasOne(t => t.CreatedBy)
+                .WithMany()
+                .HasForeignKey(ts => ts.CreatedById);
+
             base.OnModelCreating(builder);
 
             foreach (var entityType in builder.Model.GetEntityTypes())

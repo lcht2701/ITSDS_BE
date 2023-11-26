@@ -30,7 +30,7 @@ public interface ITicketService
     Task<Ticket> CloseTicket(int ticketId, int userId);
     //Background jobs
     Task AssignSupportJob(int ticketId);
-    Task CancelAssignSupportJob(string jobId, int ticketId);
+    Task<bool> CancelAssignSupportJob(string jobId, int ticketId);
     Task CloseTicketJob(int ticketId);
     Task CancelCloseTicketJob(string jobId, int ticketId);
 }

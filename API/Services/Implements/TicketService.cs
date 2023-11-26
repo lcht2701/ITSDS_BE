@@ -54,7 +54,7 @@ public class TicketService : ITicketService
     public async Task<List<GetTicketResponse>> Get()
     {
         var result = await _ticketRepository.GetAsync(navigationProperties: new string[]
-            { "Requester", "Service", "Category", "Mode" });
+            { "Requester", "Service", "Category", "Mode", "CreatedBy" });
 
         var response = result.Select(ticket =>
         {
@@ -86,7 +86,7 @@ public class TicketService : ITicketService
         var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == userId);
         var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
         var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
-            new string[] { "Requester", "Service", "Category", "Mode" });
+            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
         var filterResult = result.Where(x =>
             IsTicketDone(x.Id) == false);
 
@@ -108,7 +108,7 @@ public class TicketService : ITicketService
         var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == userId);
         var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
         var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
-            new string[] { "Requester", "Service", "Category", "Mode" });
+            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
         var filterResult = result.Where(x =>
             IsTicketDone(x.Id) == true);
 
@@ -128,7 +128,7 @@ public class TicketService : ITicketService
     {
         var result =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
-                new string[] { "Requester", "Service", "Category", "Mode" }) ?? throw new KeyNotFoundException("Ticket is not exist");
+                new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" }) ?? throw new KeyNotFoundException("Ticket is not exist");
         var entity = _mapper.Map<Ticket, GetTicketResponse>(result);
         DataResponse.CleanNullableDateTime(entity);
         var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id), new string[] { "Team", "Technician" });
@@ -144,7 +144,7 @@ public class TicketService : ITicketService
     public async Task<List<GetTicketResponse>> GetByUser(int userId)
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
-            new string[] { "Requester", "Service", "Category", "Mode" });
+            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
         var response = result.Select(ticket =>
         {
             var entity = _mapper.Map(ticket, new GetTicketResponse());
@@ -158,7 +158,7 @@ public class TicketService : ITicketService
     public async Task<List<GetTicketResponse>> GetTicketAvailable(int userId)
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
-            new string[] { "Requester", "Service", "Category", "Mode" });
+            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
 
         var filteredResult = result.Where(x => !IsTicketDone(x.Id));
 
@@ -177,7 +177,7 @@ public class TicketService : ITicketService
     public async Task<List<GetTicketResponse>> GetTicketHistory(int userId)
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
-            new string[] { "Requester", "Service", "Category", "Mode" });
+            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
 
         var filteredResult = result.Where(x => IsTicketDone(x.Id));
 
@@ -434,12 +434,15 @@ public class TicketService : ITicketService
             // You might want to log this or take other actions
         }
     }
-    public async Task CancelAssignSupportJob(string jobId, int ticketId)
+    public async Task<bool> CancelAssignSupportJob(string jobId, int ticketId)
     {
+        var check = false;
         if (await IsTicketAssigned(ticketId) == true)
         {
             BackgroundJob.Delete(jobId);
+            check = true;
         }
+        return check;
     }
     public async Task CloseTicketJob(int ticketId)
     {

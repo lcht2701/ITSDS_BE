@@ -32,6 +32,7 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public DateTime? DeletedAt { get; set; }
     public GetAssignmentResponse? Assignment { get; set; }
     public virtual User? Requester { get; set; }
+    public virtual User? CreatedBy { get; set; }
     public virtual Service? Service { get; set; }
     public virtual Category? Category { get; set; }
     public virtual Mode? Mode { get; set; }

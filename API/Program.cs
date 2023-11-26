@@ -158,7 +158,7 @@ app.UseCors(CorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAutoWrapper();
-app.UseHangfireDashboard();
+app.UseHangfireDashboard("/hangfire");
 app.MapControllers();
 app.MapHangfireDashboard();
 app.Run();

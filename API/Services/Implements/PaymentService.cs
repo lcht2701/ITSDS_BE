@@ -146,13 +146,20 @@ public class PaymentService : IPaymentService
 
     public async Task<bool> SendPaymentNotification(int termId)
     {
-        var term = await _termRepository.FirstOrDefaultAsync(x => x.Id.Equals(termId)) ?? throw new KeyNotFoundException("Payment Term is not exist");
-        var company = term.Payment.Contract.Company ?? throw new KeyNotFoundException("Company not found for the given termId");
+        var term = await _termRepository.FirstOrDefaultAsync(x => x.Id.Equals(termId))
+           ?? throw new KeyNotFoundException("Payment Term is not exist");
+
+        var payment = await _paymentRepository.FirstOrDefaultAsync(x => x.Id == term.PaymentId)
+                      ?? throw new KeyNotFoundException("Payment is not exist");
+
+        var contract = await _contractRepository.FirstOrDefaultAsync(x => x.Id == payment.ContractId)
+                       ?? throw new KeyNotFoundException("Contract is not exist");
+
+        var company = contract.Company
+                      ?? throw new KeyNotFoundException("Company not found for the given termId");
+
         var customerAdmin = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(company.CustomerAdminId));
 
-        //var payment = await _paymentRepository.FirstOrDefaultAsync(x => x.Id.Equals(term.PaymentId));
-        //var contract = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(payment.ContractId));
-        //var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id.Equals(contract.CompanyId));
         try
         {
             using (MimeMessage emailMessage = new MimeMessage())

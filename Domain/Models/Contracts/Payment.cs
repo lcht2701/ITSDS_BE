@@ -28,8 +28,6 @@ namespace Domain.Models.Contracts
 
         public string? Note { get; set; }
 
-        public virtual Contract? Contract { get; set; }
-
         [JsonIgnore]
         public virtual ICollection<PaymentTerm>? PaymentTerms { get; set; }
     }

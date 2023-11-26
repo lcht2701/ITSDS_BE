@@ -8,8 +8,10 @@ using Domain.Models.Tickets;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Ocsp;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using static Grpc.Core.Metadata;
 
 namespace API.Controllers;
 
@@ -196,7 +198,9 @@ public class TicketController : BaseController
             #region Background Job for auto assign
             string jobId = BackgroundJob.Schedule(
                         () => _ticketService.AssignSupportJob(entity.Id),
-                        TimeSpan.FromMinutes(10));
+                        TimeSpan.FromMinutes(5));
+            BackgroundJob.ContinueJobWith(
+                jobId, () => SendNotificationAfterAssignment(entity));
             RecurringJob.AddOrUpdate(
                 jobId + "_Cancellation",
                 () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
@@ -270,7 +274,11 @@ public class TicketController : BaseController
                 #region Background Job for auto assign
                 string jobId = BackgroundJob.Schedule(
                             () => _ticketService.AssignSupportJob(entity.Id),
-                            TimeSpan.FromMinutes(10));
+                            TimeSpan.FromMinutes(5));
+                //Send Notification After The Ticket Is Assigned By BackgroundJob
+                BackgroundJob.ContinueJobWith(
+                jobId, () => SendNotificationAfterAssignment(entity));
+
                 RecurringJob.AddOrUpdate(
                     jobId + "_Cancellation",
                     () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
@@ -525,6 +533,27 @@ public class TicketController : BaseController
         else
         {
             return 0;
+        }
+    }
+
+    [NonAction]
+    public async Task SendNotificationAfterAssignment(Ticket ticket)
+    {
+        var techinicianId = (await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticket.Id)).TechnicianId;
+        if (techinicianId != null)
+        {
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned to you",
+                (int)techinicianId);
+        }
+        if (ticket.RequesterId != null)
+        {
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned",
+                (int)ticket.RequesterId);
+        }
+        foreach (var managerId in await GetManagerIdsList())
+        {
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned",
+                managerId);
         }
     }
 }

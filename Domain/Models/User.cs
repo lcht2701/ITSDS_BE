@@ -1,8 +1,5 @@
 ﻿using Domain.Constants.Enums;
-using Domain.Models.Contracts;
 using Domain.Models.Tickets;
-using Microsoft.AspNetCore.Identity;
-using System.Diagnostics.Eventing.Reader;
 using System.Text.Json.Serialization;
 
 namespace Domain.Models;
