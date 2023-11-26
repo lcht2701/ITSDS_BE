@@ -146,45 +146,45 @@ public class AssignmentController : BaseController
     }
 
 
-    [Authorize]
-    [HttpPatch("{ticketId}")]
-    public async Task<IActionResult> UpdateTicketAssignment(int ticketId, [FromBody] UpdateTicketAssignmentManualRequest req)
-    {
-        try
-        {
-            await _assignmentService.Update(ticketId, req);
-            #region Notification
-            var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId);
-            await _messagingService.SendNotification("ITSDS", $"Ticket Assignment for [{ticket.Title}] has been updated",
-                    CurrentUserID);
-            if (req.TechnicianId != null)
-            {
-                await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned to you",
-                    (int)req.TechnicianId);
-            }
-            if (ticket.RequesterId != null)
-            {
-                await _messagingService.SendNotification("ITSDS", $"Ticket Assignment for [{ticket.Title}] has been updated",
-                    (int)ticket.RequesterId);
-            }
+    //[Authorize]
+    //[HttpPatch("{ticketId}")]
+    //public async Task<IActionResult> UpdateTicketAssignment(int ticketId, [FromBody] UpdateTicketAssignmentManualRequest req)
+    //{
+    //    try
+    //    {
+    //        await _assignmentService.Update(ticketId, req);
+    //        #region Notification
+    //        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId);
+    //        await _messagingService.SendNotification("ITSDS", $"Ticket Assignment for [{ticket.Title}] has been updated",
+    //                CurrentUserID);
+    //        if (req.TechnicianId != null)
+    //        {
+    //            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned to you",
+    //                (int)req.TechnicianId);
+    //        }
+    //        if (ticket.RequesterId != null)
+    //        {
+    //            await _messagingService.SendNotification("ITSDS", $"Ticket Assignment for [{ticket.Title}] has been updated",
+    //                (int)ticket.RequesterId);
+    //        }
 
-            #endregion
-            return Ok("Updated Successfully");
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (BadRequestException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
+    //        #endregion
+    //        return Ok("Updated Successfully");
+    //    }
+    //    catch (KeyNotFoundException ex)
+    //    {
+    //        return NotFound(ex.Message);
+    //    }
+    //    catch (BadRequestException ex)
+    //    {
+    //        return BadRequest(ex.Message);
+    //    }
+    //    catch (Exception ex)
+    //    {
 
-            return BadRequest(ex.Message);
-        }
-    }
+    //        return BadRequest(ex.Message);
+    //    }
+    //}
 
 
     [Authorize]

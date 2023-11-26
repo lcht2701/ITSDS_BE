@@ -19,7 +19,7 @@ public class MessagingService : IMessagingService
 
     public async Task<List<Messaging>> GetNotification(int userId)
     {
-        var result = (await _messagingRepository.WhereAsync(x => x.UserId == userId)).OrderByDescending(x => x.CreatedAt).ToList();
+        var result = (await _messagingRepository.WhereAsync(x => x.UserId == userId)).Take(50).OrderByDescending(x => x.CreatedAt).ToList();
         return result;
     }
 

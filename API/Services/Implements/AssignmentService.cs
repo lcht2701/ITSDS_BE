@@ -155,9 +155,16 @@ public class AssignmentService : IAssignmentService
         var existingAssignment = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticketId);
         if (existingAssignment != null)
         {
-            throw new BadRequestException("Ticket has been assigned");
+            await UpdateExistingAssignment(model, existingAssignment);
         }
+        else
+        {
+            await CreateNewAssignment(ticketId, model, ticket);
+        }
+    }
 
+    private async Task CreateNewAssignment(int ticketId, AssignTicketManualRequest model, Ticket ticket)
+    {
         if (model.TechnicianId != null || model.TeamId != null)
         {
             if (model.TechnicianId != null && model.TeamId != null)
@@ -179,7 +186,41 @@ public class AssignmentService : IAssignmentService
                 await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
         }
     }
+    private async Task UpdateExistingAssignment(AssignTicketManualRequest model, Assignment existingAssignment)
+    {
+        Assignment entity;
 
+        switch (GetAssignmentCase(model.TechnicianId, model.TeamId))
+        {
+            case AssignmentCase.NullNull:
+                await _assignmentRepository.SoftDeleteAsync(existingAssignment);
+                break;
+
+            case AssignmentCase.NotNullNull:
+                entity = _mapper.Map(model, existingAssignment);
+                entity.TeamId = null;
+                await _assignmentRepository.UpdateAsync(entity);
+                break;
+
+            case AssignmentCase.NullNotNull:
+                entity = _mapper.Map(model, existingAssignment);
+                entity.TechnicianId = null;
+                await _assignmentRepository.UpdateAsync(entity);
+                break;
+
+            case AssignmentCase.NotNullNotNull:
+                if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
+                {
+                    throw new BadRequestException("This technician is not a member of the specified team.");
+                }
+                entity = _mapper.Map(model, existingAssignment);
+                await _assignmentRepository.UpdateAsync(entity);
+                break;
+
+            default:
+                throw new BadRequestException("Invalid modeluest.");
+        }
+    }
 
     public async Task Update(int ticketId, UpdateTicketAssignmentManualRequest model)
     {
