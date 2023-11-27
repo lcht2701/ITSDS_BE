@@ -191,7 +191,7 @@ public class PaymentService : IPaymentService
 
             emailMessage.Subject = "Payment Term Notification";
 
-            var filePath = Directory.GetCurrentDirectory() + "\\Templates\\PaymentNotification.html";
+            var filePath = AppDomain.CurrentDomain.BaseDirectory + "\\Templates\\PaymentNotification.html";
 
             string emailTemplateText = File.ReadAllText(filePath);
 

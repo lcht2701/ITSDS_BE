@@ -555,10 +555,10 @@ public class TicketService : ITicketService
             switch (ticket.TicketStatus)
             {
                 case TicketStatus.Closed:
-                    filePath = Directory.GetCurrentDirectory() + "\\Templates\\TicketClosedNotification.html";
+                    filePath = AppDomain.CurrentDomain.BaseDirectory + "\\Templates\\TicketClosedNotification.html";
                     break;
                 case TicketStatus.Cancelled:
-                    filePath = Directory.GetCurrentDirectory() + "\\Templates\\TicketCancelledNotification.html";
+                    filePath = AppDomain.CurrentDomain.BaseDirectory + "\\Templates\\TicketCancelledNotification.html";
                     break;
                 default:
                     return;
