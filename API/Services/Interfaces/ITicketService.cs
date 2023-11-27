@@ -16,9 +16,9 @@ public interface ITicketService
     Task<List<GetTicketStatusesResponse>> GetTicketStatuses();
     Task<object> GetTicketLog(int id);
     Task<GetTicketResponse> GetById(int id);
-    Task<Ticket> CreateByCustomer(int userId, CreateTicketCustomerRequest model);
+    Task<Ticket> CreateByCustomer(int createdBy, CreateTicketCustomerRequest model);
     Task<Ticket> UpdateByCustomer(int id, UpdateTicketCustomerRequest model);
-    Task<Ticket> CreateByManager(CreateTicketManagerRequest model);
+    Task<Ticket> CreateByManager(int createdBy, CreateTicketManagerRequest model);
     Task<Ticket> UpdateByTechnician(int id, TechnicianAddDetailRequest model);
     Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model);
     Task Remove(int id);

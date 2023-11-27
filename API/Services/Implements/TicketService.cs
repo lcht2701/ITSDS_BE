@@ -46,18 +46,20 @@ public class TicketService : ITicketService
         _mailSettings = mailSettings.Value;
     }
 
-    public async Task<Ticket> CreateByCustomer(int userId, CreateTicketCustomerRequest model)
+    public async Task<Ticket> CreateByCustomer(int createdById, CreateTicketCustomerRequest model)
     {
         Ticket entity = _mapper.Map(model, new Ticket());
-        entity.RequesterId = userId;
+        entity.RequesterId = createdById;
+        entity.CreatedById = createdById;
         entity.TicketStatus = TicketStatus.Open;
         await _ticketRepository.CreateAsync(entity);
         return entity;
     }
 
-    public async Task<Ticket> CreateByManager(CreateTicketManagerRequest model)
+    public async Task<Ticket> CreateByManager(int createdById, CreateTicketManagerRequest model)
     {
         Ticket entity = _mapper.Map(model, new Ticket());
+        entity.CreatedById = createdById;
         await _ticketRepository.CreateAsync(entity);
         return entity;
     }

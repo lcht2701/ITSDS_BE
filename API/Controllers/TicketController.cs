@@ -250,7 +250,7 @@ public class TicketController : BaseController
     {
         try
         {
-            Ticket entity = await _ticketService.CreateByManager(model);
+            Ticket entity = await _ticketService.CreateByManager(CurrentUserID, model);
             await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
             #region Notification
             foreach (var managerId in await GetManagerIdsList())
