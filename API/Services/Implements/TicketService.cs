@@ -3,16 +3,20 @@ using API.DTOs.Responses.Assignments;
 using API.DTOs.Responses.Tickets;
 using API.Services.Interfaces;
 using AutoMapper;
+using Domain.Application.AppConfig;
 using Domain.Constants;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
 using Hangfire;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using static Grpc.Core.Metadata;
 
 namespace API.Services.Implements;
 
@@ -25,8 +29,12 @@ public class TicketService : ITicketService
     private readonly IAuditLogService _auditLogService;
     private readonly IMessagingService _messagingService;
     private readonly IMapper _mapper;
+    private readonly MailSettings _mailSettings;
 
-    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository, IAuditLogService auditLogService, IMessagingService messagingService, IMapper mapper)
+    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository,
+        IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository,
+        IAuditLogService auditLogService, IMessagingService messagingService, IMapper mapper,
+        IOptions<MailSettings> mailSettings)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -35,6 +43,7 @@ public class TicketService : ITicketService
         _auditLogService = auditLogService;
         _messagingService = messagingService;
         _mapper = mapper;
+        _mailSettings = mailSettings.Value;
     }
 
     public async Task<Ticket> CreateByCustomer(int userId, CreateTicketCustomerRequest model)
@@ -130,15 +139,18 @@ public class TicketService : ITicketService
     {
         var result =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
-                new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" }) ?? throw new KeyNotFoundException("Ticket is not exist");
+                new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" }) ??
+            throw new KeyNotFoundException("Ticket is not exist");
         var entity = _mapper.Map<Ticket, GetTicketResponse>(result);
         DataResponse.CleanNullableDateTime(entity);
-        var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id), new string[] { "Team", "Technician" });
+        var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
+            new string[] { "Team", "Technician" });
         if (ass != null)
         {
             var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
             entity.Assignment = assMapping;
         }
+
         return entity;
     }
 
@@ -207,14 +219,16 @@ public class TicketService : ITicketService
 
     public async Task Remove(int id)
     {
-        var target = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Ticket is not exist");
+        var target = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ??
+                     throw new KeyNotFoundException("Ticket is not exist");
         await _ticketRepository.SoftDeleteAsync(target);
     }
 
     public async Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model)
     {
         var target =
-            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Ticket is not exist");
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ??
+            throw new KeyNotFoundException("Ticket is not exist");
         //if (target.TicketStatus != TicketStatus.Open || target.TicketStatus != TicketStatus.Assigned)
         //{
         //    throw new BadRequestException("Ticket can not be updated when it is being executed");
@@ -236,7 +250,8 @@ public class TicketService : ITicketService
     public async Task<Ticket> UpdateByTechnician(int id, TechnicianAddDetailRequest model)
     {
         var target =
-            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Ticket is not exist");
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ??
+            throw new KeyNotFoundException("Ticket is not exist");
         var result = _mapper.Map(model, target);
         await _ticketRepository.UpdateAsync(result);
         return result;
@@ -257,6 +272,7 @@ public class TicketService : ITicketService
         {
             ticket.CompletedTime = DateTime.Now;
         }
+
         await _ticketRepository.UpdateAsync(ticket);
         return ticket;
     }
@@ -332,6 +348,7 @@ public class TicketService : ITicketService
             default:
                 throw new BadRequestException();
         }
+
         return ticket;
     }
 
@@ -342,7 +359,7 @@ public class TicketService : ITicketService
             () => CloseTicketJob(ticket.Id),
             TimeSpan.FromDays(2));
         BackgroundJob.ContinueJobWith(
-                jobId, () => SendNotificationAfterCloseTicket(ticket));
+            jobId, () => SendNotificationAfterCloseTicket(ticket));
         RecurringJob.AddOrUpdate(
             jobId + "_Cancellation",
             () => CancelCloseTicketJob(jobId, ticket.Id),
@@ -353,22 +370,32 @@ public class TicketService : ITicketService
     [NonAction]
     public async Task SendNotificationAfterCloseTicket(Ticket ticket)
     {
-        var techinicianId = (await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticket.Id)).TechnicianId;
+        #region Notification
+
+        var techinicianId = (await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticket.Id))
+            .TechnicianId;
         if (techinicianId != null)
         {
             await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been closed",
                 (int)techinicianId);
         }
+
         if (ticket.RequesterId != null)
         {
             await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been closed",
                 (int)ticket.RequesterId);
         }
+
         foreach (var managerId in await GetManagerIdsList())
         {
             await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been closed",
                 managerId);
         }
+
+        #endregion
+        #region Mail Notification
+        await SendTicketMailNotification(ticket);
+        #endregion
     }
 
     public async Task<Ticket> CancelTicket(int ticketId, int userId)
@@ -381,12 +408,14 @@ public class TicketService : ITicketService
             ticket.TicketStatus = TicketStatus.Cancelled;
             ticket.CompletedTime = DateTime.Now;
             await _ticketRepository.UpdateAsync(ticket);
+            await SendTicketMailNotification(ticket);
         }
         else
         {
             throw new BadRequestException(
                 "Cancellation of the ticket is not allowed once it has entered the processing state");
         }
+
         return ticket;
     }
 
@@ -400,16 +429,19 @@ public class TicketService : ITicketService
             ticket.TicketStatus = TicketStatus.Closed;
             ticket.CompletedTime = DateTime.Now;
             await _ticketRepository.UpdateAsync(ticket);
+            await SendTicketMailNotification(ticket);
         }
         else
         {
             throw new BadRequestException(
                 "If the ticket is not resolved, it cannot be closed");
         }
+
         return ticket;
     }
 
     #region Background Services
+
     public async Task AssignSupportJob(int ticketId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(t => t.Id == ticketId);
@@ -459,6 +491,7 @@ public class TicketService : ITicketService
             // You might want to log this or take other actions
         }
     }
+
     public async Task<bool> CancelAssignSupportJob(string jobId, int ticketId)
     {
         var check = false;
@@ -467,12 +500,15 @@ public class TicketService : ITicketService
             BackgroundJob.Delete(jobId);
             check = true;
         }
+
         return check;
     }
+
     public async Task CloseTicketJob(int ticketId)
     {
         await UpdateTicketStatus(ticketId, TicketStatus.Closed);
     }
+
     public async Task CancelCloseTicketJob(string jobId, int ticketId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
@@ -481,6 +517,7 @@ public class TicketService : ITicketService
             BackgroundJob.Delete(jobId);
         }
     }
+
     #endregion
 
     private async Task<int> GetNumberOfAssignmentsForTechnician(int technicianId)
@@ -488,10 +525,60 @@ public class TicketService : ITicketService
         var result = await _assignmentRepository.WhereAsync(x => x.TechnicianId == technicianId);
         return result.Count;
     }
+
     private async Task<List<int>> GetManagerIdsList()
     {
         var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
         return managerIds;
     }
 
+    private async Task SendTicketMailNotification(Ticket ticket)
+    {
+        #region GetDetail
+        var requester = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticket.RequesterId))
+                        ?? throw new KeyNotFoundException($"Requester with ID {ticket.RequesterId} is not exist");
+        string requesterName = $"{requester.FirstName} {requester.LastName}";
+        #endregion
+
+        using (MimeMessage emailMessage = new MimeMessage())
+        {
+            MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
+            emailMessage.From.Add(emailFrom);
+            MailboxAddress emailTo = new MailboxAddress(requesterName,
+                requester.Email);
+            emailMessage.To.Add(emailTo);
+
+            emailMessage.Subject = "Ticket Notification";
+            string filePath;
+            switch (ticket.TicketStatus)
+            {
+                case TicketStatus.Closed:
+                    filePath = Directory.GetCurrentDirectory() + "\\Templates\\TicketClosedNotification.html";
+                    break;
+                case TicketStatus.Cancelled:
+                    filePath = Directory.GetCurrentDirectory() + "\\Templates\\TicketCancelledNotification.html";
+                    break;
+                default:
+                    return;
+            }
+            string emailTemplateText = File.ReadAllText(filePath);
+
+            emailTemplateText = string.Format(emailTemplateText, requesterName, ticket.Title, ticket.Description);
+
+            BodyBuilder emailBodyBuilder = new BodyBuilder();
+            emailBodyBuilder.HtmlBody = emailTemplateText;
+            emailBodyBuilder.TextBody = "Plain Text goes here to avoid marked as spam for some email servers.";
+
+            emailMessage.Body = emailBodyBuilder.ToMessageBody();
+
+            using (SmtpClient mailClient = new SmtpClient())
+            {
+                await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port,
+                    SecureSocketOptions.StartTls);
+                await mailClient.AuthenticateAsync(_mailSettings.SenderEmail, _mailSettings.Password);
+                await mailClient.SendAsync(emailMessage);
+                await mailClient.DisconnectAsync(true);
+            }
+        }
+    }
 }

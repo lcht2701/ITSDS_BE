@@ -23,7 +23,9 @@ public class PaymentService : IPaymentService
     private readonly MailSettings _mailSettings;
     private readonly IMapper _mapper;
 
-    public PaymentService(IRepositoryBase<Payment> paymentRepository, IRepositoryBase<PaymentTerm> termRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<User> userRepository, IOptions<MailSettings> mailSettings, IMapper mapper)
+    public PaymentService(IRepositoryBase<Payment> paymentRepository, IRepositoryBase<PaymentTerm> termRepository,
+        IRepositoryBase<Contract> contractRepository, IRepositoryBase<Company> companyRepository,
+        IRepositoryBase<User> userRepository, IOptions<MailSettings> mailSettings, IMapper mapper)
     {
         _paymentRepository = paymentRepository;
         _termRepository = termRepository;
@@ -41,12 +43,14 @@ public class PaymentService : IPaymentService
 
     public async Task<Payment> GetByContract(int contractId)
     {
-        return await _paymentRepository.FirstOrDefaultAsync(x => x.ContractId == contractId) ?? throw new KeyNotFoundException("Payment is not exist");
+        return await _paymentRepository.FirstOrDefaultAsync(x => x.ContractId == contractId) ??
+               throw new KeyNotFoundException("Payment is not exist");
     }
 
     public async Task<Payment> GetById(int id)
     {
-        return await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id) ?? throw new KeyNotFoundException("Payment is not exist");
+        return await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id) ??
+               throw new KeyNotFoundException("Payment is not exist");
     }
 
     public async Task<List<PaymentTerm>> GetPaymentTerms(int paymentId)
@@ -64,27 +68,30 @@ public class PaymentService : IPaymentService
 
     public async Task<Payment> Update(int id, UpdatePaymentRequest model)
     {
-        var target = await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id) ?? throw new KeyNotFoundException("Payment is not exist");
+        var target = await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id) ??
+                     throw new KeyNotFoundException("Payment is not exist");
         var entity = _mapper.Map(model, target);
         await _paymentRepository.UpdateAsync(entity);
         return entity;
-
     }
 
     public async Task Remove(int id)
     {
-        var target = await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id) ?? throw new KeyNotFoundException("Payment is not exist");
+        var target = await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id) ??
+                     throw new KeyNotFoundException("Payment is not exist");
         var terms = await _termRepository.WhereAsync(x => x.PaymentId == target.Id);
         foreach (var term in terms)
         {
             await _termRepository.DeleteAsync(term);
         }
+
         await _paymentRepository.DeleteAsync(target);
     }
 
     public async Task ClosePayment(int id)
     {
-        var target = await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id) ?? throw new KeyNotFoundException("Payment is not exist");
+        var target = await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id) ??
+                     throw new KeyNotFoundException("Payment is not exist");
         var terms = await _termRepository.WhereAsync(x => x.PaymentId == id);
         bool allTermsFullyPaid = terms.All(term => term.IsPaid == true);
         if (allTermsFullyPaid)
@@ -96,13 +103,15 @@ public class PaymentService : IPaymentService
         {
             throw new BadRequestException("All Payment Terms need to be FINISHED in order to close the payment");
         }
+
         await _paymentRepository.UpdateAsync(target);
     }
 
     public async Task<List<PaymentTerm>> GeneratePaymentTerms(int paymentId)
     {
         List<PaymentTerm> paymentTerms = new();
-        var payment = await _paymentRepository.FirstOrDefaultAsync(x => x.Id == paymentId) ?? throw new KeyNotFoundException("Payment is not exist");
+        var payment = await _paymentRepository.FirstOrDefaultAsync(x => x.Id == paymentId) ??
+                      throw new KeyNotFoundException("Payment is not exist");
         var contract = await _contractRepository.FirstOrDefaultAsync(x => x.Id == payment.ContractId);
         DateTime paymentDate = payment.FirstDateOfPayment;
         double remainingAmount = (double)contract.Value - payment.InitialPaymentAmount;
@@ -121,25 +130,29 @@ public class PaymentService : IPaymentService
             int monthsAdded = payment.Duration / payment.NumberOfTerms;
             paymentDate = paymentDate.AddMonths(monthsAdded);
         }
+
         await _termRepository.CreateAsync(paymentTerms);
         return paymentTerms;
     }
 
     public async Task<PaymentTerm> UpdatePaymentTerm(int id, UpdatePaymentTermRequest model)
     {
-        var target = await _termRepository.FirstOrDefaultAsync(x => x.Id == id) ?? throw new KeyNotFoundException("Payment Term is not exist");
+        var target = await _termRepository.FirstOrDefaultAsync(x => x.Id == id) ??
+                     throw new KeyNotFoundException("Payment Term is not exist");
         var entity = _mapper.Map(model, target);
         if (entity.IsPaid == true)
         {
             entity.TermFinishTime = DateTime.UtcNow;
         }
+
         await _termRepository.UpdateAsync(entity);
         return entity;
     }
 
     public async Task RemovePaymentTerm(int paymentId)
     {
-        var terms = await _termRepository.WhereAsync(x => x.PaymentId == paymentId) ?? throw new KeyNotFoundException("Payment Term is not exist");
+        var terms = await _termRepository.WhereAsync(x => x.PaymentId == paymentId) ??
+                    throw new KeyNotFoundException("Payment Term is not exist");
         foreach (var term in terms)
         {
             await _termRepository.DeleteAsync(term);
@@ -149,27 +162,31 @@ public class PaymentService : IPaymentService
     public async Task SendPaymentNotification(int termId)
     {
         #region GetDetail
+
         var term = await _termRepository.FirstOrDefaultAsync(x => x.Id.Equals(termId))
-                ?? throw new KeyNotFoundException($"Payment Term with ID {termId} is not exist");
+                   ?? throw new KeyNotFoundException($"Payment Term with ID {termId} is not exist");
 
         var payment = await _paymentRepository.FirstOrDefaultAsync(x => x.Id.Equals(term.PaymentId))
-            ?? throw new KeyNotFoundException($"Payment with ID {term.PaymentId} is not exist");
+                      ?? throw new KeyNotFoundException($"Payment with ID {term.PaymentId} is not exist");
 
         var contract = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(payment.ContractId))
-            ?? throw new KeyNotFoundException($"Contract with ID {payment.ContractId} is not exist");
+                       ?? throw new KeyNotFoundException($"Contract with ID {payment.ContractId} is not exist");
 
         var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id.Equals(contract.CompanyId))
-            ?? throw new KeyNotFoundException($"Company with ID {contract.CompanyId} is not exist");
+                      ?? throw new KeyNotFoundException($"Company with ID {contract.CompanyId} is not exist");
 
         var customerAdmin = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(company.CustomerAdminId))
-            ?? throw new KeyNotFoundException($"Customer Admin not found for the given termId: {termId}");
+                            ?? throw new KeyNotFoundException(
+                                $"Customer Admin not found for the given termId: {termId}");
 
         #endregion
+
         using (MimeMessage emailMessage = new MimeMessage())
         {
             MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
             emailMessage.From.Add(emailFrom);
-            MailboxAddress emailTo = new MailboxAddress($"{customerAdmin.FirstName} {customerAdmin.LastName}", customerAdmin.Email);
+            MailboxAddress emailTo = new MailboxAddress($"{customerAdmin.FirstName} {customerAdmin.LastName}",
+                customerAdmin.Email);
             emailMessage.To.Add(emailTo);
 
             emailMessage.Subject = "Payment Term Notification";
@@ -178,7 +195,8 @@ public class PaymentService : IPaymentService
 
             string emailTemplateText = File.ReadAllText(filePath);
 
-            emailTemplateText = string.Format(emailTemplateText, company.CompanyName, term.Description, term.TermAmount, term.TermEnd, DateTime.Now.Year.ToString());
+            emailTemplateText = string.Format(emailTemplateText, company.CompanyName, term.Description, term.TermEnd,
+                $"{term.TermAmount:N0} VND", DateTime.Now.Year.ToString());
 
             BodyBuilder emailBodyBuilder = new BodyBuilder();
             emailBodyBuilder.HtmlBody = emailTemplateText;
@@ -188,7 +206,8 @@ public class PaymentService : IPaymentService
 
             using (SmtpClient mailClient = new SmtpClient())
             {
-                await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port, MailKit.Security.SecureSocketOptions.StartTls);
+                await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port,
+                    MailKit.Security.SecureSocketOptions.StartTls);
                 await mailClient.AuthenticateAsync(_mailSettings.SenderEmail, _mailSettings.Password);
                 await mailClient.SendAsync(emailMessage);
                 await mailClient.DisconnectAsync(true);
