@@ -138,10 +138,10 @@ builder.Services.AddCors(options =>
 
 FirebaseApp.Create(new AppOptions()
 {
-    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-twxch-b0200036bb.json")),
+    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-cdsks-dfe3f409ae.json")),
 });
 
-Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-twxch-b0200036bb.json"));
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-cdsks-dfe3f409ae.json"));
 
 builder.Services.AddLogging();
 

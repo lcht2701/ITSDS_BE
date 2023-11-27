@@ -1,5 +1,6 @@
 ﻿using API.Services.Interfaces;
 using Domain.Models;
+using FirebaseAdmin.Messaging;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
@@ -33,41 +34,29 @@ public class MessagingService : IMessagingService
             IsRead = false
         });
 
-        //try
+        //// Retrieve the device token for the user
+        //var model = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId);
+        //if (model == null || string.IsNullOrEmpty(model.Token))
         //{
-        //    // Retrieve the device token for the user
-        //    var model = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId);
-        //    if (model == null || string.IsNullOrEmpty(model.Token))
-        //    {
-        //        _logger.LogInformation($"No valid token found for user {userId}. Notification created locally.");
-        //        return;
-        //    }
-
-        //    // Prepare the notification payload for Firebase
-        //    var notification = new Message()
-        //    {
-        //        Notification = new Notification
-        //        {
-        //            Title = title,
-        //            Body = message,
-        //        },
-        //        Token = model.Token
-        //    };
-
-        //    // Send the notification via Firebase
-        //    var messaging = FirebaseMessaging.DefaultInstance;
-        //    var result = await messaging.SendAsync(notification);
-
-        //    _logger.LogInformation($"Notification sent successfully. Result: {result}");
+        //    return;
         //}
-        //catch (Exception ex)
+
+        //// Prepare the notification payload for Firebase
+        //var notification = new Message()
         //{
-        //    // Log any exceptions that occur during the process
-        //    _logger.LogError($"Error sending notification: {ex.Message}", ex);
-        //    // Optionally, rethrow the exception if you want to let it propagate up the call stack
-        //    throw;
-        //}
+        //    Notification = new Notification
+        //    {
+        //        Title = title,
+        //        Body = message,
+        //    },
+        //    Token = model.Token
+        //};
+
+        //// Send the notification via Firebase
+        //var result = await FirebaseMessaging.DefaultInstance.SendAsync(notification);
+
     }
+
 
 
     public async Task<Messaging> MarkAsRead(int notificationId)

@@ -36,7 +36,7 @@ public class MessagingController : BaseController
     {
         try
         {
-            await _messagingService.SendNotification("ITSDS", model.Message!, CurrentUserID);
+            await _messagingService.SendNotification("ITSDS", model.Message, CurrentUserID);
             return Ok("Send Notification Successfully");
         }
         catch (Exception ex)
