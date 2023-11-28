@@ -243,23 +243,23 @@ public class PaymentController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpPost("term/send-notification")]
-    public async Task<IActionResult> SendNotification(int id)
-    {
-        try
-        {
-            await _paymentService.SendPaymentNotification(id);
-            return Ok("Payment Term Notification Sent Successfully");
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
+    //[Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    //[HttpPost("term/send-notification")]
+    //public async Task<IActionResult> SendNotification(int id)
+    //{
+    //    try
+    //    {
+    //        await _paymentService.SendPaymentNotification(id);
+    //        return Ok("Payment Term Notification Sent Successfully");
+    //    }
+    //    catch (KeyNotFoundException ex)
+    //    {
+    //        return BadRequest(ex.Message);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return BadRequest(ex.Message);
+    //    }
+    //}
 
 }

@@ -360,8 +360,8 @@ public class TicketService : ITicketService
         string jobId = BackgroundJob.Schedule(
             () => CloseTicketJob(ticket.Id),
             TimeSpan.FromDays(2));
-        BackgroundJob.ContinueJobWith(
-            jobId, () => SendNotificationAfterCloseTicket(ticket));
+        //BackgroundJob.ContinueJobWith(
+        //    jobId, () => SendNotificationAfterCloseTicket(ticket));
         RecurringJob.AddOrUpdate(
             jobId + "_Cancellation",
             () => CancelCloseTicketJob(jobId, ticket.Id),
@@ -395,9 +395,9 @@ public class TicketService : ITicketService
         }
 
         #endregion
-        #region Mail Notification
-        await SendTicketMailNotification(ticket);
-        #endregion
+        //#region Mail Notification
+        //await SendTicketMailNotification(ticket);
+        //#endregion
     }
 
     public async Task<Ticket> CancelTicket(int ticketId, int userId)
@@ -410,7 +410,7 @@ public class TicketService : ITicketService
             ticket.TicketStatus = TicketStatus.Cancelled;
             ticket.CompletedTime = DateTime.Now;
             await _ticketRepository.UpdateAsync(ticket);
-            await SendTicketMailNotification(ticket);
+            //await SendTicketMailNotification(ticket);
         }
         else
         {
@@ -431,7 +431,7 @@ public class TicketService : ITicketService
             ticket.TicketStatus = TicketStatus.Closed;
             ticket.CompletedTime = DateTime.Now;
             await _ticketRepository.UpdateAsync(ticket);
-            await SendTicketMailNotification(ticket);
+            //await SendTicketMailNotification(ticket);
         }
         else
         {
@@ -555,10 +555,10 @@ public class TicketService : ITicketService
             switch (ticket.TicketStatus)
             {
                 case TicketStatus.Closed:
-                    filePath = AppDomain.CurrentDomain.BaseDirectory + "\\Templates\\TicketClosedNotification.html";
+                    filePath = "~/Templates/TicketClosedNotification.html";
                     break;
                 case TicketStatus.Cancelled:
-                    filePath = AppDomain.CurrentDomain.BaseDirectory + "\\Templates\\TicketCancelledNotification.html";
+                    filePath = "~/Templates/TicketCancelledNotification.html";
                     break;
                 default:
                     return;
