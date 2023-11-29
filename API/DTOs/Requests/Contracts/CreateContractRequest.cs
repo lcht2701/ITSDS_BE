@@ -1,5 +1,6 @@
 ﻿using API.Mappings;
 using Domain.Models.Contracts;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs.Requests.Contracts
@@ -16,6 +17,7 @@ namespace API.DTOs.Requests.Contracts
 
         public DateTime EndDate { get; set; }
 
+        [DefaultValue(null)]
         public int? ParentContractId { get; set; }
         
         public int AccountantId { get; set; }

@@ -68,7 +68,7 @@ public class ContractService : IContractService
         {
             model.ParentContractId = null;
         }
-        else
+        if (model.ParentContractId.HasValue)
         {
             var parent = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ParentContractId));
             if (parent.ParentContractId.HasValue)
