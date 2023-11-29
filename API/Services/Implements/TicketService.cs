@@ -66,15 +66,22 @@ public class TicketService : ITicketService
 
     public async Task<List<GetTicketResponse>> Get()
     {
-        var result = await _ticketRepository.GetAsync(navigationProperties: new string[]
-            { "Requester", "Service", "Category", "Mode", "CreatedBy" });
+        var result = (await _ticketRepository.GetAsync(navigationProperties: new string[]
+            { "Requester", "Service", "Category", "Mode", "CreatedBy" })).ToList();
 
-        var response = result.Select(ticket =>
+
+        var response = _mapper.Map<List<GetTicketResponse>>(result);
+        foreach (var entity in response)
         {
-            var entity = _mapper.Map(ticket, new GetTicketResponse());
             DataResponse.CleanNullableDateTime(entity);
-            return entity;
-        }).ToList();
+            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
+                new string[] { "Team", "Technician" });
+            if (ass != null)
+            {
+                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
+                entity.Assignment = assMapping;
+            }
+        }
         return response;
     }
 
@@ -104,14 +111,18 @@ public class TicketService : ITicketService
             IsTicketDone(x.Id) == false);
 
         // Map the tickets to response entities
-        var response = filterResult.Select(ticket =>
+        var response = _mapper.Map<List<GetTicketResponse>>(filterResult);
+        foreach (var entity in response)
+        {
+            DataResponse.CleanNullableDateTime(entity);
+            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
+                new string[] { "Team", "Technician" });
+            if (ass != null)
             {
-                var entity = _mapper.Map<GetTicketResponse>(ticket);
-                DataResponse.CleanNullableDateTime(entity);
-                return entity;
-            })
-            .OrderByDescending(x => x.TicketStatus)
-            .ToList();
+                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
+                entity.Assignment = assMapping;
+            }
+        }
         return response;
     }
 
@@ -126,14 +137,18 @@ public class TicketService : ITicketService
             IsTicketDone(x.Id) == true);
 
         // Map the tickets to response entities
-        var response = filterResult.Select(ticket =>
+        var response = _mapper.Map<List<GetTicketResponse>>(filterResult);
+        foreach (var entity in response)
+        {
+            DataResponse.CleanNullableDateTime(entity);
+            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
+                new string[] { "Team", "Technician" });
+            if (ass != null)
             {
-                var entity = _mapper.Map<GetTicketResponse>(ticket);
-                DataResponse.CleanNullableDateTime(entity);
-                return entity;
-            })
-            .OrderByDescending(x => x.TicketStatus)
-            .ToList();
+                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
+                entity.Assignment = assMapping;
+            }
+        }
         return response;
     }
 
@@ -161,12 +176,18 @@ public class TicketService : ITicketService
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
             new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
-        var response = result.Select(ticket =>
+        var response = _mapper.Map<List<GetTicketResponse>>(result);
+        foreach (var entity in response)
         {
-            var entity = _mapper.Map(ticket, new GetTicketResponse());
             DataResponse.CleanNullableDateTime(entity);
-            return entity;
-        }).ToList();
+            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
+                new string[] { "Team", "Technician" });
+            if (ass != null)
+            {
+                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
+                entity.Assignment = assMapping;
+            }
+        }
         return response;
     }
 
@@ -178,14 +199,18 @@ public class TicketService : ITicketService
 
         var filteredResult = result.Where(x => !IsTicketDone(x.Id));
 
-        var response = filteredResult.Select(ticket =>
+        var response = _mapper.Map<List<GetTicketResponse>>(filteredResult);
+        foreach (var entity in response)
+        {
+            DataResponse.CleanNullableDateTime(entity);
+            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
+                new string[] { "Team", "Technician" });
+            if (ass != null)
             {
-                var entity = _mapper.Map<GetTicketResponse>(ticket);
-                DataResponse.CleanNullableDateTime(entity);
-                return entity;
-            })
-            .OrderByDescending(x => x.CreatedAt)
-            .ToList();
+                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
+                entity.Assignment = assMapping;
+            }
+        }
         return response;
     }
 
@@ -197,14 +222,18 @@ public class TicketService : ITicketService
 
         var filteredResult = result.Where(x => IsTicketDone(x.Id));
 
-        var response = filteredResult.Select(ticket =>
+        var response = _mapper.Map<List<GetTicketResponse>>(filteredResult);
+        foreach (var entity in response)
+        {
+            DataResponse.CleanNullableDateTime(entity);
+            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
+                new string[] { "Team", "Technician" });
+            if (ass != null)
             {
-                var entity = _mapper.Map<GetTicketResponse>(ticket);
-                DataResponse.CleanNullableDateTime(entity);
-                return entity;
-            })
-            .OrderByDescending(x => x.CompletedTime)
-            .ToList();
+                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
+                entity.Assignment = assMapping;
+            }
+        }
         return response;
     }
 
@@ -259,7 +288,7 @@ public class TicketService : ITicketService
         return result;
     }
 
-    public bool IsTicketDone(int ticketId)
+    public bool IsTicketDone(int? ticketId)
     {
         var ticket = _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId).Result;
         return ticket.TicketStatus is TicketStatus.Closed or TicketStatus.Cancelled;
