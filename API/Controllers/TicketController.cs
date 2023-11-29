@@ -516,7 +516,6 @@ public class TicketController : BaseController
             return BadRequest(ex.Message);
         }
     }
-
     private async Task<List<int>> GetManagerIdsList()
     {
         var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();

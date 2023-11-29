@@ -389,8 +389,8 @@ public class TicketService : ITicketService
         string jobId = BackgroundJob.Schedule(
             () => CloseTicketJob(ticket.Id),
             TimeSpan.FromDays(2));
-        //BackgroundJob.ContinueJobWith(
-        //    jobId, () => SendNotificationAfterCloseTicket(ticket));
+        BackgroundJob.ContinueJobWith(
+            jobId, () => SendNotificationAfterCloseTicket(ticket));
         RecurringJob.AddOrUpdate(
             jobId + "_Cancellation",
             () => CancelCloseTicketJob(jobId, ticket.Id),
@@ -424,9 +424,9 @@ public class TicketService : ITicketService
         }
 
         #endregion
-        //#region Mail Notification
-        //await SendTicketMailNotification(ticket);
-        //#endregion
+        #region Mail Notification
+        await SendTicketMailNotification(ticket);
+        #endregion
     }
 
     public async Task<Ticket> CancelTicket(int ticketId, int userId)
@@ -439,7 +439,7 @@ public class TicketService : ITicketService
             ticket.TicketStatus = TicketStatus.Cancelled;
             ticket.CompletedTime = DateTime.Now;
             await _ticketRepository.UpdateAsync(ticket);
-            //await SendTicketMailNotification(ticket);
+            await SendTicketMailNotification(ticket);
         }
         else
         {
@@ -460,7 +460,7 @@ public class TicketService : ITicketService
             ticket.TicketStatus = TicketStatus.Closed;
             ticket.CompletedTime = DateTime.Now;
             await _ticketRepository.UpdateAsync(ticket);
-            //await SendTicketMailNotification(ticket);
+            await SendTicketMailNotification(ticket);
         }
         else
         {
@@ -580,20 +580,82 @@ public class TicketService : ITicketService
             emailMessage.To.Add(emailTo);
 
             emailMessage.Subject = "Ticket Notification";
-            string filePath;
+            string emailTemplateText;
             switch (ticket.TicketStatus)
             {
                 case TicketStatus.Closed:
-                    filePath = "~/Templates/TicketClosedNotification.html";
+                    emailTemplateText = @"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Ticket Closure Notification</title>
+</head>
+<body style=""font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;"">
+
+    <div style=""max-width: 600px; margin: 20px auto; background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);"">
+
+        <h2 style=""color: #333;"">Ticket Closure Notification</h2>
+
+        <p>Dear {0},</p>
+        <p>Your ticket has been successfully closed with the following details:</p>
+
+        <ul style=""list-style-type: none; padding: 0;"">
+            <li><strong>Title:</strong> {1}</li>
+            <li><strong>Description:</strong> {2}</li>
+            <li><strong>Status:</strong> Closed</li>
+        </ul>
+
+        <p>We appreciate your cooperation. If you have any further questions or concerns, please feel free to contact our support team.</p>
+
+        <div style=""margin-top: 20px; text-align: center; color: #888;"">
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+
+    </div>
+
+</body>
+</html>
+";
                     break;
                 case TicketStatus.Cancelled:
-                    filePath = "~/Templates/TicketCancelledNotification.html";
+                    emailTemplateText = @"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Ticket Cancellation Notification</title>
+</head>
+<body style=""font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;"">
+
+    <div style=""max-width: 600px; margin: 20px auto; background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);"">
+
+        <h2 style=""color: #333;"">Ticket Cancellation Notification</h2>
+
+        <p>Dear {0},</p>
+        <p>Your ticket has been successfully cancelled with the following details:</p>
+
+        <ul style=""list-style-type: none; padding: 0;"">
+            <li><strong>Title:</strong> {1}</li>
+            <li><strong>Description:</strong> {2}</li>
+            <li><strong>Status:</strong> Cancelled</li>
+        </ul>
+
+        <p>If you have any questions or concerns, please feel free to contact our support team.</p>
+
+        <div style=""margin-top: 20px; text-align: center; color: #888;"">
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+
+    </div>
+
+</body>
+</html>
+";
                     break;
                 default:
                     return;
             }
-            string emailTemplateText = File.ReadAllText(filePath);
-
             emailTemplateText = string.Format(emailTemplateText, requesterName, ticket.Title, ticket.Description);
 
             BodyBuilder emailBodyBuilder = new BodyBuilder();
