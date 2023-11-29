@@ -12,7 +12,6 @@ namespace Persistence.Context
         }
 
         public virtual DbSet<User>? Users { get; set; }
-        public virtual DbSet<Configuration>? Configurations { get; set; }
         public virtual DbSet<AuditLog>? AuditLogs { get; set; }
         public virtual DbSet<Messaging>? Messagings { get; set; }
         public virtual DbSet<DeviceToken>? DeviceTokens { get; set; }
