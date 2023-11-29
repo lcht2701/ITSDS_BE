@@ -8,7 +8,6 @@ public partial class Team : BaseEntity
     public Team()
     {
         Assignments = new HashSet<Assignment>();
-        Contracts = new HashSet<Contract>();
     }
 
     public string? Name { get; set; }
@@ -23,8 +22,6 @@ public partial class Team : BaseEntity
 
     public virtual User? Manager { get; set; }
 
-    [JsonIgnore]
-    public virtual ICollection<Contract>? Contracts { get; set; }
     [JsonIgnore]
     public virtual ICollection<Assignment>? Assignments { get; set; }
 }

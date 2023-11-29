@@ -64,7 +64,11 @@ public class ContractService : IContractService
         var entity = _mapper.Map(model, new Contract());
         SetContractStatus(entity);
         entity.IsRenewed = false;
-        if (model.ParentContractId.HasValue)
+        if (model.ParentContractId == 0)
+        {
+            model.ParentContractId = null;
+        }
+        else
         {
             var parent = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ParentContractId));
             if (parent.ParentContractId.HasValue)

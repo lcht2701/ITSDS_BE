@@ -34,7 +34,7 @@ public class FeedbackService : IFeedbackService
 
         if (user.Role == Role.Customer)
         {
-            feedbackQuery = (IList<Feedback>)feedbackQuery.Where(x => x.IsPublic == true);
+            feedbackQuery = feedbackQuery.Where(x => x.IsPublic == true).ToList();
         }
 
         var result = feedbackQuery.ToList() ?? throw new KeyNotFoundException();
