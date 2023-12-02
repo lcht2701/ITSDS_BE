@@ -15,9 +15,13 @@ namespace API.DTOs.Requests.Tickets
 
         public int? ModeId { get; set; }
 
+        public int? CategoryId { get; set; }
+        
         public int? ServiceId { get; set; }
 
-        public int? CategoryId { get; set; }
+        public string? Type { get; set; }
+
+        public string? Location { get; set; }
 
         public TicketStatus? TicketStatus { get; set; }
 

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231202121359_add1TeamManage1Category")]
+    partial class add1TeamManage1Category
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -690,7 +692,9 @@ namespace Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("CategoryId")
+                        .IsUnique()
+                        .HasFilter("[CategoryId] IS NOT NULL");
 
                     b.HasIndex("DeletedAt");
 
@@ -1202,8 +1206,8 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Models.Tickets.Team", b =>
                 {
                     b.HasOne("Domain.Models.Tickets.Category", "Category")
-                        .WithMany("Teams")
-                        .HasForeignKey("CategoryId");
+                        .WithOne("Team")
+                        .HasForeignKey("Domain.Models.Tickets.Team", "CategoryId");
 
                     b.HasOne("Domain.Models.User", "Manager")
                         .WithMany()
@@ -1348,7 +1352,7 @@ namespace Persistence.Migrations
                 {
                     b.Navigation("Services");
 
-                    b.Navigation("Teams");
+                    b.Navigation("Team");
 
                     b.Navigation("TicketSolutions");
 

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231202120423_addFieldsToTicketFlow")]
+    partial class addFieldsToTicketFlow
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -554,6 +556,9 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<int?>("AssignedTechnicalId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -571,6 +576,8 @@ namespace Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AssignedTechnicalId");
 
                     b.HasIndex("DeletedAt");
 
@@ -660,9 +667,6 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int?>("CategoryId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -689,8 +693,6 @@ namespace Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
 
                     b.HasIndex("DeletedAt");
 
@@ -1180,6 +1182,15 @@ namespace Persistence.Migrations
                     b.Navigation("Ticket");
                 });
 
+            modelBuilder.Entity("Domain.Models.Tickets.Category", b =>
+                {
+                    b.HasOne("Domain.Models.User", "AssignedTechnical")
+                        .WithMany()
+                        .HasForeignKey("AssignedTechnicalId");
+
+                    b.Navigation("AssignedTechnical");
+                });
+
             modelBuilder.Entity("Domain.Models.Tickets.Feedback", b =>
                 {
                     b.HasOne("Domain.Models.Tickets.TicketSolution", "Solution")
@@ -1201,15 +1212,9 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Team", b =>
                 {
-                    b.HasOne("Domain.Models.Tickets.Category", "Category")
-                        .WithMany("Teams")
-                        .HasForeignKey("CategoryId");
-
                     b.HasOne("Domain.Models.User", "Manager")
                         .WithMany()
                         .HasForeignKey("ManagerId");
-
-                    b.Navigation("Category");
 
                     b.Navigation("Manager");
                 });
@@ -1347,8 +1352,6 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Models.Tickets.Category", b =>
                 {
                     b.Navigation("Services");
-
-                    b.Navigation("Teams");
 
                     b.Navigation("TicketSolutions");
 

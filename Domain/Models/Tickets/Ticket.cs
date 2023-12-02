@@ -1,5 +1,6 @@
 ﻿using Domain.Constants.Enums;
 using Domain.Models.Contracts;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using static Domain.Customs.CustomAttributes;
 
@@ -11,21 +12,24 @@ public partial class Ticket : BaseEntity
     {
         TicketTasks = new HashSet<TicketTask>();
     }
-    public int RequesterId { get; set; }
 
-    public int CreatedById { get; set; }
+    public int? RequesterId { get; set; }
+
+    public int? CreatedById { get; set; }
 
     public string Title { get; set; }
 
     public string? Description { get; set; }
 
-    public string Location { get; set; }
+    public string Type { get; set; }
 
-    public int? ModeId { get; set; }
+    public string? Location { get; set; }
 
     public int ServiceId { get; set; }
-    
+
     public int CategoryId { get; set; }
+    
+    public int? ModeId { get; set; }
 
     public TicketStatus TicketStatus { get; set; }
 

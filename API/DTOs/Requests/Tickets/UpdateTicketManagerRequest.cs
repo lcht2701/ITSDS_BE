@@ -15,8 +15,6 @@ namespace API.DTOs.Requests.Tickets
 
         public int? ModeId { get; set; }
 
-        public int? ServiceId { get; set; }
-
         public TicketStatus? TicketStatus { get; set; }
 
         public Priority? Priority { get; set; }
@@ -28,6 +26,12 @@ namespace API.DTOs.Requests.Tickets
         public Urgency? Urgency { get; set; }
 
         public int? CategoryId { get; set; }
+
+        public int? ServiceId { get; set; }
+
+        public string? Type { get; set; }
+
+        public string? Location { get; set; }
 
         public string? AttachmentUrl { get; set; }
 

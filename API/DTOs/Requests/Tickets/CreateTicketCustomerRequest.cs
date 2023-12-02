@@ -1,7 +1,6 @@
 ﻿using API.Mappings;
 using Domain.Constants.Enums;
 using Domain.Models.Tickets;
-using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs.Requests.Tickets
 {
@@ -11,7 +10,11 @@ namespace API.DTOs.Requests.Tickets
 
         public string? Description { get; set; }
 
-        public int? CategoryId { get; set; }
+        public int? ServiceId { get; set; }
+
+        public string? Type { get; set; }
+
+        public string? Location { get; set; }
 
         public Priority? Priority { get; set; }
 

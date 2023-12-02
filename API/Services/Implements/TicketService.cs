@@ -8,12 +8,12 @@ using Domain.Constants;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
+using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 using Hangfire;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
@@ -26,24 +26,23 @@ public class TicketService : ITicketService
     private readonly IRepositoryBase<Assignment> _assignmentRepository;
     private readonly IRepositoryBase<TicketTask> _taskRepository;
     private readonly IRepositoryBase<User> _userRepository;
+    private readonly IRepositoryBase<Service> _serviceRepository;
     private readonly IAuditLogService _auditLogService;
     private readonly IMessagingService _messagingService;
     private readonly IMapper _mapper;
     private readonly MailSettings _mailSettings;
 
-    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository,
-        IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository,
-        IAuditLogService auditLogService, IMessagingService messagingService, IMapper mapper,
-        IOptions<MailSettings> mailSettings)
+    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService, IMessagingService messagingService, IMapper mapper, MailSettings mailSettings)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
         _taskRepository = taskRepository;
         _userRepository = userRepository;
+        _serviceRepository = serviceRepository;
         _auditLogService = auditLogService;
         _messagingService = messagingService;
         _mapper = mapper;
-        _mailSettings = mailSettings.Value;
+        _mailSettings = mailSettings;
     }
 
     public async Task<Ticket> CreateByCustomer(int createdById, CreateTicketCustomerRequest model)
@@ -52,6 +51,8 @@ public class TicketService : ITicketService
         entity.RequesterId = createdById;
         entity.CreatedById = createdById;
         entity.TicketStatus = TicketStatus.Open;
+        var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
+        if (categoryId != null) entity.CategoryId = (int)categoryId;
         await _ticketRepository.CreateAsync(entity);
         return entity;
     }

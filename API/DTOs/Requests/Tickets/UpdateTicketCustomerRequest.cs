@@ -15,6 +15,12 @@ namespace API.DTOs.Requests.Tickets
 
         public int? CategoryId { get; set; }
 
+        public int? ServiceId { get; set; }
+
+        public string? Type { get; set; }
+
+        public string? Location { get; set; }
+
         public string? AttachmentUrl { get; set; }
     }
 }

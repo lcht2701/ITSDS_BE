@@ -13,9 +13,13 @@ namespace Domain.Models.Contracts
 
         public string? Description { get; set; }
 
+        public int? CategoryId { get; set; }
+
         public string? Type { get; set; }
 
         public double? Amount { get; set; }
+
+        public virtual Category? Category { get; set; }
 
         [JsonIgnore]
         public virtual ICollection<Ticket>? Tickets { get; set; }
