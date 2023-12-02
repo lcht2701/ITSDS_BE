@@ -47,7 +47,7 @@ public class TicketSolutionService : ITicketSolutionService
     }
 
 
-    public async Task<object> GetById(int id)
+    public async Task<object> GetById(int id)   
     {
         var result = await _solutionRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
             new string[] { "Category", "Owner", "CreatedBy" }) ?? throw new KeyNotFoundException();

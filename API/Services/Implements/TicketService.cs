@@ -66,8 +66,8 @@ public class TicketService : ITicketService
 
     public async Task<List<GetTicketResponse>> Get()
     {
-        var result = (await _ticketRepository.GetAsync(navigationProperties: new string[]
-            { "Requester", "Service", "Category", "Mode", "CreatedBy" })).ToList();
+        var result = await _ticketRepository.GetAsync(navigationProperties: new string[]
+            { "Requester", "Service", "Category", "Mode", "CreatedBy" });
 
 
         var response = _mapper.Map<List<GetTicketResponse>>(result);

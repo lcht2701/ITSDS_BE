@@ -59,7 +59,6 @@ public class TicketController : BaseController
     {
         var response = await _ticketService.Get();
         var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-
         return Ok(pagedResponse);
     }
 
@@ -204,6 +203,13 @@ public class TicketController : BaseController
                 jobId + "_Cancellation",
                 () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
                 "*/5 * * * * *"); //Every 5 secs
+            #endregion
+            #region Notification
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{model.Title}] has been created and scheduled for assignment", CurrentUserID);
+            foreach (var managerId in await GetManagerIdsList())
+            {
+                await _messagingService.SendNotification("ITSDS", $"New ticket [{model.Title}] has been created", managerId);
+            }
             #endregion
             return Ok("Ticket created and scheduled for assignment.");
         }
