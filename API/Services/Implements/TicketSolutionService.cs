@@ -59,6 +59,7 @@ public class TicketSolutionService : ITicketSolutionService
     {
         var entity = _mapper.Map(model, new TicketSolution());
         entity.CreatedById = createdById;
+        entity.IsApproved = false;
         await _solutionRepository.CreateAsync(entity);
     }
 
