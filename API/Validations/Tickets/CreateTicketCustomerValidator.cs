@@ -18,9 +18,15 @@ namespace API.Validations.Tickets
                 .NotEmpty().WithMessage("Title is required.")
                 .NotNull().WithMessage("Priority is required.");
 
-            RuleFor(x => x.CategoryId)
-                .NotNull().WithMessage("Category ID is required.")
+            RuleFor(x => x.ServiceId)
+                .NotNull().WithMessage("Service ID is required.")
                 .GreaterThan(0).WithMessage("Category ID should be greater than 0.");
+
+            RuleFor(x => x.Type)
+                .NotNull().WithMessage("Type is required.");
+
+            RuleFor(x => x.Location)
+                .MaximumLength(250).WithMessage("Title should not exceed 100 characters.");
 
         }
     }

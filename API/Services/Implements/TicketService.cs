@@ -14,6 +14,7 @@ using Hangfire;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
@@ -32,7 +33,7 @@ public class TicketService : ITicketService
     private readonly IMapper _mapper;
     private readonly MailSettings _mailSettings;
 
-    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService, IMessagingService messagingService, IMapper mapper, MailSettings mailSettings)
+    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService, IMessagingService messagingService, IMapper mapper, IOptions<MailSettings> mailSettings)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -42,7 +43,7 @@ public class TicketService : ITicketService
         _auditLogService = auditLogService;
         _messagingService = messagingService;
         _mapper = mapper;
-        _mailSettings = mailSettings;
+        _mailSettings = mailSettings.Value;
     }
 
     public async Task<Ticket> CreateByCustomer(int createdById, CreateTicketCustomerRequest model)
@@ -373,7 +374,7 @@ public class TicketService : ITicketService
                 {
                     ticket.TicketStatus = newStatus;
                     await _ticketRepository.UpdateAsync(ticket);
-                    if (jobId != null) await CancelCloseTicketJob(jobId, ticketId);
+                    if (jobId != null) await CancelCloseTicketJob(jobId, ticket.Id);
                 }
 
                 break;
@@ -382,52 +383,6 @@ public class TicketService : ITicketService
         }
 
         return ticket;
-    }
-
-    private string AutoCloseBackgroundService(Ticket ticket)
-    {
-        //Auto Schedule Job to Close Ticket
-        string jobId = BackgroundJob.Schedule(
-            () => CloseTicketJob(ticket.Id),
-            TimeSpan.FromDays(2));
-        BackgroundJob.ContinueJobWith(
-            jobId, () => SendNotificationAfterCloseTicket(ticket));
-        RecurringJob.AddOrUpdate(
-            jobId + "_Cancellation",
-            () => CancelCloseTicketJob(jobId, ticket.Id),
-            "*/5 * * * * *"); //Every 5
-        return jobId;
-    }
-
-    [NonAction]
-    public async Task SendNotificationAfterCloseTicket(Ticket ticket)
-    {
-        #region Notification
-
-        var techinicianId = (await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticket.Id))
-            .TechnicianId;
-        if (techinicianId != null)
-        {
-            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been closed",
-                (int)techinicianId);
-        }
-
-        if (ticket.RequesterId != null)
-        {
-            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been closed",
-                (int)ticket.RequesterId);
-        }
-
-        foreach (var managerId in await GetManagerIdsList())
-        {
-            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been closed",
-                managerId);
-        }
-
-        #endregion
-        #region Mail Notification
-        await SendTicketMailNotification(ticket);
-        #endregion
     }
 
     public async Task<Ticket> CancelTicket(int ticketId, int userId)
@@ -472,12 +427,61 @@ public class TicketService : ITicketService
         return ticket;
     }
 
+    public async Task SendNotificationAfterCloseTicket(Ticket ticket)
+    {
+        #region Notification
+
+        var techinicianId = (await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticket.Id))
+            .TechnicianId;
+        if (techinicianId != null)
+        {
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been closed",
+                (int)techinicianId);
+        }
+
+        if (ticket.RequesterId != null)
+        {
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been closed",
+                (int)ticket.RequesterId);
+        }
+
+        foreach (var managerId in await GetManagerIdsList())
+        {
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been closed",
+                managerId);
+        }
+
+        #endregion
+        #region Mail Notification
+        await SendTicketMailNotification(ticket);
+        #endregion
+    }
+
+    public async Task SendNotificationAfterAssignment(Ticket ticket)
+    {
+        var techinicianId = (await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticket.Id)).TechnicianId;
+        if (techinicianId != null)
+        {
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned to you",
+                (int)techinicianId);
+        }
+        if (ticket.RequesterId != null)
+        {
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned",
+                (int)ticket.RequesterId);
+        }
+        foreach (var managerId in await GetManagerIdsList())
+        {
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned",
+                managerId);
+        }
+    }
+
     #region Background Services
 
     public async Task AssignSupportJob(int ticketId)
     {
-        var ticket = await _ticketRepository.FirstOrDefaultAsync(t => t.Id == ticketId);
-
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
         if (ticket == null)
         {
             // Handle the case where the ticket does not exist
@@ -510,12 +514,13 @@ public class TicketService : ITicketService
         {
             var assignment = new Assignment()
             {
-                TicketId = ticketId,
+                TicketId = ticket.Id,
                 TechnicianId = selectedTechnician
             };
 
             await _assignmentRepository.CreateAsync(assignment);
-            await UpdateTicketStatus(ticketId, TicketStatus.Assigned);
+            await UpdateTicketStatus(ticket.Id, TicketStatus.Assigned);
+            await SendNotificationAfterAssignment(ticket);
         }
         else
         {
@@ -539,6 +544,8 @@ public class TicketService : ITicketService
     public async Task CloseTicketJob(int ticketId)
     {
         await UpdateTicketStatus(ticketId, TicketStatus.Closed);
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId);
+        await SendNotificationAfterCloseTicket(ticket);
     }
 
     public async Task CancelCloseTicketJob(string jobId, int ticketId)
@@ -551,6 +558,21 @@ public class TicketService : ITicketService
     }
 
     #endregion
+
+    private string AutoCloseBackgroundService(Ticket ticket)
+    {
+        //Auto Schedule Job to Close Ticket
+        string jobId = BackgroundJob.Schedule(
+            () => CloseTicketJob(ticket.Id),
+            TimeSpan.FromDays(2));
+        BackgroundJob.ContinueJobWith(
+            jobId, () => SendNotificationAfterCloseTicket(ticket));
+        RecurringJob.AddOrUpdate(
+            jobId + "_Cancellation",
+            () => CancelCloseTicketJob(jobId, ticket.Id),
+            "*/5 * * * * *"); //Every 5
+        return jobId;
+    }
 
     private async Task<int> GetNumberOfAssignmentsForTechnician(int technicianId)
     {
@@ -675,4 +697,5 @@ public class TicketService : ITicketService
             }
         }
     }
+
 }
