@@ -26,7 +26,7 @@ namespace API.Validations.Tickets
                 .NotNull().WithMessage("Type is required.");
 
             RuleFor(x => x.Location)
-                .MaximumLength(250).WithMessage("Title should not exceed 100 characters.");
+                .MaximumLength(250).WithMessage("Location should not exceed 250 characters.");
 
         }
     }

@@ -1,4 +1,5 @@
-﻿using API.DTOs.Requests.Tickets;
+﻿using API.DTOs.Requests.Assignments;
+using API.DTOs.Requests.Tickets;
 using API.DTOs.Responses.Assignments;
 using API.DTOs.Responses.Tickets;
 using API.Services.Interfaces;
@@ -30,10 +31,11 @@ public class TicketService : ITicketService
     private readonly IRepositoryBase<Service> _serviceRepository;
     private readonly IAuditLogService _auditLogService;
     private readonly IMessagingService _messagingService;
+    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IMapper _mapper;
     private readonly MailSettings _mailSettings;
 
-    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService, IMessagingService messagingService, IMapper mapper, IOptions<MailSettings> mailSettings)
+    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService, IMessagingService messagingService, IRepositoryBase<TeamMember> teamMemberRepository, IMapper mapper, IOptions<MailSettings> mailSettings)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -42,28 +44,9 @@ public class TicketService : ITicketService
         _serviceRepository = serviceRepository;
         _auditLogService = auditLogService;
         _messagingService = messagingService;
+        _teamMemberRepository = teamMemberRepository;
         _mapper = mapper;
         _mailSettings = mailSettings.Value;
-    }
-
-    public async Task<Ticket> CreateByCustomer(int createdById, CreateTicketCustomerRequest model)
-    {
-        Ticket entity = _mapper.Map(model, new Ticket());
-        entity.RequesterId = createdById;
-        entity.CreatedById = createdById;
-        entity.TicketStatus = TicketStatus.Open;
-        var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
-        if (categoryId != null) entity.CategoryId = (int)categoryId;
-        await _ticketRepository.CreateAsync(entity);
-        return entity;
-    }
-
-    public async Task<Ticket> CreateByManager(int createdById, CreateTicketManagerRequest model)
-    {
-        Ticket entity = _mapper.Map(model, new Ticket());
-        entity.CreatedById = createdById;
-        await _ticketRepository.CreateAsync(entity);
-        return entity;
     }
 
     public async Task<List<GetTicketResponse>> Get()
@@ -173,7 +156,6 @@ public class TicketService : ITicketService
         return entity;
     }
 
-
     public async Task<List<GetTicketResponse>> GetByUser(int userId)
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
@@ -250,12 +232,58 @@ public class TicketService : ITicketService
         return await _assignmentRepository.FirstOrDefaultAsync(o => o.TicketId == ticketId) != null;
     }
 
-    public async Task Remove(int id)
+    public async Task<Ticket> CreateByCustomer(int createdById, CreateTicketCustomerRequest model)
     {
-        var target = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ??
-                     throw new KeyNotFoundException("Ticket is not exist");
-        await _ticketRepository.SoftDeleteAsync(target);
+        Ticket entity = _mapper.Map(model, new Ticket());
+        entity.RequesterId = createdById;
+        entity.CreatedById = createdById;
+        entity.TicketStatus = TicketStatus.Open;
+        var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
+        if (categoryId != null) entity.CategoryId = (int)categoryId;
+        await _ticketRepository.CreateAsync(entity);
+        return entity;
     }
+
+    public async Task<Ticket> CreateByManager(int createdById, CreateTicketManagerRequest model)
+    {
+        Ticket entity = _mapper.Map(model.Ticket, new Ticket());
+        entity.CreatedById = createdById;
+        await _ticketRepository.CreateAsync(entity);
+
+        if (model.Assignment?.TechnicianId != null || model.Assignment?.TeamId != null)
+        {
+            if (model.Assignment != null && model.Assignment.TechnicianId != null && model.Assignment.TeamId != null)
+            {
+                if (await IsTechnicianMemberOfTeamAsync(model.Assignment.TechnicianId, model.Assignment.TeamId) == null)
+                {
+                    throw new BadRequestException("This technician is not a member of the specified team.");
+                }
+
+                var assignment = new Assignment()
+                {
+                    TicketId = entity.Id,
+                    TechnicianId = model.Assignment.TechnicianId,
+                    TeamId = model.Assignment.TeamId
+                };
+                await _assignmentRepository.CreateAsync(assignment);
+                if (entity.TicketStatus == TicketStatus.Open)
+                    await UpdateTicketStatus(entity.Id, TicketStatus.Assigned);
+            }
+        }
+
+        return entity;
+    }
+
+
+    #region Assignment Support
+    public async Task<object> IsTechnicianMemberOfTeamAsync(int? technicianId, int? teamId)
+    {
+        var check = await _teamMemberRepository.FirstOrDefaultAsync(x =>
+            x.MemberId.Equals(technicianId) && x.TeamId.Equals(teamId));
+
+        return check;
+    }
+    #endregion
 
     public async Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model)
     {
@@ -288,6 +316,13 @@ public class TicketService : ITicketService
         var result = _mapper.Map(model, target);
         await _ticketRepository.UpdateAsync(result);
         return result;
+    }
+
+    public async Task Remove(int id)
+    {
+        var target = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ??
+                     throw new KeyNotFoundException("Ticket is not exist");
+        await _ticketRepository.SoftDeleteAsync(target);
     }
 
     public bool IsTicketDone(int? ticketId)

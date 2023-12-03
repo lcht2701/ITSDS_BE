@@ -1,4 +1,6 @@
-﻿namespace Domain.Models.Tickets;
+﻿using System.Text.Json.Serialization;
+
+namespace Domain.Models.Tickets;
 
 public partial class Assignment : BaseEntity
 {
@@ -12,5 +14,6 @@ public partial class Assignment : BaseEntity
 
     public virtual Team? Team { get; set; }
 
+    [JsonIgnore]
     public virtual Ticket? Ticket { get; set; }
 }

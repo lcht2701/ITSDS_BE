@@ -186,6 +186,7 @@ public class AssignmentService : IAssignmentService
                 await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
         }
     }
+
     private async Task UpdateExistingAssignment(AssignTicketManualRequest model, Assignment existingAssignment)
     {
         Assignment entity;

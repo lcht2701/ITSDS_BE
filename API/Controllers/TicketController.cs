@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using static Grpc.Core.Metadata;
 
 namespace API.Controllers;
 
@@ -258,18 +259,18 @@ public class TicketController : BaseController
             #region Notification
             foreach (var managerId in await GetManagerIdsList())
             {
-                await _messagingService.SendNotification("ITSDS", $"Status of ticket [{model.Title}] has been updated", managerId);
+                await _messagingService.SendNotification("ITSDS", $"Status of ticket [{model.Ticket!.Title}] has been updated", managerId);
 
             }
-            if (model.RequesterId != null)
+            if (model.Ticket!.RequesterId != null)
             {
-                await _messagingService.SendNotification("ITSDS", $"Ticket [{model.Title}] has been created",
-                    (int)model.RequesterId);
+                await _messagingService.SendNotification("ITSDS", $"Ticket [{model.Ticket!.Title}] has been created",
+                    (int)model.Ticket!.RequesterId);
             }
             #endregion
             if (await _ticketService.IsTicketAssigned(entity.Id))
             {
-                return Ok("Created Successfully");
+                return Ok(new { Message = "Ticket created successfully", Data = entity });
             }
             else
             {

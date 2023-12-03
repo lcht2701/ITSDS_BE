@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace API.Validations.Tickets
 {
-    public class CreateTicketManagerValidator : AbstractValidator<CreateTicketManagerRequest>
+    public class CreateTicketManagerValidator : AbstractValidator<CreateTicketManagerDetail>
     {
         public CreateTicketManagerValidator()
         {
