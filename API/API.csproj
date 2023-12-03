@@ -53,7 +53,7 @@
 	  <Content Update="appsettings.Development.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Update="itsds-v1-firebase-adminsdk-cdsks-dfe3f409ae.json">
+	  <Content Update="admin_sdk.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </Content>
 	</ItemGroup>

@@ -186,13 +186,6 @@ public class TicketController : BaseController
         {
             Ticket entity = await _ticketService.CreateByCustomer(CurrentUserID, model);
             await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
-            #region Notification
-            await _messagingService.SendNotification("ITSDS", $"Ticket [{model.Title}] has been created and scheduled for assignment", CurrentUserID);
-            foreach (var managerId in await GetManagerIdsList())
-            {
-                await _messagingService.SendNotification("ITSDS", $"New ticket [{model.Title}] has been created", managerId);
-            }
-            #endregion
             #region Background Job for auto assign
             string jobId = BackgroundJob.Schedule(
                         () => _ticketService.AssignSupportJob(entity.Id),

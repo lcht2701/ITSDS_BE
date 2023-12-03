@@ -34,27 +34,32 @@ public class MessagingService : IMessagingService
             IsRead = false
         });
 
-        //// Retrieve the device token for the user
-        //var model = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId);
-        //if (model == null || string.IsNullOrEmpty(model.Token))
-        //{
-        //    return;
-        //}
+        // Retrieve the device token for the user
+        var model = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId);
+        if (model == null || string.IsNullOrEmpty(model.Token))
+        {
+            return;
+        }
 
-        //// Prepare the notification payload for Firebase
-        //var notification = new Message()
-        //{
-        //    Notification = new Notification
-        //    {
-        //        Title = title,
-        //        Body = message,
-        //    },
-        //    Token = model.Token
-        //};
+        try
+        {
+            var notification = new Message()
+            {
+                Notification = new Notification
+                {
+                    Title = title,
+                    Body = message,
+                },
+                Token = model.Token
+            };
 
-        //// Send the notification via Firebase
-        //var result = await FirebaseMessaging.DefaultInstance.SendAsync(notification);
-
+            var result = await FirebaseMessaging.DefaultInstance.SendAsync(notification);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending notification");
+            return;
+        }
     }
 
 
