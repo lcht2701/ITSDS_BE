@@ -283,6 +283,17 @@ public class TicketService : ITicketService
     }
     #endregion
 
+    public async Task<Ticket> UpdateByCustomer(int id, UpdateTicketCustomerRequest model)
+    {
+        var target =
+            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException();
+        var result = _mapper.Map(model, target);
+        var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
+        if (categoryId != null) target.CategoryId = (int)categoryId;
+        await _ticketRepository.UpdateAsync(result);
+        return result;
+    }
+
     public async Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model)
     {
         var target =
@@ -292,15 +303,6 @@ public class TicketService : ITicketService
         //{
         //    throw new BadRequestException("Ticket can not be updated when it is being executed");
         //}
-        var result = _mapper.Map(model, target);
-        await _ticketRepository.UpdateAsync(result);
-        return result;
-    }
-
-    public async Task<Ticket> UpdateByCustomer(int id, UpdateTicketCustomerRequest model)
-    {
-        var target =
-            await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException();
         var result = _mapper.Map(model, target);
         await _ticketRepository.UpdateAsync(result);
         return result;

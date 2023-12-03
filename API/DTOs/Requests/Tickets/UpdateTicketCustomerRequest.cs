@@ -13,8 +13,6 @@ namespace API.DTOs.Requests.Tickets
 
         public Priority? Priority { get; set; }
 
-        public int? CategoryId { get; set; }
-
         public int? ServiceId { get; set; }
 
         public string? Type { get; set; }

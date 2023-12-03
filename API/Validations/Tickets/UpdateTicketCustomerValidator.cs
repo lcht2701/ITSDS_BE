@@ -17,10 +17,6 @@ namespace API.Validations.Tickets
             RuleFor(x => x.Priority)
                 .NotEmpty().WithMessage("Title is required.")
                 .NotNull().WithMessage("Priority is required.");
-
-            RuleFor(x => x.CategoryId)
-                .NotNull().WithMessage("Category ID is required.")
-                .GreaterThan(0).WithMessage("Category ID should be greater than 0.");
         }
     }
 }

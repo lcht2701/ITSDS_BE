@@ -57,7 +57,7 @@ public class MessagingService : IMessagingService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error sending notification");
+            _logger.ToString();
             return;
         }
     }
@@ -101,7 +101,8 @@ public class MessagingService : IMessagingService
             }
             else
             {
-
+                existToken.UserId = userId;
+                existToken.Token = token;
                 await _tokenRepository.UpdateAsync(existToken);
             }
         }
