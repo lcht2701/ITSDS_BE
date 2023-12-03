@@ -18,6 +18,21 @@ public class TicketSolutionController : BaseController
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
+    [HttpGet("/all")]
+    public async Task<IActionResult> GetAll()
+    {
+        try
+        {
+            var result = await _ticketSolutionService.Get(CurrentUserID);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
     [HttpGet]
     public async Task<IActionResult> GetSolutions(
         [FromQuery] string? filter,

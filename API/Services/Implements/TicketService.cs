@@ -1,5 +1,4 @@
-﻿using API.DTOs.Requests.Assignments;
-using API.DTOs.Requests.Tickets;
+﻿using API.DTOs.Requests.Tickets;
 using API.DTOs.Responses.Assignments;
 using API.DTOs.Responses.Tickets;
 using API.Services.Interfaces;
@@ -14,7 +13,6 @@ using Domain.Models.Tickets;
 using Hangfire;
 using MailKit.Net.Smtp;
 using MailKit.Security;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using Persistence.Helpers;
