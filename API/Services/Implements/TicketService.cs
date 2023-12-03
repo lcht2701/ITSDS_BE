@@ -30,10 +30,11 @@ public class TicketService : ITicketService
     private readonly IAuditLogService _auditLogService;
     private readonly IMessagingService _messagingService;
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
+    private readonly IRepositoryBase<Team> _teamRepository;
     private readonly IMapper _mapper;
     private readonly MailSettings _mailSettings;
 
-    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService, IMessagingService messagingService, IRepositoryBase<TeamMember> teamMemberRepository, IMapper mapper, IOptions<MailSettings> mailSettings)
+    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService, IMessagingService messagingService, IRepositoryBase<TeamMember> teamMemberRepository, IMapper mapper, IOptions<MailSettings> mailSettings, IRepositoryBase<Team> teamRepository)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -43,6 +44,7 @@ public class TicketService : ITicketService
         _auditLogService = auditLogService;
         _messagingService = messagingService;
         _teamMemberRepository = teamMemberRepository;
+        _teamRepository = teamRepository;
         _mapper = mapper;
         _mailSettings = mailSettings.Value;
     }
@@ -519,12 +521,21 @@ public class TicketService : ITicketService
         var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
         if (ticket == null)
         {
-            // Handle the case where the ticket does not exist
             return;
         }
 
-        var availableTechnicians =
-            await _userRepository.WhereAsync(x => x.Role == Role.Technician && x.IsActive == true);
+        var teamIds = (await _teamRepository.WhereAsync(team => team.CategoryId == ticket.CategoryId))
+            .Select(team => team.Id);
+
+        if (!teamIds.Any()) return;
+
+        var memberIds = (await _teamMemberRepository.WhereAsync(teamMember => teamIds.Contains(teamMember.Id)))
+            .Select(teamMember => teamMember.Id);
+
+        if (!memberIds.Any()) return;
+
+        var availableTechnicians = await _userRepository
+            .WhereAsync(user => user.Role == Role.Technician && user.IsActive == true && memberIds.Contains(user.Id));
 
         if (!availableTechnicians.Any())
         {
