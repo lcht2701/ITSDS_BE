@@ -96,7 +96,7 @@ public class UserController : BaseController
     }
     #endregion
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}, {Roles.TECHNICIAN}")]
+    [Authorize]
     [HttpGet("all")]
     public async Task<IActionResult> GetAllUsers()
     {

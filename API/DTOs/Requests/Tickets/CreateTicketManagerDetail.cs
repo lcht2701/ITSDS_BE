@@ -20,7 +20,13 @@ namespace API.DTOs.Requests.Tickets
 
         public string? Type { get; set; }
 
-        public string? Location { get; set; }
+        public string? Street { get; set; }
+
+        public string? Ward { get; set; }
+
+        public string? District { get; set; }
+
+        public string? City { get; set; }
 
         public TicketStatus? TicketStatus { get; set; }
 

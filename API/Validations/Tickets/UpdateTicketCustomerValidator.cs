@@ -17,6 +17,19 @@ namespace API.Validations.Tickets
             RuleFor(x => x.Priority)
                 .NotEmpty().WithMessage("Title is required.")
                 .NotNull().WithMessage("Priority is required.");
+
+            RuleFor(x => x.Street)
+                .NotNull().WithMessage("Street is required")
+                .MaximumLength(200).WithMessage("Street should not exceed 200 characters.");
+
+            RuleFor(x => x.Ward)
+                .NotNull().WithMessage("Ward is required");
+
+            RuleFor(x => x.District)
+                .NotNull().WithMessage("District is required");
+
+            RuleFor(x => x.City)
+                .NotNull().WithMessage("City is required");
         }
     }
 }

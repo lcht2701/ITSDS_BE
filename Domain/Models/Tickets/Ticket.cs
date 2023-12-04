@@ -1,6 +1,5 @@
 ﻿using Domain.Constants.Enums;
 using Domain.Models.Contracts;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using static Domain.Customs.CustomAttributes;
 
@@ -23,7 +22,13 @@ public partial class Ticket : BaseEntity
 
     public string Type { get; set; }
 
-    public string? Location { get; set; }
+    public string? Street { get; set; }
+
+    public string? Ward { get; set; }
+
+    public string? District { get; set; }
+
+    public string? City { get; set; }
 
     public int ServiceId { get; set; }
 

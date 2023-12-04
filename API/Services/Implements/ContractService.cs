@@ -3,6 +3,7 @@ using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
+using Domain.Models;
 using Domain.Models.Contracts;
 using Persistence.Repositories.Interfaces;
 
@@ -11,13 +12,15 @@ namespace API.Services.Implements;
 public class ContractService : IContractService
 {
     private readonly IRepositoryBase<Contract> _contractRepository;
+    private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IRepositoryBase<Renewal> _renewalRepository;
     private readonly IRepositoryBase<ServiceContract> _serviceContractRepository;
     private readonly IMapper _mapper;
 
-    public ContractService(IRepositoryBase<Contract> contractRepository, IRepositoryBase<Renewal> renewalRepository, IRepositoryBase<ServiceContract> serviceContractRepository, IMapper mapper)
+    public ContractService(IRepositoryBase<Contract> contractRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<Renewal> renewalRepository, IRepositoryBase<ServiceContract> serviceContractRepository, IMapper mapper)
     {
         _contractRepository = contractRepository;
+        _companyMemberRepository = companyMemberRepository;
         _renewalRepository = renewalRepository;
         _serviceContractRepository = serviceContractRepository;
         _mapper = mapper;
@@ -47,9 +50,15 @@ public class ContractService : IContractService
         return result;
     }
 
-    public async Task<List<Contract>> GetByCompany(int companyId)
+    public async Task<List<Contract>> GetByCustomer(int userId)
     {
-        var result = (await _contractRepository.WhereAsync(x => x.CompanyId.Equals(companyId), new string[] { "Accountant", "Company" })).ToList();
+        List<Contract> result = new();
+        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(userId));
+        if (companyMember == null)
+        {
+            return result;
+        }
+        result = (await _contractRepository.WhereAsync(x => x.CompanyId.Equals(companyMember.CompanyId), new string[] { "Accountant", "Company" })).ToList();
         return result;
     }
 

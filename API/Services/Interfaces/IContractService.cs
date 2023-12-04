@@ -8,7 +8,7 @@ namespace API.Services.Interfaces
         Task<List<Contract>> Get();
         Task<List<Contract>> GetParentContracts();
         Task<List<Contract>> GetChildContracts(int contractId);
-        Task<List<Contract>> GetByCompany(int companyId);
+        Task<List<Contract>> GetByCustomer(int userId);
         Task<List<Contract>> GetByAccountant(int userId);
         Task<Contract> GetById(int id);
         Task<Contract> Create(CreateContractRequest model);

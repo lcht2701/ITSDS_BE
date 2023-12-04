@@ -1,6 +1,9 @@
 ﻿using API.DTOs.Requests.ServiceContracts;
 using API.Services.Interfaces;
+using Domain.Exceptions;
+using Domain.Models;
 using Domain.Models.Contracts;
+using Domain.Models.Tickets;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
@@ -9,11 +12,21 @@ public class ServiceContractService : IServiceContractService
 {
     private readonly IRepositoryBase<ServiceContract> _repo;
     private readonly IRepositoryBase<Service> _serviceRepo;
+    private readonly IRepositoryBase<Ticket> _ticketRepo;
+    private readonly IRepositoryBase<Contract> _contractRepo;
+    private readonly IRepositoryBase<Company> _companyRepo;
+    private readonly IRepositoryBase<Category> _categoryRepo;
+    private readonly IRepositoryBase<User> _userRepo;
 
-    public ServiceContractService(IRepositoryBase<ServiceContract> repo, IRepositoryBase<Service> serviceRepo)
+    public ServiceContractService(IRepositoryBase<ServiceContract> repo, IRepositoryBase<Service> serviceRepo, IRepositoryBase<Ticket> ticketRepo, IRepositoryBase<Contract> contractRepo, IRepositoryBase<Company> companyRepo, IRepositoryBase<Category> categoryRepo, IRepositoryBase<User> userRepo)
     {
         _repo = repo;
         _serviceRepo = serviceRepo;
+        _ticketRepo = ticketRepo;
+        _contractRepo = contractRepo;
+        _companyRepo = companyRepo;
+        _categoryRepo = categoryRepo;
+        _userRepo = userRepo;
     }
 
     public async Task<List<ServiceContract>> Get(int contractId)
@@ -95,4 +108,48 @@ public class ServiceContractService : IServiceContractService
         await _repo.DeleteAsync(target);
     }
 
+    public async Task<List<Ticket>> CreatePeriodicTickets(int id, int currentUserId)
+    {
+        List<Ticket> list = new();
+        var serviceContract = await _repo.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Service is not exist in the contract");
+
+        if (!serviceContract.StartDate.HasValue || !serviceContract.EndDate.HasValue || !serviceContract.Frequency.HasValue)
+        {
+            return list;
+        }
+
+        #region Data For Create Contract
+        var service = await _serviceRepo.FirstOrDefaultAsync(x => x.Id.Equals(serviceContract.ServiceId));
+        var contract = await _contractRepo.FirstOrDefaultAsync(x => x.Id.Equals(serviceContract.ContractId));
+        var company = await _companyRepo.FirstOrDefaultAsync(x => x.Id.Equals(contract.CompanyId));
+        var customer = await _userRepo.FirstOrDefaultAsync(x => x.Id.Equals(company.CustomerAdminId));
+        #endregion
+
+        TimeSpan? totalDate = serviceContract.EndDate - serviceContract.StartDate;
+        int numOfTickets = (int)Math.Ceiling((decimal)(totalDate.Value.Days / serviceContract.Frequency));
+        DateTime? startDate = serviceContract.StartDate;
+        for (int i = 1; i <= numOfTickets; i++)
+        {
+            Ticket newTicket = new()
+            {
+                RequesterId = customer.Id,
+                CreatedById = currentUserId,
+                Title = $"Periodic Ticket #{i} - {service.Description}",
+                Description = $"Periodic Service Support #{i} for {company.CompanyName} - {service.Description}",
+                ServiceId = service.Id,
+                CategoryId = (await _categoryRepo.FirstOrDefaultAsync(x => x.Id.Equals(service.CategoryId))).Id,
+                TicketStatus = Domain.Constants.Enums.TicketStatus.Open,
+                Priority = Domain.Constants.Enums.Priority.High,
+                ScheduledStartTime = startDate,
+                ScheduledEndTime = startDate.Value.AddDays((double)serviceContract.Frequency),
+                DueTime = startDate.Value.AddDays((double)serviceContract.Frequency),
+                Impact = Domain.Constants.Enums.Impact.Medium,
+                Urgency = Domain.Constants.Enums.Urgency.Medium,
+            };
+            list.Add(newTicket);
+            startDate = startDate.Value.AddDays((double)serviceContract.Frequency + 1);
+        }
+        await _ticketRepo.CreateAsync(list);
+        return list;
+    }
 }

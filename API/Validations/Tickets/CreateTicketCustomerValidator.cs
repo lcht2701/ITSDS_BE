@@ -1,5 +1,6 @@
 ﻿using API.DTOs.Requests.Tickets;
 using FluentValidation;
+using Microsoft.IdentityModel.Tokens;
 
 namespace API.Validations.Tickets
 {
@@ -25,8 +26,18 @@ namespace API.Validations.Tickets
             RuleFor(x => x.Type)
                 .NotNull().WithMessage("Type is required.");
 
-            RuleFor(x => x.Location)
-                .MaximumLength(250).WithMessage("Location should not exceed 250 characters.");
+            RuleFor(x => x.Street)
+                .NotNull().WithMessage("Street is required")
+                .MaximumLength(200).WithMessage("Street should not exceed 200 characters.");
+
+            RuleFor(x => x.Ward)
+                .NotNull().WithMessage("Ward is required");
+
+            RuleFor(x => x.District)
+                .NotNull().WithMessage("District is required");
+
+            RuleFor(x => x.City)
+                .NotNull().WithMessage("City is required");
 
         }
     }

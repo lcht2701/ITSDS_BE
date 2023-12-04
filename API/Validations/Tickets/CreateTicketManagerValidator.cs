@@ -29,6 +29,19 @@ namespace API.Validations.Tickets
 
             RuleFor(x => x.ImpactDetail)
                 .MaximumLength(100).WithMessage("Impact detail should not exceed 100 characters.");
+
+            RuleFor(x => x.Street)
+                .NotNull().WithMessage("Street is required")
+                .MaximumLength(200).WithMessage("Street should not exceed 200 characters.");
+
+            RuleFor(x => x.Ward)
+                .NotNull().WithMessage("Ward is required");
+
+            RuleFor(x => x.District)
+                .NotNull().WithMessage("District is required");
+
+            RuleFor(x => x.City)
+                .NotNull().WithMessage("City is required");
         }
     }
 }

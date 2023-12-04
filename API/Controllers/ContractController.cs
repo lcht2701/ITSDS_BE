@@ -23,14 +23,13 @@ public class ContractController : BaseController
 
     [Authorize]
     [HttpGet("all")]
-
     public async Task<IActionResult> GetAllContract()
     {
         var result = await _contractService.Get();
         return Ok(result);
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetContracts(
     [FromQuery] string? filter,
@@ -52,7 +51,7 @@ public class ContractController : BaseController
         return Ok(result);
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [Authorize]
     [HttpGet("child")]
     public async Task<IActionResult> GetChildContracts(int contractId)
     {
@@ -67,7 +66,7 @@ public class ContractController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [Authorize]
     [HttpGet("renew")]
     public async Task<IActionResult> GetRenewals(int contractId)
     {
@@ -97,13 +96,13 @@ public class ContractController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpGet("company/{companyId}")]
-    public async Task<IActionResult> GetByCompany(int companyId)
+    [Authorize]
+    [HttpGet("customer")]
+    public async Task<IActionResult> GetByCustomer()
     {
         try
         {
-            var result = await _contractService.GetByCompany(companyId);
+            var result = await _contractService.GetByCustomer(CurrentUserID);
             return Ok(result);
         }
         catch (Exception ex)
@@ -112,7 +111,7 @@ public class ContractController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [Authorize]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetContractById(int id)
     {
@@ -203,7 +202,7 @@ public class ContractController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [Authorize]
     [HttpGet("services")]
     public async Task<IActionResult> GetServiceOfContract(int contractId)
     {
@@ -222,7 +221,7 @@ public class ContractController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [Authorize]
     [HttpGet("services/select")]
     public async Task<IActionResult> GetSeletionList(int contractId)
     {
@@ -275,42 +274,23 @@ public class ContractController : BaseController
         }
     }
 
-    //[Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    //[HttpGet("services/{id}")]
-    //public async Task<IActionResult> GetServiceDetail(int id)
-    //{
-    //    try
-    //    {
-    //        var result = await _serviceContractService.GetById(id);
-    //        return Ok(result);
-    //    }
-    //    catch (KeyNotFoundException ex)
-    //    {
-    //        return NotFound(ex.Message);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return BadRequest(ex.Message);
-    //    }
-    //}
-
-    //[Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    //[HttpPut("services/modify")]
-    //public async Task<IActionResult> ModifyServicesInContract(ModifyServicesInContract model)
-    //{
-    //    try
-    //    {
-    //        var result = await _serviceContractService.ModifyServices(model);
-    //        return Ok(result);
-    //    }
-    //    catch (KeyNotFoundException ex)
-    //    {
-    //        return NotFound(ex.Message);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return BadRequest(ex.Message);
-    //    }
-    //}
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpPost("generate-periodic-tickets")]
+    public async Task<IActionResult> CreatePeriodicTickets(int id)
+    {
+        try
+        {
+            var result = await _serviceContractService.CreatePeriodicTickets(id, CurrentUserID);
+            return Ok(new { Message = "Periodic Tickets Created Successfully", Data = result });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
 }
