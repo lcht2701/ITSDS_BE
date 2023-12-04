@@ -23,6 +23,12 @@ public class ServiceService : IServiceService
         return result;
     }
 
+    public async Task<List<Service>> GetByCategory(int categoryId)
+    {
+        var result = (await _serviceRepository.WhereAsync(x => x.CategoryId.Equals(categoryId))).ToList() ?? throw new KeyNotFoundException("Category is not exist");
+        return result;
+    }
+
     public async Task<Service> GetById(int id)
     {
         var result = await _serviceRepository.FirstOrDefaultAsync(u => u.Id.Equals(id)) ?? throw new KeyNotFoundException("Service is not exist");

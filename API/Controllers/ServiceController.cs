@@ -40,6 +40,25 @@ public class ServiceController : BaseController
         return Ok(pagedResponse);
     }
 
+    [Authorize]
+    [HttpGet("category")]
+    public async Task<IActionResult> GetByCategory(int categoryId)
+    {
+        try
+        {
+            var result = await _serviceService.GetByCategory(categoryId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [Authorize(Roles = Roles.MANAGER)]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetServiceById(int id)
