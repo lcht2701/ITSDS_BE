@@ -31,13 +31,13 @@ namespace API.Validations.Tickets
                 .MaximumLength(200).WithMessage("Street should not exceed 200 characters.");
 
             RuleFor(x => x.Ward)
-                .NotNull().WithMessage("Ward is required");
+                .NotEmpty().WithMessage("Ward is required");
 
             RuleFor(x => x.District)
-                .NotNull().WithMessage("District is required");
+                .NotEmpty().WithMessage("District is required");
 
             RuleFor(x => x.City)
-                .NotNull().WithMessage("City is required");
+                .NotEmpty().WithMessage("City is required");
 
         }
     }

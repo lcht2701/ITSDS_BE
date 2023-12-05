@@ -29,15 +29,17 @@ namespace API.DTOs.Requests.Tickets
 
         public int? ServiceId { get; set; }
 
+        public bool? IsPeriodic { get; set; }
+
         public string? Type { get; set; }
 
         public string? Street { get; set; }
 
-        public string? Ward { get; set; }
+        public int? Ward { get; set; }
 
-        public string? District { get; set; }
+        public int? District { get; set; }
 
-        public string? City { get; set; }
+        public int? City { get; set; }
 
         public string? AttachmentUrl { get; set; }
 

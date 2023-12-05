@@ -238,6 +238,7 @@ public class TicketService : ITicketService
         entity.RequesterId = createdById;
         entity.CreatedById = createdById;
         entity.TicketStatus = TicketStatus.Open;
+        entity.IsPeriodic = false;
         var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
         if (categoryId != null) entity.CategoryId = (int)categoryId;
         await _ticketRepository.CreateAsync(entity);

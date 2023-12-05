@@ -16,7 +16,10 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public string? Title { get; set; }
     public string? Description { get; set; }
     public string? Type { get; set; }
-    public string? Location { get; set; }
+    public string? Street { get; set; }
+    public int? Ward { get; set; }
+    public int? District { get; set; }
+    public int? City { get; set; }
     public int? ModeId { get; set; }
     public int? ServiceId { get; set; }
     public int? CategoryId { get; set; }
