@@ -17,20 +17,6 @@ public class TicketSolutionController : BaseController
         _ticketSolutionService = ticketSolutionService;
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
-    [HttpGet("/all")]
-    public async Task<IActionResult> GetAll()
-    {
-        try
-        {
-            var result = await _ticketSolutionService.Get(CurrentUserID);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
     [HttpGet]
@@ -45,6 +31,21 @@ public class TicketSolutionController : BaseController
             var result = await _ticketSolutionService.Get(CurrentUserID);
             var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
             return Ok(pagedResponse);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllSolutions()
+    {
+        try
+        {
+            var result = await _ticketSolutionService.Get(CurrentUserID);
+            return Ok(result);
         }
         catch (Exception ex)
         {

@@ -247,15 +247,15 @@ public class TicketService : ITicketService
 
     public async Task<Ticket> CreateByManager(int createdById, CreateTicketManagerRequest model)
     {
-        Ticket entity = _mapper.Map(model.Ticket, new Ticket());
+        Ticket entity = _mapper.Map(model, new Ticket());
         entity.CreatedById = createdById;
         await _ticketRepository.CreateAsync(entity);
 
-        if (model.Assignment?.TechnicianId != null || model.Assignment?.TeamId != null)
+        if (model?.TechnicianId != null || model?.TeamId != null)
         {
-            if (model.Assignment != null && model.Assignment.TechnicianId != null && model.Assignment.TeamId != null)
+            if (model != null && model.TechnicianId != null && model.TeamId != null)
             {
-                if (await IsTechnicianMemberOfTeamAsync(model.Assignment.TechnicianId, model.Assignment.TeamId) == null)
+                if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
                 {
                     throw new BadRequestException("This technician is not a member of the specified team.");
                 }
@@ -263,9 +263,10 @@ public class TicketService : ITicketService
                 var assignment = new Assignment()
                 {
                     TicketId = entity.Id,
-                    TechnicianId = model.Assignment.TechnicianId,
-                    TeamId = model.Assignment.TeamId
+                    TechnicianId = model.TechnicianId,
+                    TeamId = model.TeamId
                 };
+
                 await _assignmentRepository.CreateAsync(assignment);
                 if (entity.TicketStatus == TicketStatus.Open)
                     await UpdateTicketStatus(entity.Id, TicketStatus.Assigned);
@@ -274,7 +275,6 @@ public class TicketService : ITicketService
 
         return entity;
     }
-
 
     #region Assignment Support
     public async Task<object> IsTechnicianMemberOfTeamAsync(int? technicianId, int? teamId)

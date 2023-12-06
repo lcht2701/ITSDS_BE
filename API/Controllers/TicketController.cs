@@ -252,13 +252,13 @@ public class TicketController : BaseController
             #region Notification
             foreach (var managerId in await GetManagerIdsList())
             {
-                await _messagingService.SendNotification("ITSDS", $"Status of ticket [{model.Ticket!.Title}] has been updated", managerId);
+                await _messagingService.SendNotification("ITSDS", $"Status of ticket [{model!.Title}] has been updated", managerId);
 
             }
-            if (model.Ticket!.RequesterId != null)
+            if (model!.RequesterId != null)
             {
-                await _messagingService.SendNotification("ITSDS", $"Ticket [{model.Ticket!.Title}] has been created",
-                    (int)model.Ticket!.RequesterId);
+                await _messagingService.SendNotification("ITSDS", $"Ticket [{model!.Title}] has been created",
+                    (int)model!.RequesterId);
             }
             #endregion
             if (await _ticketService.IsTicketAssigned(entity.Id))
