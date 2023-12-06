@@ -19,6 +19,7 @@ using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 using DateTime = System.DateTime;
+using DayOfWeek = System.DayOfWeek;
 
 namespace API.Services.Implements;
 

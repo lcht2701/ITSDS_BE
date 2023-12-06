@@ -29,10 +29,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 builder.Services.AddHangfire(config => config
-        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-        .UseSimpleAssemblyNameTypeSerializer()
-        .UseRecommendedSerializerSettings()
-        .UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
 builder.Services.AddHangfireServer();
 
 // Add services to the container.
@@ -62,13 +62,10 @@ builder.Services.AddScoped<IMessagingService, MessagingService>();
 builder.Services.AddScoped<IFirebaseService, FirebaseService>();
 
 builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>())
-                .AddFluentValidation(c => c.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly()));
+    .AddFluentValidation(c => c.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly()));
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.Configure<FormOptions>(options =>
-{
-    options.MultipartBodyLengthLimit = int.MaxValue;
-});
+builder.Services.Configure<FormOptions>(options => { options.MultipartBodyLengthLimit = int.MaxValue; });
 
 builder.Services.AddSwaggerGen(option =>
 {
@@ -93,11 +90,11 @@ builder.Services.AddSwaggerGen(option =>
             {
                 Reference = new OpenApiReference
                 {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
                 }
             },
-            new string[]{}
+            new string[] { }
         }
     });
 });
@@ -131,8 +128,8 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins("*")
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
+                .AllowAnyHeader()
+                .AllowAnyMethod();
         });
 });
 
@@ -141,7 +138,8 @@ FirebaseApp.Create(new AppOptions()
     Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "admin_sdk.json")),
 });
 
-Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "admin_sdk.json"));
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS",
+    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "admin_sdk.json"));
 
 builder.Services.AddLogging();
 
@@ -160,4 +158,6 @@ app.UseAutoWrapper();
 app.UseHangfireDashboard("/hangfire");
 app.MapControllers();
 app.MapHangfireDashboard();
+RecurringJob.AddOrUpdate<IHangfireJobService>("daily-job", x => x.PeriodTicketSummaryNotificationJob(), Cron.Daily(8, 0));
+RecurringJob.AddOrUpdate<IHangfireJobService>("daily-job", x => x.UpdateStatusOfContract(), "*/5 * * * *");
 app.Run();

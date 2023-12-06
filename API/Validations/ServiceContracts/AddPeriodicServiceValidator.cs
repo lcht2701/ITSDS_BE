@@ -7,6 +7,9 @@ public class AddPeriodicServiceValidator : AbstractValidator<AddPeriodicService>
 {
     public AddPeriodicServiceValidator()
     {
+        RuleFor(x => x.ServiceId)
+            .NotEmpty().WithMessage("Service is required");
+        
         RuleFor(x => x.Frequency)
             .NotEmpty().WithMessage("Frequency Days is required")
             .GreaterThan(0).WithMessage("Frequency Days must be greater than 0");

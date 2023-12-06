@@ -254,6 +254,21 @@ public class ContractController : BaseController
             return BadRequest(ex.Message);
         }
     }
+    
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [HttpPost("periodic-service")]
+    public async Task<IActionResult> AddPeriodicService(int contractId, [FromBody] AddPeriodicService model)
+    {
+        try
+        {
+            var result = await _serviceContractService.AddPeriodicService(contractId, model);
+            return Ok(new { Message = "Periodic Service Added To Contract Successfully", Data = result });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpDelete("services/{id}")]
