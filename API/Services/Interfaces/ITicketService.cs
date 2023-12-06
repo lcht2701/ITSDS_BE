@@ -14,6 +14,7 @@ public interface ITicketService
     Task<List<GetTicketResponse>> GetAssignedTickets(int userId);
     Task<List<GetTicketResponse>> GetCompletedAssignedTickets(int userId);
     Task<List<GetTicketStatusesResponse>> GetTicketStatuses();
+    Task<List<GetTicketResponse>> GetPeriodicTickets(int? numOfDays);
     Task<object> GetTicketLog(int id);
     Task<GetTicketResponse> GetById(int id);
     Task<Ticket> CreateByCustomer(int createdBy, CreateTicketCustomerRequest model);

@@ -1,5 +1,6 @@
 ﻿using API.DTOs.Requests.ServiceContracts;
 using API.Services.Interfaces;
+using AutoMapper;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
@@ -17,8 +18,9 @@ public class ServiceContractService : IServiceContractService
     private readonly IRepositoryBase<Company> _companyRepo;
     private readonly IRepositoryBase<Category> _categoryRepo;
     private readonly IRepositoryBase<User> _userRepo;
+    private readonly IMapper _mapper;
 
-    public ServiceContractService(IRepositoryBase<ServiceContract> repo, IRepositoryBase<Service> serviceRepo, IRepositoryBase<Ticket> ticketRepo, IRepositoryBase<Contract> contractRepo, IRepositoryBase<Company> companyRepo, IRepositoryBase<Category> categoryRepo, IRepositoryBase<User> userRepo)
+    public ServiceContractService(IRepositoryBase<ServiceContract> repo, IRepositoryBase<Service> serviceRepo, IRepositoryBase<Ticket> ticketRepo, IRepositoryBase<Contract> contractRepo, IRepositoryBase<Company> companyRepo, IRepositoryBase<Category> categoryRepo, IRepositoryBase<User> userRepo, IMapper mapper)
     {
         _repo = repo;
         _serviceRepo = serviceRepo;
@@ -27,6 +29,7 @@ public class ServiceContractService : IServiceContractService
         _companyRepo = companyRepo;
         _categoryRepo = categoryRepo;
         _userRepo = userRepo;
+        _mapper = mapper;
     }
 
     public async Task<List<ServiceContract>> Get(int contractId)
@@ -102,6 +105,14 @@ public class ServiceContractService : IServiceContractService
         return result;
     }
 
+    public async Task<ServiceContract> AddPeriodicService(int contractId, AddPeriodicService model)
+    {
+        var entity = _mapper.Map(model, new ServiceContract());
+        entity.ContractId = contractId;
+        await _repo.CreateAsync(entity);
+        return entity;
+    }
+
     public async Task Remove(int id)
     {
         var target = await _repo.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Service is not exist in the contract");
@@ -145,6 +156,7 @@ public class ServiceContractService : IServiceContractService
                 DueTime = startDate.Value.AddDays((double)serviceContract.Frequency),
                 Impact = Domain.Constants.Enums.Impact.Medium,
                 Urgency = Domain.Constants.Enums.Urgency.Medium,
+                IsPeriodic = true,
             };
             list.Add(newTicket);
             startDate = startDate.Value.AddDays((double)serviceContract.Frequency + 1);

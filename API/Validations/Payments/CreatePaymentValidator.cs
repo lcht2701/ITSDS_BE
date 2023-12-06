@@ -18,10 +18,6 @@ namespace API.Validations.Payments
                 .NotEmpty().WithMessage("Number Of Terms is required.")
                 .GreaterThan(0).WithMessage("NumberOfTerms should be greater than 0.");
 
-            RuleFor(x => x.FirstDateOfPayment)
-                .NotEmpty().WithMessage("FirstDateOfPayment is required.")
-                .Must(date => date >= DateTime.UtcNow).WithMessage("FirstDateOfPayment should be a future date.");
-
             RuleFor(x => x.Duration)
                 .NotEmpty().WithMessage("Duration is required.")
                 .GreaterThan(0).WithMessage("Duration should be greater than 0.");

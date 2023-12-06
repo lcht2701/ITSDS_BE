@@ -32,7 +32,7 @@ namespace API.Validations.TicketTasks
                 .WithMessage("Priority is required.");
 
             RuleFor(x => x.ScheduledStartTime)
-                .GreaterThan(DateTime.Now).When(x => x.ScheduledStartTime != null)
+                .GreaterThan(DateTime.Today).When(x => x.ScheduledStartTime != null)
                 .WithMessage("Scheduled start time should be in the future.");
 
             RuleFor(x => x.ScheduledEndTime)

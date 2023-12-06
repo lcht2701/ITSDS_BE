@@ -10,6 +10,7 @@ using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
+using Google.Type;
 using Hangfire;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -17,6 +18,7 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using DateTime = System.DateTime;
 
 namespace API.Services.Implements;
 
@@ -34,7 +36,11 @@ public class TicketService : ITicketService
     private readonly IMapper _mapper;
     private readonly MailSettings _mailSettings;
 
-    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService, IMessagingService messagingService, IRepositoryBase<TeamMember> teamMemberRepository, IMapper mapper, IOptions<MailSettings> mailSettings, IRepositoryBase<Team> teamRepository)
+    public TicketService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository,
+        IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository,
+        IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService,
+        IMessagingService messagingService, IRepositoryBase<TeamMember> teamMemberRepository, IMapper mapper,
+        IOptions<MailSettings> mailSettings, IRepositoryBase<Team> teamRepository)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -67,6 +73,7 @@ public class TicketService : ITicketService
                 entity.Assignment = assMapping;
             }
         }
+
         return response;
     }
 
@@ -84,6 +91,44 @@ public class TicketService : ITicketService
 
         return Task.FromResult(enumValues);
     }
+
+    public async Task<List<GetTicketResponse>> GetPeriodicTickets(int? numOfDays)
+    {
+        var result = await _ticketRepository
+            .GetAsync(navigationProperties: new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" })
+            .ConfigureAwait(false);
+
+        if (numOfDays.HasValue)
+        {
+            result = result
+                .Where(x => x.IsPeriodic && x.ScheduledStartTime!.Value.Date >= DateTime.Today &&
+                            x.ScheduledStartTime!.Value.Date <= DateTime.Today.AddDays((int)numOfDays));
+        }
+        else
+        {
+            result = result
+                .Where(x => x.IsPeriodic && x.ScheduledStartTime!.Value.Date >= DateTime.Today);
+        }
+
+        var response = _mapper.Map<List<GetTicketResponse>>(result);
+
+        foreach (var entity in response)
+        {
+            DataResponse.CleanNullableDateTime(entity);
+
+            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
+                new string[] { "Team", "Technician" }).ConfigureAwait(false);
+
+            if (ass != null)
+            {
+                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
+                entity.Assignment = assMapping;
+            }
+        }
+
+        return response;
+    }
+
 
     //For Technician
     public async Task<List<GetTicketResponse>> GetAssignedTickets(int userId)
@@ -108,6 +153,7 @@ public class TicketService : ITicketService
                 entity.Assignment = assMapping;
             }
         }
+
         return response;
     }
 
@@ -134,6 +180,7 @@ public class TicketService : ITicketService
                 entity.Assignment = assMapping;
             }
         }
+
         return response;
     }
 
@@ -172,6 +219,7 @@ public class TicketService : ITicketService
                 entity.Assignment = assMapping;
             }
         }
+
         return response;
     }
 
@@ -195,6 +243,7 @@ public class TicketService : ITicketService
                 entity.Assignment = assMapping;
             }
         }
+
         return response;
     }
 
@@ -218,6 +267,7 @@ public class TicketService : ITicketService
                 entity.Assignment = assMapping;
             }
         }
+
         return response;
     }
 
@@ -277,6 +327,7 @@ public class TicketService : ITicketService
     }
 
     #region Assignment Support
+
     public async Task<object> IsTechnicianMemberOfTeamAsync(int? technicianId, int? teamId)
     {
         var check = await _teamMemberRepository.FirstOrDefaultAsync(x =>
@@ -284,6 +335,7 @@ public class TicketService : ITicketService
 
         return check;
     }
+
     #endregion
 
     public async Task<Ticket> UpdateByCustomer(int id, UpdateTicketCustomerRequest model)
@@ -490,24 +542,30 @@ public class TicketService : ITicketService
         }
 
         #endregion
+
         #region Mail Notification
+
         await SendTicketMailNotification(ticket);
+
         #endregion
     }
 
     public async Task SendNotificationAfterAssignment(Ticket ticket)
     {
-        var techinicianId = (await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticket.Id)).TechnicianId;
+        var techinicianId = (await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticket.Id))
+            .TechnicianId;
         if (techinicianId != null)
         {
             await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned to you",
                 (int)techinicianId);
         }
+
         if (ticket.RequesterId != null)
         {
             await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned",
                 (int)ticket.RequesterId);
         }
+
         foreach (var managerId in await GetManagerIdsList())
         {
             await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned",
@@ -636,9 +694,11 @@ public class TicketService : ITicketService
     private async Task SendTicketMailNotification(Ticket ticket)
     {
         #region GetDetail
+
         var requester = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticket.RequesterId))
                         ?? throw new KeyNotFoundException($"Requester with ID {ticket.RequesterId} is not exist");
         string requesterName = $"{requester.FirstName} {requester.LastName}";
+
         #endregion
 
         using (MimeMessage emailMessage = new MimeMessage())
@@ -726,6 +786,7 @@ public class TicketService : ITicketService
                 default:
                     return;
             }
+
             emailTemplateText = string.Format(emailTemplateText, requesterName, ticket.Title, ticket.Description);
 
             BodyBuilder emailBodyBuilder = new BodyBuilder();
@@ -744,5 +805,4 @@ public class TicketService : ITicketService
             }
         }
     }
-
 }

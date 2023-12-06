@@ -62,6 +62,14 @@ public class TicketController : BaseController
         var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
         return Ok(pagedResponse);
     }
+    
+    [Authorize]
+    [HttpGet("period")]
+    public async Task<IActionResult> GetPeriodicTickets(int numOfDays)
+    {
+        var response = await _ticketService.GetPeriodicTickets(numOfDays);
+        return Ok(response);
+    }
 
 
     [Authorize]

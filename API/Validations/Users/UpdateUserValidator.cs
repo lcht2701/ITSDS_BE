@@ -32,7 +32,7 @@ namespace API.Validations.Users
                 .NotNull().WithMessage("IsActive is required.");
 
             RuleFor(x => x.DateOfBirth)
-                .LessThan(DateTime.Now).When(x => x.DateOfBirth != null)
+                .LessThan(DateTime.Today).When(x => x.DateOfBirth != null)
                 .WithMessage("Date of birth should be in the past.");
 
             RuleFor(x => x.Address)
