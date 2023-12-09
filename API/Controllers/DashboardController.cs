@@ -99,7 +99,7 @@ public class DashboardController : BaseController
     [HttpGet("manager/ticket/this-month")]
     public async Task<IActionResult> GetCreatedTicketThisMonth()
     {
-        var dashboard = await _dashboardService.GetTicketDashboardByMonth(DateTime.Now);
+        var dashboard = await _dashboardService.GetTicketDashboardByMonth(DateTime.Today);
         return Ok(dashboard);
     }
 
@@ -107,7 +107,15 @@ public class DashboardController : BaseController
     [HttpGet("manager/ticket/last-month")]
     public async Task<IActionResult> GetCreatedTicketLastMonth()
     {
-        var dashboard = await _dashboardService.GetTicketDashboardByMonth(DateTime.Now.AddMonths(-1));
+        var dashboard = await _dashboardService.GetTicketDashboardByMonth(DateTime.Today.AddMonths(-1));
+        return Ok(dashboard);
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("manager/dashboard")]
+    public async Task<IActionResult> GetManagerDashboard()
+    {
+        var dashboard = await _dashboardService.GetManagerDashboard();
         return Ok(dashboard);
     }
 

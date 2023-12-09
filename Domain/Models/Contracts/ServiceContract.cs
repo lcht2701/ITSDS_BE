@@ -15,8 +15,8 @@
         public DateTime? StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
-
-
+        
+        
         public virtual Contract? Contract { get; set; }
 
         public virtual Service? Service { get; set; }

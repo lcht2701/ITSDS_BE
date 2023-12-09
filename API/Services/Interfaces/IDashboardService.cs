@@ -37,4 +37,6 @@ public interface IDashboardService
     Task<List<TeamCreatedDashboardData>> GetRecentCreatedTeam(int amount);
     Task<List<TeamUpdatedDashboardData>> GetRecentUpdatedTeam(int amount);
 
+
+    Task<ManagerDashboard> GetManagerDashboard(); 
 }

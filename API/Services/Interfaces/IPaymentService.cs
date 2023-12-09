@@ -8,7 +8,7 @@ public interface IPaymentService
 {
     //Payment
     Task<List<Payment>> Get();
-    Task<Payment> GetByContract(int contractId);
+    Task<List<Payment>> GetByContract(int contractId);
     Task<Payment> GetById(int id);
     Task<Payment> Create(CreatePaymentRequest model);
     Task<Payment> Update(int id, UpdatePaymentRequest model);

@@ -9,6 +9,7 @@ namespace Domain.Models.Contracts
         {
             Renewals = new HashSet<Renewal>();
             ServiceContracts = new HashSet<ServiceContract>();
+            Payments = new HashSet<Payment>();
         }
 
         public string? Name { get; set; }
@@ -41,5 +42,7 @@ namespace Domain.Models.Contracts
         public virtual ICollection<ServiceContract>? ServiceContracts { get; set; }
         [JsonIgnore]
         public virtual ICollection<Renewal> Renewals { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Payment> Payments { get; set; }
     }
 }

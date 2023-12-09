@@ -38,30 +38,33 @@ public class PaymentService : IPaymentService
 
     public async Task<List<Payment>> Get()
     {
-        return await _paymentRepository.ToListAsync();
+        var result = await _paymentRepository.GetAsync(navigationProperties: new string[] { "Contract" });
+        return result.ToList();
     }
 
-    public async Task<Payment> GetByContract(int contractId)
+    public async Task<List<Payment>> GetByContract(int contractId)
     {
-        return await _paymentRepository.FirstOrDefaultAsync(x => x.ContractId == contractId) ??
-               throw new KeyNotFoundException("Payment is not exist");
+        var result = await _paymentRepository.WhereAsync(x => x.ContractId == contractId, new string[] { "Contract" });
+        return result.ToList();
     }
 
     public async Task<Payment> GetById(int id)
     {
-        return await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id) ??
+        var result = await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id, new string[] { "Contract" }) ??
                throw new KeyNotFoundException("Payment is not exist");
+        return result;
     }
 
     public async Task<List<PaymentTerm>> GetPaymentTerms(int paymentId)
     {
-        var list = (await _termRepository.WhereAsync(x => x.PaymentId == paymentId)).ToList();
-        return list;
+        var list = await _termRepository.WhereAsync(x => x.PaymentId == paymentId, new string[] { "Payment" });
+        return list.ToList();
     }
 
     public async Task<Payment> Create(CreatePaymentRequest model)
     {
         var entity = _mapper.Map<Payment>(model);
+        entity.IsFullyPaid = false;
         await _paymentRepository.CreateAsync(entity);
         return entity;
     }

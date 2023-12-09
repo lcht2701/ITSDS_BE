@@ -29,9 +29,10 @@ public class DashboardService : IDashboardService
     private readonly IRepositoryBase<Contract> _contractRepository;
     private readonly IRepositoryBase<Payment> _paymentRepository;
     private readonly IRepositoryBase<PaymentTerm> _termRepository;
+    private readonly IRepositoryBase<TicketSolution> _solutionRepository;
     private readonly IMapper _mapper;
 
-    public DashboardService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<Category> categoryRepository, IRepositoryBase<Mode> modeRepository, IRepositoryBase<Service> serviceRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Payment> paymentRepository, IRepositoryBase<PaymentTerm> termRepository, IMapper mapper)
+    public DashboardService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<Category> categoryRepository, IRepositoryBase<Mode> modeRepository, IRepositoryBase<Service> serviceRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Payment> paymentRepository, IRepositoryBase<PaymentTerm> termRepository, IRepositoryBase<TicketSolution> solutionRepository, IMapper mapper)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -44,6 +45,7 @@ public class DashboardService : IDashboardService
         _contractRepository = contractRepository;
         _paymentRepository = paymentRepository;
         _termRepository = termRepository;
+        _solutionRepository = solutionRepository;
         _mapper = mapper;
     }
 
@@ -299,19 +301,18 @@ public class DashboardService : IDashboardService
                 ClosedTicketsCount = group.Count(t => t.TicketStatus == TicketStatus.Closed),
                 CancelledTicketsCount = group.Count(t => t.TicketStatus == TicketStatus.Cancelled)
             })
-            .OrderBy(group => group.LineName)  // Order by week name
             .ToList();
 
         // Ensure all 5 weeks are included
         var allWeeks = Enumerable.Range(1, 5);
         var resultWithAllWeeks = allWeeks
             .Select(week => ticketTotalsByWeek.FirstOrDefault(r => r.LineName == $"Week {week}") ?? new DashboardTableRow
-            {
-                LineName = $"Week {week}",
-                OnGoingTicketsCount = 0,
-                ClosedTicketsCount = 0,
-                CancelledTicketsCount = 0
-            })
+                    {
+                        LineName = $"Week {week}",
+                        OnGoingTicketsCount = 0,
+                        ClosedTicketsCount = 0,
+                        CancelledTicketsCount = 0
+                })
             .ToList();
 
         return resultWithAllWeeks;
@@ -477,5 +478,17 @@ public class DashboardService : IDashboardService
         };
         return dashboard;
     }
+
     #endregion
+
+    public async Task<ManagerDashboard> GetManagerDashboard()
+    {
+        ManagerDashboard data = new();
+        data.CurrentResolvedTicketCount = (await _ticketRepository.WhereAsync(x => x.TicketStatus.Equals(TicketStatus.Resolved))).Count;
+        data.AvailableContractsCount = (await _contractRepository.WhereAsync(x => x.Status != ContractStatus.Expired)).Count;
+        data.TeamsCount = (await _teamRepository.ToListAsync()).Count;
+        data.SolutionsCount = (await _solutionRepository.ToListAsync()).Count;
+        return data;
+    }
+
 }
