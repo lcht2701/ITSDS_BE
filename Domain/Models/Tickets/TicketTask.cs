@@ -32,8 +32,6 @@ public partial class TicketTask : BaseEntity
 
     public TicketTaskStatus? TaskStatus { get; set; }
 
-    public string? AttachmentUrl { get; set; }
-
     public virtual User? Technician { get; set; }
 
     public virtual User? CreateBy { get; set; }

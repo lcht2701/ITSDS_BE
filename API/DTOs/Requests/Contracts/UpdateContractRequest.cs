@@ -22,6 +22,6 @@ namespace API.DTOs.Requests.Contracts
 
         public int CompanyId { get; set; }
 
-        public string? AttachmentURl { get; set; }
+        public List<string>? AttachmentUrls { get; set; }
     }
 }

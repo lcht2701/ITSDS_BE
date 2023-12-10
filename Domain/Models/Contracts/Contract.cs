@@ -28,8 +28,6 @@ namespace Domain.Models.Contracts
 
         public int? AccountantId { get; set; }
 
-        public string? AttachmentURl { get; set; }
-
         public int? CompanyId { get; set; }
 
         public ContractStatus? Status { get; set; }

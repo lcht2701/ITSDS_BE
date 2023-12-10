@@ -41,7 +41,7 @@ namespace API.DTOs.Requests.Tickets
 
         public int? City { get; set; }
 
-        public string? AttachmentUrl { get; set; }
+        public List<string>? AttachmentUrls { get; set; }
 
         public DateTime? ScheduledStartTime { get; set; }
 

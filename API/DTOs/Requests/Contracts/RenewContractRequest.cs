@@ -18,6 +18,6 @@ namespace API.DTOs.Requests.Contracts
 
         public int AccountantId { get; set; }
 
-        public string? AttachmentURl { get; set; }
+        public List<string>? AttachmentURls { get; set; }
     }
 }

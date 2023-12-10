@@ -42,7 +42,7 @@ namespace API.DTOs.Requests.Tickets
 
         public Urgency? Urgency { get; set; }
 
-        public string? AttachmentUrl { get; set; }
+        public List<string>? AttachmentUrls { get; set; }
 
         [DefaultValue(null)]
         public int? TechnicianId { get; set; }

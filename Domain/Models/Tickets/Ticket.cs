@@ -56,8 +56,6 @@ public partial class Ticket : BaseEntity
     
     public Urgency? Urgency { get; set; }
 
-    public string? AttachmentUrl { get; set; }
-
     public virtual User? Requester { get; set; }
 
     public virtual User? CreatedBy { get; set; }

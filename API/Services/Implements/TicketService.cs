@@ -10,7 +10,6 @@ using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
-using Google.Type;
 using Hangfire;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -18,8 +17,8 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using static Grpc.Core.Metadata;
 using DateTime = System.DateTime;
-using DayOfWeek = System.DayOfWeek;
 
 namespace API.Services.Implements;
 
@@ -34,6 +33,7 @@ public class TicketService : ITicketService
     private readonly IMessagingService _messagingService;
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IRepositoryBase<Team> _teamRepository;
+    private readonly IAttachmentService _attachmentService;
     private readonly IMapper _mapper;
     private readonly MailSettings _mailSettings;
 
@@ -41,7 +41,7 @@ public class TicketService : ITicketService
         IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository,
         IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService,
         IMessagingService messagingService, IRepositoryBase<TeamMember> teamMemberRepository, IMapper mapper,
-        IOptions<MailSettings> mailSettings, IRepositoryBase<Team> teamRepository)
+        IOptions<MailSettings> mailSettings, IRepositoryBase<Team> teamRepository, IAttachmentService attachmentService)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -54,14 +54,21 @@ public class TicketService : ITicketService
         _teamRepository = teamRepository;
         _mapper = mapper;
         _mailSettings = mailSettings.Value;
+        _attachmentService = attachmentService;
     }
 
     public async Task<List<GetTicketResponse>> Get()
     {
         var result = await _ticketRepository.GetAsync(navigationProperties: new string[]
             { "Requester", "Service", "Category", "Mode", "CreatedBy" });
+        List<GetTicketResponse> response = await ModifyTicketListResponse(result);
 
+        return response;
+    }
 
+    #region Modify Ticket List Response
+    private async Task<List<GetTicketResponse>> ModifyTicketListResponse(IEnumerable<Ticket> result)
+    {
         var response = _mapper.Map<List<GetTicketResponse>>(result);
         foreach (var entity in response)
         {
@@ -73,25 +80,12 @@ public class TicketService : ITicketService
                 var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
                 entity.Assignment = assMapping;
             }
+            entity.AttachmentUrl = (await _attachmentService.Get(Tables.TICKET, entity.Id)).Select(x => x.Url).ToList();
         }
 
         return response;
     }
-
-    public Task<List<GetTicketStatusesResponse>> GetTicketStatuses()
-    {
-        var enumValues = Enum.GetValues(typeof(TicketStatus))
-            .Cast<TicketStatus>()
-            .Where(status => status != TicketStatus.Cancelled && status != TicketStatus.Closed)
-            .Select(status => new GetTicketStatusesResponse
-            {
-                Id = (int)status,
-                StatusName = DataResponse.GetEnumDescription((Enum?)status)
-            })
-            .ToList();
-
-        return Task.FromResult(enumValues);
-    }
+    #endregion
 
     public async Task<List<GetTicketResponse>> GetPeriodicTickets(int? numOfDays)
     {
@@ -111,21 +105,7 @@ public class TicketService : ITicketService
                 .Where(x => x.IsPeriodic && x.ScheduledStartTime!.Value.Date >= DateTime.Today);
         }
 
-        var response = _mapper.Map<List<GetTicketResponse>>(result);
-
-        foreach (var entity in response)
-        {
-            DataResponse.CleanNullableDateTime(entity);
-
-            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
-                new string[] { "Team", "Technician" }).ConfigureAwait(false);
-
-            if (ass != null)
-            {
-                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
-                entity.Assignment = assMapping;
-            }
-        }
+        List<GetTicketResponse> response = await ModifyTicketListResponse(result);
 
         return response;
     }
@@ -142,18 +122,7 @@ public class TicketService : ITicketService
             IsTicketDone(x.Id) == false);
 
         // Map the tickets to response entities
-        var response = _mapper.Map<List<GetTicketResponse>>(filterResult);
-        foreach (var entity in response)
-        {
-            DataResponse.CleanNullableDateTime(entity);
-            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
-                new string[] { "Team", "Technician" });
-            if (ass != null)
-            {
-                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
-                entity.Assignment = assMapping;
-            }
-        }
+        List<GetTicketResponse> response = await ModifyTicketListResponse(filterResult);
 
         return response;
     }
@@ -169,18 +138,7 @@ public class TicketService : ITicketService
             IsTicketDone(x.Id) == true);
 
         // Map the tickets to response entities
-        var response = _mapper.Map<List<GetTicketResponse>>(filterResult);
-        foreach (var entity in response)
-        {
-            DataResponse.CleanNullableDateTime(entity);
-            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
-                new string[] { "Team", "Technician" });
-            if (ass != null)
-            {
-                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
-                entity.Assignment = assMapping;
-            }
-        }
+        List<GetTicketResponse> response = await ModifyTicketListResponse(filterResult);
 
         return response;
     }
@@ -208,19 +166,7 @@ public class TicketService : ITicketService
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
             new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
-        var response = _mapper.Map<List<GetTicketResponse>>(result);
-        foreach (var entity in response)
-        {
-            DataResponse.CleanNullableDateTime(entity);
-            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
-                new string[] { "Team", "Technician" });
-            if (ass != null)
-            {
-                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
-                entity.Assignment = assMapping;
-            }
-        }
-
+        List<GetTicketResponse> response = await ModifyTicketListResponse(result);
         return response;
     }
 
@@ -229,22 +175,8 @@ public class TicketService : ITicketService
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
             new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
-
         var filteredResult = result.Where(x => !IsTicketDone(x.Id));
-
-        var response = _mapper.Map<List<GetTicketResponse>>(filteredResult);
-        foreach (var entity in response)
-        {
-            DataResponse.CleanNullableDateTime(entity);
-            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
-                new string[] { "Team", "Technician" });
-            if (ass != null)
-            {
-                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
-                entity.Assignment = assMapping;
-            }
-        }
-
+        List<GetTicketResponse> response = await ModifyTicketListResponse(filteredResult);
         return response;
     }
 
@@ -253,22 +185,8 @@ public class TicketService : ITicketService
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
             new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
-
         var filteredResult = result.Where(x => IsTicketDone(x.Id));
-
-        var response = _mapper.Map<List<GetTicketResponse>>(filteredResult);
-        foreach (var entity in response)
-        {
-            DataResponse.CleanNullableDateTime(entity);
-            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
-                new string[] { "Team", "Technician" });
-            if (ass != null)
-            {
-                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
-                entity.Assignment = assMapping;
-            }
-        }
-
+        List<GetTicketResponse> response = await ModifyTicketListResponse(filteredResult);
         return response;
     }
 
@@ -292,7 +210,11 @@ public class TicketService : ITicketService
         entity.IsPeriodic = false;
         var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
         if (categoryId != null) entity.CategoryId = (int)categoryId;
-        await _ticketRepository.CreateAsync(entity);
+        var result = await _ticketRepository.CreateAsync(entity);
+        if (model.AttachmentUrls != null)
+        {
+            await _attachmentService.Add(Tables.TICKET, result.Id, model.AttachmentUrls);
+        }
         return entity;
     }
 
@@ -300,7 +222,11 @@ public class TicketService : ITicketService
     {
         Ticket entity = _mapper.Map(model, new Ticket());
         entity.CreatedById = createdById;
-        await _ticketRepository.CreateAsync(entity);
+        var result = await _ticketRepository.CreateAsync(entity);
+        if (model.AttachmentUrls != null)
+        {
+            await _attachmentService.Add(Tables.TICKET, result.Id, model.AttachmentUrls);
+        }
 
         if (model?.TechnicianId != null || model?.TeamId != null)
         {
@@ -343,11 +269,15 @@ public class TicketService : ITicketService
     {
         var target =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException();
-        var result = _mapper.Map(model, target);
+        var entity = _mapper.Map(model, target);
         var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
         if (categoryId != null) target.CategoryId = (int)categoryId;
-        await _ticketRepository.UpdateAsync(result);
-        return result;
+        var result = await _ticketRepository.UpdateAsync(entity);
+        if (model.AttachmentUrls != null)
+        {
+            await _attachmentService.Update(Tables.TICKET, result.Id, model.AttachmentUrls);
+        }
+        return entity;
     }
 
     public async Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model)
@@ -359,9 +289,13 @@ public class TicketService : ITicketService
         //{
         //    throw new BadRequestException("Ticket can not be updated when it is being executed");
         //}
-        var result = _mapper.Map(model, target);
-        await _ticketRepository.UpdateAsync(result);
-        return result;
+        var entity = _mapper.Map(model, target);
+        var result = await _ticketRepository.UpdateAsync(entity);
+        if (model.AttachmentUrls != null)
+        {
+            await _attachmentService.Update(Tables.TICKET, result.Id, model.AttachmentUrls);
+        }
+        return entity;
     }
 
     public async Task<Ticket> UpdateByTechnician(int id, TechnicianAddDetailRequest model)
@@ -378,6 +312,7 @@ public class TicketService : ITicketService
     {
         var target = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ??
                      throw new KeyNotFoundException("Ticket is not exist");
+        await _attachmentService.Delete(Tables.TICKET, target.Id);
         await _ticketRepository.SoftDeleteAsync(target);
     }
 
@@ -573,6 +508,23 @@ public class TicketService : ITicketService
                 managerId);
         }
     }
+
+    #region Get TicketStatus's List
+    public Task<List<GetTicketStatusesResponse>> GetTicketStatuses()
+    {
+        var enumValues = Enum.GetValues(typeof(TicketStatus))
+            .Cast<TicketStatus>()
+            .Where(status => status != TicketStatus.Cancelled && status != TicketStatus.Closed)
+            .Select(status => new GetTicketStatusesResponse
+            {
+                Id = (int)status,
+                StatusName = DataResponse.GetEnumDescription((Enum?)status)
+            })
+            .ToList();
+
+        return Task.FromResult(enumValues);
+    }
+    #endregion
 
     #region Background Services
 

@@ -10,7 +10,7 @@ namespace API.DTOs.Responses.Tickets;
 
 public class GetTicketResponse : IMapFrom<Ticket>
 {
-    public int? Id { get; set; }
+    public int Id { get; set; }
     public int? RequesterId { get; set; }
     public int? CreatedById { get; set; }
     public string? Title { get; set; }
@@ -28,7 +28,7 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public Impact? Impact { get; set; }
     public string? ImpactDetail { get; set; }
     public Urgency? Urgency { get; set; }
-    public string? AttachmentUrl { get; set; }
+    public List<string>? AttachmentUrl { get; set; }
     public DateTime? ScheduledStartTime { get; set; }
     public DateTime? ScheduledEndTime { get; set; }
     public DateTime? DueTime { get; set; }

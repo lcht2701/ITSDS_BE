@@ -1,11 +1,14 @@
 ﻿using API.DTOs.Requests.Contracts;
+using API.DTOs.Responses.Contracts;
 using API.Services.Interfaces;
 using AutoMapper;
+using Domain.Constants;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Persistence.Repositories.Interfaces;
+using static Grpc.Core.Metadata;
 
 namespace API.Services.Implements;
 
@@ -15,57 +18,65 @@ public class ContractService : IContractService
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IRepositoryBase<Renewal> _renewalRepository;
     private readonly IRepositoryBase<ServiceContract> _serviceContractRepository;
+    private readonly IAttachmentService _attachmentService;
     private readonly IMapper _mapper;
 
-    public ContractService(IRepositoryBase<Contract> contractRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<Renewal> renewalRepository, IRepositoryBase<ServiceContract> serviceContractRepository, IMapper mapper)
+    public ContractService(IRepositoryBase<Contract> contractRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<Renewal> renewalRepository, IRepositoryBase<ServiceContract> serviceContractRepository, IAttachmentService attachmentService, IMapper mapper)
     {
         _contractRepository = contractRepository;
         _companyMemberRepository = companyMemberRepository;
         _renewalRepository = renewalRepository;
         _serviceContractRepository = serviceContractRepository;
+        _attachmentService = attachmentService;
         _mapper = mapper;
     }
 
-    public async Task<List<Contract>> Get()
+    public async Task<List<GetContractResponse>> Get()
     {
         var result = (await _contractRepository.GetAsync(navigationProperties: new string[] { "Accountant", "Company" })).ToList();
-        return result;
+        List<GetContractResponse> response = await GetContractResponse(result);
+        return response;
     }
 
-    public async Task<List<Contract>> GetParentContracts()
+    public async Task<List<GetContractResponse>> GetParentContracts()
     {
         var result = (await _contractRepository.WhereAsync(x => x.ParentContractId == null, new string[] { "Accountant", "Company" })).ToList();
-        return result;
+        List<GetContractResponse> response = await GetContractResponse(result);
+        return response;
     }
 
-    public async Task<List<Contract>> GetChildContracts(int contractId)
+    public async Task<List<GetContractResponse>> GetChildContracts(int contractId)
     {
         var result = (await _contractRepository.WhereAsync(x => x.ParentContractId.Equals(contractId), new string[] { "Accountant", "Company" })).ToList();
-        return result;
+        List<GetContractResponse> response = await GetContractResponse(result);
+        return response;
     }
 
-    public async Task<List<Contract>> GetByAccountant(int userId)
+    public async Task<List<GetContractResponse>> GetByAccountant(int userId)
     {
         var result = (await _contractRepository.WhereAsync(x => x.AccountantId.Equals(userId), new string[] { "Accountant", "Company" })).ToList();
-        return result;
+        List<GetContractResponse> response = await GetContractResponse(result);
+        return response;
     }
 
-    public async Task<List<Contract>> GetByCustomer(int userId)
+    public async Task<List<GetContractResponse>> GetByCustomer(int userId)
     {
         List<Contract> result = new();
         var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(userId));
-        if (companyMember == null)
+        if (companyMember != null)
         {
-            return result;
+            result = (await _contractRepository.WhereAsync(x => x.CompanyId.Equals(companyMember.CompanyId), new string[] { "Accountant", "Company" })).ToList();
         }
-        result = (await _contractRepository.WhereAsync(x => x.CompanyId.Equals(companyMember.CompanyId), new string[] { "Accountant", "Company" })).ToList();
-        return result;
+        List<GetContractResponse> response = await GetContractResponse(result);
+        return response;
     }
 
-    public async Task<Contract> GetById(int id)
+    public async Task<GetContractResponse> GetById(int id)
     {
         Contract result = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Accountant", "Company" }) ?? throw new KeyNotFoundException("Contract is not exist");
-        return result;
+        var response = _mapper.Map(result, new GetContractResponse());
+        response.AttachmentUrl = (await _attachmentService.Get(Tables.CONTRACT, response.Id)).Select(x => x.Url).ToList();
+        return response;
     }
 
     public async Task<Contract> Create(CreateContractRequest model)
@@ -83,7 +94,11 @@ public class ContractService : IContractService
             bool isValid = ValidateChildContract(entity, parent);
             if (!isValid) throw new BadRequestException($"Date must be within parent contract: From [{parent.StartDate}] to [{parent.EndDate}]");
         }
-        await _contractRepository.CreateAsync(entity);
+        var contract = await _contractRepository.CreateAsync(entity);
+        if (model.AttachmentUrl != null)
+        {
+            await _attachmentService.Add(Tables.TICKET, contract.Id, model.AttachmentUrl);
+        }
         return entity;
     }
 
@@ -99,7 +114,11 @@ public class ContractService : IContractService
             if (isValid == false) throw new BadRequestException($"Date must be within parent contract: From [{parent.StartDate}] to [{parent.EndDate}]");
         }
         await _contractRepository.UpdateAsync(entity);
-        var relatedServices = await _serviceContractRepository.WhereAsync(x => x.ContractId == entity.Id);
+        var contract = await _contractRepository.UpdateAsync(entity);
+        if (model.AttachmentUrls != null)
+        {
+            await _attachmentService.Update(Tables.TICKET, contract.Id, model.AttachmentUrls);
+        }
         return entity;
     }
 
@@ -107,6 +126,7 @@ public class ContractService : IContractService
     {
         var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Contract is not exist"));
         await _contractRepository.SoftDeleteAsync(target);
+        await _attachmentService.Delete(Tables.TICKET, target.Id);
         var relatedServices = await _serviceContractRepository.WhereAsync(x => x.ContractId == target.Id);
         foreach (var relatedService in relatedServices)
         {
@@ -156,6 +176,16 @@ public class ContractService : IContractService
         return newRenewal;
     }
 
+    private async Task<List<GetContractResponse>> GetContractResponse(List<Contract> result)
+    {
+        var response = _mapper.Map<List<GetContractResponse>>(result);
+        foreach (var item in response)
+        {
+            item.AttachmentUrl = (await _attachmentService.Get(Tables.CONTRACT, item.Id)).Select(x => x.Url).ToList();
+        }
+
+        return response;
+    }
     private static void SetContractStatus(Contract entity)
     {
         if (entity.StartDate < DateTime.Now)

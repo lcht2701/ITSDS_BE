@@ -17,7 +17,7 @@ namespace API.DTOs.Requests.TicketTasks
         public DateTime? ScheduledStartTime { get; set; }
         public DateTime? ScheduledEndTime { get; set; }
         public int? Progress { get; set; }
-        public string? AttachmentUrl { get; set; }
+        public List<string>? AttachmentUrls { get; set; }
         public string? Note { get; set; }
     }
 }
