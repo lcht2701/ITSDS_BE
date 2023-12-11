@@ -4,6 +4,7 @@ using API.Services.Interfaces;
 using API.Utils;
 using Domain.Application.AppConfig;
 using FirebaseAdmin;
+using FluentValidation.AspNetCore;
 using Google.Apis.Auth.OAuth2;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -26,18 +27,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     var connectionString = configuration.GetConnectionString("DefaultConnection");
     options.UseSqlServer(connectionString);
 });
-builder.Services.AddHangfire(config => config
-        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-        .UseSimpleAssemblyNameTypeSerializer()
-        .UseRecommendedSerializerSettings()
-        .UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
-builder.Services.AddHangfireServer();
 
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
+builder.Services.AddHangfireServer();
 
 // Add services to the container.
 builder.Services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
-builder.Services.AddSingleton<FirebaseStorageService>();
-
 builder.Services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>));
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
@@ -45,11 +44,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
-builder.Services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
-builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IModeService, ModeService>();
-builder.Services.AddScoped<IMessagingService, MessagingService>();
-builder.Services.AddScoped<IServicePackService, ServicePackService>();
 builder.Services.AddScoped<IServiceService, ServiceService>();
 builder.Services.AddScoped<ITeamMemberService, TeamMemberService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
@@ -57,14 +52,22 @@ builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ITicketSolutionService, TicketSolutionService>();
 builder.Services.AddScoped<ITicketTaskService, TicketTaskService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<ICompanyMemberService, CompanyMemberService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IServiceContractService, ServiceContractService>();
+builder.Services.AddScoped<IMailService, MailService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IMessagingService, MessagingService>();
+builder.Services.AddScoped<IFirebaseService, FirebaseService>();
+builder.Services.AddScoped<IHangfireJobService, HangfireJobService>();
+builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 
-builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>());
+builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>())
+    .AddFluentValidation(c => c.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly()));
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.Configure<FormOptions>(options =>
-{
-    options.MultipartBodyLengthLimit = int.MaxValue;
-});
+builder.Services.Configure<FormOptions>(options => { options.MultipartBodyLengthLimit = int.MaxValue; });
 
 builder.Services.AddSwaggerGen(option =>
 {
@@ -89,11 +92,11 @@ builder.Services.AddSwaggerGen(option =>
             {
                 Reference = new OpenApiReference
                 {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
                 }
             },
-            new string[]{}
+            new string[] { }
         }
     });
 });
@@ -127,15 +130,20 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins("*")
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
+                .AllowAnyHeader()
+                .AllowAnyMethod();
         });
 });
 
 FirebaseApp.Create(new AppOptions()
 {
-    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "itsds-v1-firebase-adminsdk-twxch-bd8d0b1075.json")),
+    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "admin_sdk.json")),
 });
+
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS",
+    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "admin_sdk.json"));
+
+builder.Services.AddLogging();
 
 var app = builder.Build();
 
@@ -149,7 +157,9 @@ app.UseCors(CorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAutoWrapper();
-app.UseHangfireDashboard();
+app.UseHangfireDashboard("/hangfire");
 app.MapControllers();
 app.MapHangfireDashboard();
+RecurringJob.AddOrUpdate<IHangfireJobService>("daily-job", x => x.PeriodTicketSummaryNotificationJob(), Cron.Daily(8, 0));
+RecurringJob.AddOrUpdate<IHangfireJobService>("daily-job", x => x.UpdateStatusOfContract(), "*/5 * * * *");
 app.Run();

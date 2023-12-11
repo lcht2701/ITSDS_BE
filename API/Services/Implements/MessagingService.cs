@@ -1,5 +1,4 @@
 ﻿using API.Services.Interfaces;
-using Domain.Exceptions;
 using Domain.Models;
 using FirebaseAdmin.Messaging;
 using Persistence.Repositories.Interfaces;
@@ -10,54 +9,70 @@ public class MessagingService : IMessagingService
 {
     private readonly IRepositoryBase<Messaging> _messagingRepository;
     private readonly IRepositoryBase<DeviceToken> _tokenRepository;
+    private readonly ILogger<MessagingService> _logger;
 
-    public MessagingService(IRepositoryBase<Messaging> messagingRepository, IRepositoryBase<DeviceToken> tokenRepository)
+    public MessagingService(IRepositoryBase<Messaging> messagingRepository, IRepositoryBase<DeviceToken> tokenRepository, ILogger<MessagingService> logger)
     {
         _messagingRepository = messagingRepository;
         _tokenRepository = tokenRepository;
+        _logger = logger;
     }
 
     public async Task<List<Messaging>> GetNotification(int userId)
     {
-        var result = await _messagingRepository.GetAsync(x => x.UserId == userId);
-        return (List<Messaging>)result;
+        var result = (await _messagingRepository.WhereAsync(x => x.UserId == userId)).Take(50).OrderByDescending(x => x.CreatedAt).ToList();
+        return result;
     }
 
-    public async Task SendNotification(string message, int userId)
+    public async Task SendNotification(string title, string message, int userId)
     {
-        string title = "ITSDS";
-        string token = (await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId))?.ToString();
-        if (token == null)
-        {
-            return;
-        }
-        var notification = new Message()
-        {
-            Notification = new Notification
-            {
-                Title = title,
-                Body = message,
-            },
-            Token = token
-        };
-
-        var messaging = FirebaseMessaging.DefaultInstance;
-        var result = await messaging.SendAsync(notification);
-    }
-
-    public async Task CreateNotification(string title, string message, int userId)
-    {
-        var entity = new Messaging()
+        await _messagingRepository.CreateAsync(new Messaging()
         {
             Title = title,
             Body = message,
             UserId = userId,
             IsRead = false
-        };
-        await _messagingRepository.CreateAsync(entity);
+        });
+
+        // Retrieve the device token for the user
+        var model = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == userId);
+        if (model == null || string.IsNullOrEmpty(model.Token))
+        {
+            return;
+        }
+
+        try
+        {
+            var notification = new Message()
+            {
+                Notification = new Notification
+                {
+                    Title = title,
+                    Body = message,
+                },
+                Token = model.Token
+            };
+
+            var result = await FirebaseMessaging.DefaultInstance.SendAsync(notification);
+        }
+        catch (Exception ex)
+        {
+            _logger.ToString();
+            return;
+        }
     }
 
-    public async Task MarkAsRead(int userId)
+
+
+    public async Task<Messaging> MarkAsRead(int notificationId)
+    {
+        var notification = await _messagingRepository.FirstOrDefaultAsync(x => x.Id == notificationId) ?? throw new KeyNotFoundException("Notification is not exist");
+        notification.IsRead = true;
+        await _messagingRepository.UpdateAsync(notification);
+        return notification;
+    }
+
+    public async Task MarkAsReadAll(int userId)
     {
         var result = await _messagingRepository.GetAsync(x => x.UserId == userId);
         foreach (var item in result)
@@ -70,31 +85,38 @@ public class MessagingService : IMessagingService
         }
     }
 
-    public async Task GetToken(int userId, string token)
+    public async Task GetToken(int userId, string? token)
     {
-        var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token.Equals(token) && x.UserId.Equals(userId));
-        if (existToken == null)
+        if (token != null)
         {
-            var newToken = new DeviceToken()
+            var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token!.Equals(token) && x.UserId.Equals(userId));
+            if (existToken == null)
             {
-                Token = token,
-                UserId = userId,
-            };
-            await _tokenRepository.CreateAsync(newToken);
-        }
-        else
-        {
-
-            await _tokenRepository.UpdateAsync(existToken);
+                var newToken = new DeviceToken()
+                {
+                    Token = token,
+                    UserId = userId,
+                };
+                await _tokenRepository.CreateAsync(newToken);
+            }
+            else
+            {
+                existToken.UserId = userId;
+                existToken.Token = token;
+                await _tokenRepository.UpdateAsync(existToken);
+            }
         }
     }
 
-    public async Task RemoveToken(int userId, string token)
+    public async Task RemoveToken(int userId, string? token)
     {
-        var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token.Equals(token) && x.UserId.Equals(userId));
-        if (existToken != null)
+        if (token != null)
         {
-            await _tokenRepository.DeleteAsync(existToken);
+            var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token!.Equals(token) && x.UserId.Equals(userId));
+            if (existToken != null)
+            {
+                await _tokenRepository.DeleteAsync(existToken);
+            }
         }
     }
 
@@ -121,5 +143,4 @@ public class MessagingService : IMessagingService
             }
         }
     }
-
 }

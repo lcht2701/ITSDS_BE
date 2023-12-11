@@ -30,7 +30,7 @@ public class AuthController : BaseController
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest model)
     {
-        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username.Equals(model.Username)) ?? throw new BadRequestException("User is not found");
+        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username!.Equals(model.Username)) ?? throw new BadRequestException("User is not found");
         var passwordHasher = new PasswordHasher<User>();
         var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, model.Password) == PasswordVerificationResult.Success;
         if (!isMatchPassword)
@@ -51,7 +51,7 @@ public class AuthController : BaseController
     [HttpPost("login-admin")]
     public async Task<IActionResult> LoginAdmin([FromBody] LoginRequest model)
     {
-        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username.Equals(model.Username)) ?? throw new BadRequestException("User is not found");
+        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username!.Equals(model.Username)) ?? throw new KeyNotFoundException("User is not found");
         if (user.IsActive == false)
         {
             throw new UnauthorizedException("Your account has been suspended");
@@ -80,7 +80,7 @@ public class AuthController : BaseController
     [HttpPatch("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
     {
-        var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID), new NotFoundException("User is not found"));
+        var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID), new KeyNotFoundException("User is not found"));
 
         var passwordHasher = new PasswordHasher<User>();
         var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, req.CurrentPassword) == PasswordVerificationResult.Success;
@@ -88,7 +88,7 @@ public class AuthController : BaseController
         {
             throw new BadRequestException("Your current password is incorrect.");
         }
-        if (req.NewPassword.Equals(req.CurrentPassword))
+        if (req.NewPassword!.Equals(req.CurrentPassword))
         {
             throw new BadRequestException("New password should not be the same as old password.");
         }
@@ -114,16 +114,15 @@ public class AuthController : BaseController
     {
         var claims = new[] {
                 new Claim("id", user.Id.ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user.Username),
-                new Claim(ClaimTypes.Role, user.Role.ToString())
+                new Claim(ClaimTypes.NameIdentifier, user.Username!),
+                new Claim(ClaimTypes.Role, user.Role.ToString()!)
             };
         //Remember to change back to 2 hours
         //return new JwtSecurityTokenHandler().WriteToken(
         //    GenerateTokenByClaims(claims, DateTime.Now.AddMinutes(120))
         //    );
         return new JwtSecurityTokenHandler().WriteToken(
-            GenerateTokenByClaims(claims, DateTime.Now.AddDays(1))
-            );
+            GenerateTokenByClaims(claims, DateTime.Now.AddDays(1)));
     }
 
     private SecurityToken GenerateTokenByClaims(Claim[] claims, DateTime expires)

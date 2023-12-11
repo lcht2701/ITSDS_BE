@@ -1,82 +1,133 @@
 ﻿
 using API.DTOs.Requests.Services;
+using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Exceptions;
-using Domain.Models.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
-using Persistence.Repositories.Interfaces;
-using System.Linq;
 
-namespace API.Controllers
+namespace API.Controllers;
+
+[Route("/v1/itsds/service")]
+public class ServiceController : BaseController
 {
-    [Route("/v1/itsds/service")]
-    public class ServiceController : BaseController
+    private readonly IServiceService _serviceService;
+
+    public ServiceController(IServiceService serviceService)
     {
-        private readonly IRepositoryBase<Service> _serviceRepository;
+        _serviceService = serviceService;
+    }
 
-        public ServiceController(IRepositoryBase<Service> serviceRepository)
+    [Authorize]
+    [HttpGet("all")]
+
+    public async Task<IActionResult> GetAllService()
+    {
+        var result = await _serviceService.Get();
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetServices(
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5)
+    {
+        var result = await _serviceService.Get();
+        var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+        return Ok(pagedResponse);
+    }
+
+    [Authorize]
+    [HttpGet("category")]
+    public async Task<IActionResult> GetByCategory(int categoryId)
+    {
+        try
         {
-            _serviceRepository = serviceRepository;
-        }
-
-        [Authorize]
-        [HttpGet("all")]
-
-        public async Task<IActionResult> GetAllService()
-        {
-            var result = await _serviceRepository.ToListAsync();
+            var result = await _serviceService.GetByCategory(categoryId);
             return Ok(result);
         }
-
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetServices(
-        [FromQuery] string? filter,
-        [FromQuery] string? sort,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 5)
+        catch (KeyNotFoundException ex)
         {
-            var result = await _serviceRepository.ToListAsync();
-            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(pagedResponse);
+            return NotFound(ex.Message);
         }
-
-        [Authorize(Roles = Roles.MANAGER)]
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetServiceById(int id)
+        catch (Exception ex)
         {
-            var result = await _serviceRepository.FirstOrDefaultAsync(u => u.Id.Equals(id), new string[] { "ServicePack" });
-            return result != null ? Ok(result) : throw new BadRequestException("Service not found");
+            return BadRequest(ex.Message);
         }
+    }
 
-        [Authorize(Roles = Roles.MANAGER)]
-        [HttpPost]
-        public async Task<IActionResult> CreateService([FromBody] CreateServiceRequest model)
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetServiceById(int id)
+    {
+        try
         {
-            var entity = Mapper.Map(model, new Service());
-            await _serviceRepository.CreateAsync(entity);
-            return Ok(entity);
+            var result = await _serviceService.GetById(id);
+            return Ok(result);
         }
-
-        [Authorize(Roles = Roles.MANAGER)]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateService(int id, [FromBody] UpdateServiceRequest req)
+        catch (KeyNotFoundException ex)
         {
-            var target = await _serviceRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service not found"));
-            Service entity = Mapper.Map(req, target);
-            await _serviceRepository.UpdateAsync(entity);
-            return Accepted("Update Successfully");
+            return NotFound(ex.Message);
         }
-
-        [Authorize(Roles = Roles.MANAGER)]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteService(int id)
+        catch (Exception ex)
         {
-            var target = await _serviceRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("Service not found"));
-            await _serviceRepository.SoftDeleteAsync(target);
-            return Ok("Delete Successfully");
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpPost]
+    public async Task<IActionResult> CreateService([FromBody] CreateServiceRequest model)
+    {
+        try
+        {
+            var result = await _serviceService.Create(model);
+            return Ok(new { Message = "Service Created Successfully", Data = result });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateService(int id, [FromBody] UpdateServiceRequest model)
+    {
+        try
+        {
+            var result = await _serviceService.Update(id, model);
+            return Ok(new { Message = "Service Updated Successfully", Data = result });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteService(int id)
+    {
+        try
+        {
+            await _serviceService.Remove(id);
+            return Ok("Service Removed Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
         }
     }
 }

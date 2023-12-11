@@ -1,5 +1,4 @@
 ﻿using API.Mappings;
-using Domain.Constants;
 using Domain.Models.Contracts;
 using System.ComponentModel.DataAnnotations;
 
@@ -7,13 +6,22 @@ namespace API.DTOs.Requests.Contracts
 {
     public class UpdateContractRequest : IMapTo<Contract>
     {
-        public string AttachmentURl { get; set; }
+        public string? Name { get; set; }
 
-        [Required]
-        public int Duration { get; set; }
-        [Required]
-        public double InitialValue { get; set; }
+        public string? Description { get; set; }
 
+        public double? Value { get; set; }
 
+        public DateTime StartDate { get; set; }
+
+        public DateTime? EndDate { get; set; }
+
+        public int? ParentContractId { get; set; }
+
+        public int? AccountantId { get; set; }
+
+        public int CompanyId { get; set; }
+
+        public List<string>? AttachmentUrls { get; set; }
     }
 }

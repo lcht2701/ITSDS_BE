@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace Domain.Models.Tickets
 {
@@ -14,13 +9,15 @@ namespace Domain.Models.Tickets
             Feedbacks = new HashSet<Feedback>();
         }
 
-        public string? Title { get; set; }
+        public string Title { get; set; }
 
         public string? Content { get; set; }
 
-        public int? CategoryId { get; set; }
+        public int CategoryId { get; set; }
 
         public int? OwnerId { get; set; }
+
+        public int? CreatedById { get; set; }
 
         public DateTime? ReviewDate { get; set; }
 
@@ -30,15 +27,17 @@ namespace Domain.Models.Tickets
 
         public string? InternalComments { get; set; }
 
-        public bool? IsApproved { get; set; }
+        public bool IsApproved { get; set; }
 
-        public bool? IsPublic { get; set; }
+        public bool IsPublic { get; set; }
 
         public string? AttachmentUrl { get; set; }
 
-        public virtual User Owner { get; set; }
+        public virtual User? Owner { get; set; }
 
-        public virtual Category Category { get; set; }
+        public virtual User? CreatedBy { get; set; }
+
+        public virtual Category? Category { get; set; }
 
         [JsonIgnore]
         public virtual ICollection<Feedback>? Feedbacks { get; set; }

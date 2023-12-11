@@ -5,10 +5,10 @@ namespace API.Services.Interfaces;
 public interface IMessagingService
 {
     Task<List<Messaging>> GetNotification(int userId);
-    Task SendNotification(string message, int userId);
-    Task CreateNotification(string title, string message, int userId);
-    Task MarkAsRead(int userId);
-    Task GetToken(int userId, string token);
-    Task RemoveToken(int userId, string token);
+    Task SendNotification(string title, string message, int userId);
+    Task<Messaging> MarkAsRead(int notificationId);
+    Task MarkAsReadAll(int userId);
+    Task GetToken(int userId, string? token);
+    Task RemoveToken(int userId, string? token);
     Task RemoveOldToken();
 }

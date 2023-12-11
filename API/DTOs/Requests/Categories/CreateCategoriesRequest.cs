@@ -7,11 +7,9 @@ namespace API.DTOs.Requests.Categories
 {
     public class CreateCategoriesRequest : IMapTo<Category>
     {
-        [Required]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        [Required]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public int? AssignedTechnicalId { get; set; }
     }

@@ -16,14 +16,15 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : BaseEntity
         _context = context;
         dbSet = context.Set<T>();
     }
-    public async Task CreateAsync(T entity)
+    public async Task<T> CreateAsync(T entity)
     {
         await dbSet.AddAsync(entity);
         entity.CreatedAt = DateTime.Now;
         await _context.SaveChangesAsync();
+        return entity;
     }
 
-    public async Task CreateAsync(IEnumerable<T> entities)
+    public async Task<IEnumerable<T>> CreateAsync(IEnumerable<T> entities)
     {
         await _context.AddRangeAsync(entities);
         foreach (var  entity in entities)
@@ -31,6 +32,7 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : BaseEntity
             entity.CreatedAt = DateTime.Now;
         }
         await _context.SaveChangesAsync();
+        return entities;
     }
 
     public async Task DeleteAsync(T entity)
@@ -41,6 +43,7 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : BaseEntity
     
     public async Task SoftDeleteAsync(T entity)
     {
+        _context.Attach(entity).State = EntityState.Modified;
         entity.DeletedAt = DateTime.Now;
         await _context.SaveChangesAsync();
     }
@@ -99,11 +102,12 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : BaseEntity
         return await dbSet.AsNoTracking().ToListAsync();
     }
 
-    public async Task UpdateAsync(T updated)
+    public async Task<T> UpdateAsync(T updated)
     {
         _context.Attach(updated).State = EntityState.Modified;
         updated.ModifiedAt = DateTime.Now;
         await _context.SaveChangesAsync();
+        return updated;
     }
 
     public async Task<IList<T>> WhereAsync(Expression<Func<T, bool>> predicate, params string[] navigationProperties)

@@ -1,6 +1,5 @@
 ﻿using API.DTOs.Requests.TicketSolutions;
 using API.Services.Interfaces;
-using Azure;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,17 +17,40 @@ public class TicketSolutionController : BaseController
         _ticketSolutionService = ticketSolutionService;
     }
 
+
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
     [HttpGet]
     public async Task<IActionResult> GetSolutions(
-    [FromQuery] string? filter,
-    [FromQuery] string? sort,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 5)
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
     {
+        try
+        {
             var result = await _ticketSolutionService.Get(CurrentUserID);
             var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
             return Ok(pagedResponse);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllSolutions()
+    {
+        try
+        {
+            var result = await _ticketSolutionService.Get(CurrentUserID);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
@@ -56,7 +78,7 @@ public class TicketSolutionController : BaseController
     {
         try
         {
-            await _ticketSolutionService.Create(model);
+            await _ticketSolutionService.Create(model, CurrentUserID);
             return Ok("Created Successfully");
         }
         catch (Exception ex)

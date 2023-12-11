@@ -9,6 +9,6 @@ namespace API.DTOs.Requests.Services
     {
         public string Type { get; set; }
         public string Description { get; set; }
-        public string Amount { get; set; }
+        public double Amount { get; set; }
     }
 }

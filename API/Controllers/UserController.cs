@@ -1,50 +1,114 @@
 using API.DTOs.Requests.Users;
-using API.DTOs.Responses.Companies;
-using API.DTOs.Responses.Teams;
-using API.DTOs.Responses.Users;
 using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Constants.Enums;
-using Domain.Exceptions;
-using Domain.Models;
-using Domain.Models.Contracts;
-using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
-using Persistence.Repositories.Interfaces;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace API.Controllers;
 
 [Route("/v1/itsds/user")]
 public class UserController : BaseController
 {
-    private readonly IRepositoryBase<User> _userRepository;
-    private readonly IRepositoryBase<Team> _teamRepository;
-    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
-    private readonly IRepositoryBase<Company> _companyRepository;
-    private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
-    private readonly IFirebaseStorageService _firebaseStorageService;
+    private readonly IUserService _userService;
+    private readonly IFirebaseService _firebaseService;
 
-    public UserController(IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IFirebaseStorageService firebaseStorageService)
+    public UserController(IUserService userService, IFirebaseService firebaseService)
     {
-        _userRepository = userRepository;
-        _teamRepository = teamRepository;
-        _teamMemberRepository = teamMemberRepository;
-        _companyRepository = companyRepository;
-        _companyMemberRepository = companyMemberRepository;
-        _firebaseStorageService = firebaseStorageService;
+        _userService = userService;
+        _firebaseService = firebaseService;
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}")]
-    [HttpGet("all")]
+    #region Selection List By Roles
+    [Authorize(Roles = Roles.ITSDSEmployees)]
+    [HttpGet("list/managers")]
+    public async Task<IActionResult> GetManagers()
+    {
+        try
+        {
+            var result = await _userService.GetManagers();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
+    [Authorize(Roles = Roles.ITSDSEmployees)]
+    [HttpGet("list/accountants")]
+    public async Task<IActionResult> GetAccountants()
+    {
+        try
+        {
+            var result = await _userService.GetAccountants();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.ITSDSEmployees)]
+    [HttpGet("list/customers")]
+    public async Task<IActionResult> GetCustomers()
+    {
+        try
+        {
+            var result = await _userService.GetCustomers();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.ITSDSEmployees)]
+    [HttpGet("list/admins")]
+    public async Task<IActionResult> GetAdmins()
+    {
+        try
+        {
+            var result = await _userService.GetAdmins();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.ITSDSEmployees)]
+    [HttpGet("list/technicians")]
+    public async Task<IActionResult> GetTechnicians()
+    {
+        try
+        {
+            var result = await _userService.GetTechnicians();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    #endregion
+
+    [Authorize]
+    [HttpGet("all")]
     public async Task<IActionResult> GetAllUsers()
     {
-        var result = await _userRepository.ToListAsync();
-        return Ok(result);
+        try
+        {
+            var result = await _userService.Get();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}")]
@@ -55,183 +119,171 @@ public class UserController : BaseController
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 5)
     {
-
-        var result = await _userRepository.ToListAsync();
-        var response = new List<GetUserResponse>();
-        foreach (var user in result)
+        try
         {
-            var entity = Mapper.Map(user, new GetUserResponse());
-
-            entity.DateOfBirth = DataResponse.CleanNullableDateTime(entity.DateOfBirth);
-            entity.CreatedAt = DataResponse.CleanNullableDateTime(entity.CreatedAt);
-            entity.ModifiedAt = DataResponse.CleanNullableDateTime(entity.ModifiedAt);
-            entity.DeletedAt = DataResponse.CleanNullableDateTime(entity.DeletedAt);
-
-            response.Add(entity);
+            var result = await _userService.Get();
+            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
         }
-
-        var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-
-        return Ok(pagedResponse);
-
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUserById(int id)
     {
-        var result =
-            await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new BadRequestException("User is not found"));
-
-        var entity = Mapper.Map(result, new GetUserResponse());
-
-        DataResponse.CleanNullableDateTime(entity);
-        return Ok(entity);
+        try
+        {
+            var result = await _userService.GetById(id);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
-    //Enable back to test authorization
-    //[Authorize(Roles = Roles.ADMIN)]
+    [Authorize(Roles = Roles.ADMIN)]
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest model)
     {
-        User entity = Mapper.Map(model, new User());
-        //Hash password
-        var passwordHasher = new PasswordHasher<User>();
-        entity.Password = passwordHasher.HashPassword(entity, model.Password);
-        entity.IsActive = true;
-        await _userRepository.CreateAsync(entity);
-        return Ok("Create Successfully");
+        try
+        {
+            var user = await _userService.Create(model);
+            if (user != null && await _firebaseService.SignUp(model.Email, model.Password) == true)
+            {
+                await _userService.CreateUserDocument(user!);
+            }
+            return Ok("Created Successfully");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest req)
+    public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest model)
     {
-        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("User not found"));
-        User entity = Mapper.Map(req, target);
-        await _userRepository.UpdateAsync(entity);
-        return Ok("Update Successfully");
+        try
+        {
+            var user = await _userService.Update(id, model);
+            await _userService.UpdateUserDocument(user);
+            return Ok("Updated Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(int id)
     {
-        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new BadRequestException("User not found"));
-        await _userRepository.SoftDeleteAsync(target);
-        return Ok("Delete Successfully");
+        try
+        {
+            await _userService.Remove(id);
+            return Ok("Deleted Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize]
     [HttpGet("profile")]
     public async Task<IActionResult> GetProfile()
     {
-        var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID),
-            new NotFoundException("User is not found"));
-        var entity = Mapper.Map(user, new GetUserProfileResponse());
-        DataResponse.CleanNullableDateTime(entity);
-        if (user.Role == Role.Customer)
+        try
         {
-            var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId == user.Id);
-
-            if (companyMember != null)
-            {
-                var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id == companyMember.CompanyId, new string[] { "CustomerAdmin" });
-                if (company != null)
-                {
-                    entity.Company = Mapper.Map(company, new GetCompanyResponse());
-                }
-            }
+            var result = await _userService.GetProfile(CurrentUserID);
+            return Ok(result);
         }
-        else
+        catch (KeyNotFoundException ex)
         {
-            var teamMember = await _teamMemberRepository.FirstOrDefaultAsync(x => x.MemberId == user.Id);
-
-            if (teamMember != null)
-            {
-                var team = await _teamRepository.FirstOrDefaultAsync(x => x.Id == teamMember.TeamId, new string[] { "Manager" });
-                if (team != null)
-                {
-                    entity.Team = Mapper.Map(team, new GetTeamResponse());
-                }
-            }
+            return NotFound(ex.Message);
         }
-
-        return Ok(entity);
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize]
     [HttpPatch("update-profile")]
-    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest req)
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest model)
     {
-        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID),
-            new NotFoundException("User is not found"));
-        User entity = Mapper.Map(req, target);
-        await _userRepository.UpdateAsync(entity);
-        return Ok("Update Successfully");
-    }
-
-    [Authorize]
-    [HttpPatch("update-profile-with-avatar")]
-    public async Task<IActionResult> UpdateProfileWithAvatar([FromBody] UpdateProfileRequest req)
-    {
-        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID),
-            new NotFoundException("User is not found"));
-        User entity = Mapper.Map(req, target);
-        await _userRepository.UpdateAsync(entity);
-        return Ok("Update Successfully");
+        try
+        {
+            var user = await _userService.UpdateProfile(CurrentUserID, model);
+            await _userService.UpdateUserDocument(user);
+            return Ok("Updated Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize]
     [HttpPatch("uploadAvatarFirebase")]
     public async Task<IActionResult> UploadImageFirebase(IFormFile file)
     {
-        var user = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID),
-            new NotFoundException("User is not found"));
-        if (file == null || file.Length == 0)
+        try
         {
-            throw new BadRequestException("No file uploaded.");
+            var result = await _userService.UploadImageFirebase(CurrentUserID, file);
+            return Ok(result);
         }
-
-        var stream = new MemoryStream();
-        await file.CopyToAsync(stream);
-        stream.Position = 0;
-
-        var linkImage = await _firebaseStorageService.UploadFirebaseAsync(stream, file.FileName);
-        user.AvatarUrl = linkImage;
-        await _userRepository.UpdateAsync(user);
-        return Ok(linkImage);
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize]
     [HttpPatch("uploadAvatarByUrl")]
-    public async Task<IActionResult> UploadAvatarByUrl([FromBody] UpdateAvatarUrlRequest req)
+    public async Task<IActionResult> UploadAvatarByUrl([FromBody] UpdateAvatarUrlRequest model)
     {
         try
         {
-            var user = await _userRepository.FoundOrThrow(c => c.Id.Equals(CurrentUserID),
-                new BadRequestException("User is not found"));
-            user.AvatarUrl = req.AvatarUrl;
-            await _userRepository.UpdateAsync(user);
-
+            var user = await _userService.UploadAvatarByUrl(CurrentUserID, model);
+            await _userService.UpdateUserDocument(user);
             return Ok("Avatar URL updated successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            return BadRequest(ex.Message);
         }
-    }
-
-
-    [Authorize]
-    [HttpGet("current-user")]
-    public async Task<IActionResult> GetCurrentUser()
-    {
-        var result = await _userRepository.FirstOrDefaultAsync(u => u.Id.Equals(CurrentUserID));
-        var entity = Mapper.Map(result, new GetUserResponse());
-
-        DataResponse.CleanNullableDateTime(entity);
-        return Ok(entity);
     }
 }

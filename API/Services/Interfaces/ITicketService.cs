@@ -13,22 +13,27 @@ public interface ITicketService
     Task<List<GetTicketResponse>> GetTicketAvailable(int userId);
     Task<List<GetTicketResponse>> GetAssignedTickets(int userId);
     Task<List<GetTicketResponse>> GetCompletedAssignedTickets(int userId);
-    Task<List<GetTicketStatusesRequest>> GetTicketStatuses();
+    Task<List<GetTicketStatusesResponse>> GetTicketStatuses();
+    Task<List<GetTicketResponse>> GetPeriodicTickets(int? numOfDays);
     Task<object> GetTicketLog(int id);
     Task<GetTicketResponse> GetById(int id);
-    Task<Ticket> CreateByCustomer(int userId, CreateTicketCustomerRequest model);
+    Task<Ticket> CreateByCustomer(int createdBy, CreateTicketCustomerRequest model);
     Task<Ticket> UpdateByCustomer(int id, UpdateTicketCustomerRequest model);
-    Task<Ticket> CreateByManager(CreateTicketManagerRequest model);
+    Task<Ticket> CreateByManager(int createdBy, CreateTicketManagerRequest model);
+    Task<Ticket> UpdateByTechnician(int id, TechnicianAddDetailRequest model);
     Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model);
     Task Remove(int id);
     Task<bool> IsTicketAssigned(int ticketId);
-    bool IsTicketDone(Ticket ticket);
-    Task UpdateTicketStatus(int ticketId, TicketStatus newStatus);
-    Task ModifyTicketStatus(int ticketId, TicketStatus newStatus);
-    Task CancelTicket(int ticketId, int userId);
+    bool IsTicketDone(int? ticketId);
+    Task<Ticket> UpdateTicketStatus(int ticketId, TicketStatus newStatus);
+    Task<Ticket> ModifyTicketStatus(int ticketId, TicketStatus newStatus);
+    Task<Ticket> CancelTicket(int ticketId, int userId);
+    Task<Ticket> CloseTicket(int ticketId, int userId);
     //Background jobs
     Task AssignSupportJob(int ticketId);
-    Task CancelAssignSupportJob(string jobId, int ticketId);
+    Task<bool> CancelAssignSupportJob(string jobId, int ticketId);
     Task CloseTicketJob(int ticketId);
     Task CancelCloseTicketJob(string jobId, int ticketId);
+    Task SendNotificationAfterCloseTicket(Ticket ticket);
+    Task SendNotificationAfterAssignment(Ticket ticket);
 }
