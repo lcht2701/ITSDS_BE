@@ -7,6 +7,7 @@ namespace Domain.Models.Tickets
         public TicketSolution()
         {
             Feedbacks = new HashSet<Feedback>();
+            Reactions = new HashSet<Reaction>();
         }
 
         public string Title { get; set; }
@@ -41,5 +42,8 @@ namespace Domain.Models.Tickets
 
         [JsonIgnore]
         public virtual ICollection<Feedback>? Feedbacks { get; set; }
+
+        [JsonIgnore]
+        public virtual ICollection<Reaction>? Reactions { get; set; }
     }
 }
