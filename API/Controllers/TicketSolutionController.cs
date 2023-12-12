@@ -11,10 +11,12 @@ namespace API.Controllers;
 public class TicketSolutionController : BaseController
 {
     private readonly ITicketSolutionService _ticketSolutionService;
+    private readonly IReactionService _reactionService;
 
-    public TicketSolutionController(ITicketSolutionService ticketSolutionService)
+    public TicketSolutionController(ITicketSolutionService ticketSolutionService, IReactionService reactionService)
     {
         _ticketSolutionService = ticketSolutionService;
+        _reactionService = reactionService;
     }
 
 
@@ -59,7 +61,7 @@ public class TicketSolutionController : BaseController
     {
         try
         {
-            var result = await _ticketSolutionService.GetById(solutionId);
+            var result = await _ticketSolutionService.GetById(solutionId, CurrentUserID);
             return Ok(result);
         }
         catch (KeyNotFoundException)
@@ -182,6 +184,35 @@ public class TicketSolutionController : BaseController
             return BadRequest(ex.Message);
         }
     }
+    [Authorize]
+    [HttpPost("{solutionId}/like")]
+    public async Task<IActionResult> Like(int solutionId)
+    {
+        try
+        {
+            await _reactionService.Like(solutionId, CurrentUserID);
+            return Ok("Create Like successfully");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    [Authorize]
+    [HttpPost("{solutionId}/dislike")]
+    public async Task<IActionResult> Dislike(int solutionId)
+    {
+        try
+        {
+            await _reactionService.Dislike(solutionId, CurrentUserID);
+            return Ok("Create Dislike successfully");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 
     // [Authorize(Roles = Roles.TECHNICIAN)]
     // [HttpPatch("submit-approval")]

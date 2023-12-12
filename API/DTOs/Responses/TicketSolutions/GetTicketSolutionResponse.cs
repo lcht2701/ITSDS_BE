@@ -32,6 +32,12 @@ public class GetTicketSolutionResponse : IMapFrom<TicketSolution>
 
     public bool? IsPublic { get; set; }
 
+    public int? CountLike { get; set; }
+
+    public int? CountDislike { get; set; }
+
+    public int? CurrentReactionUser { get; set; }
+
     public DateTime? CreatedAt { get; set; }
 
     public DateTime? ModifiedAt { get; set; }

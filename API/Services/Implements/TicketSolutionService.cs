@@ -5,8 +5,10 @@ using AutoMapper;
 using Domain.Constants.Enums;
 using Domain.Models;
 using Domain.Models.Tickets;
+using Org.BouncyCastle.Tsp;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using static Grpc.Core.Metadata;
 
 namespace API.Services.Implements;
 
@@ -14,13 +16,14 @@ public class TicketSolutionService : ITicketSolutionService
 {
     private readonly IRepositoryBase<TicketSolution> _solutionRepository;
     private readonly IRepositoryBase<User> _userRepository;
+    private readonly IRepositoryBase<Reaction> _reactRepository;
     private readonly IMapper _mapper;
 
-    public TicketSolutionService(IRepositoryBase<TicketSolution> solutionRepository,
-        IRepositoryBase<User> userRepository, IMapper mapper)
+    public TicketSolutionService(IRepositoryBase<TicketSolution> solutionRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Reaction> reactRepository, IMapper mapper)
     {
         _solutionRepository = solutionRepository;
         _userRepository = userRepository;
+        _reactRepository = reactRepository;
         _mapper = mapper;
     }
 
@@ -36,22 +39,47 @@ public class TicketSolutionService : ITicketSolutionService
             result = result.Where(x => x.IsPublic == true && x.IsApproved == true);
         }
 
-        var response = result.Select(solution =>
+        List<GetTicketSolutionResponse> response = new();
+        foreach (var item in result)
         {
-            var entity = _mapper.Map<GetTicketSolutionResponse>(solution);
+            var entity = _mapper.Map<GetTicketSolutionResponse>(item);
             DataResponse.CleanNullableDateTime(entity);
-            return entity;
-        }).ToList();
+            //logic reaction
+            entity.CountLike = (await _reactRepository.WhereAsync(x => x.SolutionId == entity.Id && x.ReactionType == 0 )).Count;
+            entity.CountDislike = (await _reactRepository.WhereAsync(x => x.SolutionId == entity.Id && x.ReactionType == 1)).Count;
+            var currentReactionUser = await _reactRepository.FirstOrDefaultAsync(x => x.SolutionId == entity.Id && x.UserId == userId);
+            if(currentReactionUser == null)
+            {
+                entity.CurrentReactionUser = null;
+            }
+            else
+            {
+                entity.CurrentReactionUser = currentReactionUser.ReactionType;
+            }
+            //done logic
+            response.Add(entity);
+        }
 
         return response;
     }
 
 
-    public async Task<object> GetById(int id)   
+    public async Task<object> GetById(int id, int userId)   
     {
         var result = await _solutionRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
             new string[] { "Category", "Owner", "CreatedBy" }) ?? throw new KeyNotFoundException();
         var response = _mapper.Map(result, new GetTicketSolutionResponse());
+        response.CountLike = (await _reactRepository.WhereAsync(x => x.SolutionId == response.Id && x.ReactionType == 0)).Count;
+        response.CountDislike = (await _reactRepository.WhereAsync(x => x.SolutionId == response.Id && x.ReactionType == 1)).Count;
+        var currentReactionUser = await _reactRepository.FirstOrDefaultAsync(x => x.SolutionId == response.Id && x.UserId == userId);
+        if (currentReactionUser == null)
+        {
+            response.CurrentReactionUser = null;
+        }
+        else
+        {
+            response.CurrentReactionUser = currentReactionUser.ReactionType;
+        }
         return response;
     }
 
