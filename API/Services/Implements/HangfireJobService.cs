@@ -103,7 +103,7 @@ public class HangfireJobService : IHangfireJobService
 
     public async Task NotifyNearExpiredContract()
     {
-        var nearExpiredContracts = await _contractRepository.WhereAsync(x => x.EndDate >= DateTime.Now.AddDays(-7));
+        var nearExpiredContracts = await _contractRepository.WhereAsync(x => x.EndDate!.Value.Date == DateTime.Today.AddMonths(-1));
         foreach (var contract in nearExpiredContracts)
         {
             var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id == contract.CompanyId);
@@ -154,6 +154,7 @@ public class HangfireJobService : IHangfireJobService
 
     <div class=""notification"">
         <h2>Contract Expiry Notification</h2>
+        <p>Your contract is near expiration. Please review and take necessary actions.</p>
         <div class=""contract-details"">
             <p><strong>Name:</strong> {0}</p>
             <p><strong>Description:</strong> {1}</p>
@@ -161,9 +162,7 @@ public class HangfireJobService : IHangfireJobService
             <p><strong>End Date:</strong> {3}</p>
             <p><strong>Company Name:</strong> {4}</p>
         </div>
-        <p>Your contract is near expiration. Please review and take necessary actions.</p>
     </div>
-
 </body>
 </html>
 ";

@@ -161,7 +161,9 @@ app.UseAutoWrapper();
 app.UseHangfireDashboard("/hangfire");
 app.MapControllers();
 app.MapHangfireDashboard();
-RecurringJob.AddOrUpdate<IHangfireJobService>("ticket-summary", x => x.PeriodTicketSummaryNotificationJob(), Cron.Daily(8, 0));
+RecurringJob.AddOrUpdate<IHangfireJobService>("ticket-summary", x => x.PeriodTicketSummaryNotificationJob(),
+    Cron.Daily(8, 0));
 RecurringJob.AddOrUpdate<IHangfireJobService>("update-contract-status", x => x.UpdateStatusOfContract(), "*/5 * * * *");
-RecurringJob.AddOrUpdate<IHangfireJobService>("notify-near-expired-contracts", x => x.NotifyNearExpiredContract(), Cron.Hourly);
+RecurringJob.AddOrUpdate<IHangfireJobService>("notify-near-expired-contracts", x => x.NotifyNearExpiredContract(),
+    Cron.Daily(8, 0));
 app.Run();
