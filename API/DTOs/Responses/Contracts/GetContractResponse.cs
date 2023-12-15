@@ -28,7 +28,7 @@ namespace API.DTOs.Responses.Contracts
 
         public int? CompanyId { get; set; }
 
-        public List<string>? AttachmentUrl { get; set; }
+        public List<string>? AttachmentUrls { get; set; }
 
         public ContractStatus? Status { get; set; }
 
