@@ -4,12 +4,11 @@ using Domain.Constants.Enums;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
-using MimeKit;
 using MailKit.Net.Smtp;
-using Persistence.Repositories.Interfaces;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
-using System.Net.WebSockets;
+using MimeKit;
+using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
 

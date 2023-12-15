@@ -18,7 +18,7 @@ public class FirebaseService : IFirebaseService
         var userCredentials = await auth.CreateUserWithEmailAndPasswordAsync(email, password);
         return userCredentials is not null;
     }
-
+        
     public async Task<string> UploadFirebaseAsync(MemoryStream stream, string fileName)
     {
         string link = "";

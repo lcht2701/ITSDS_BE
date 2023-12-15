@@ -1,10 +1,9 @@
-﻿using Domain.Constants.Enums;
-using Domain.Models.Contracts;
+﻿using System.Text.Json.Serialization;
+using Domain.Constants.Enums;
 using Domain.Models.Tickets;
-using System.Text.Json.Serialization;
 
 namespace Domain.Models;
-
+    
 public class User : BaseEntity
 {
     public User()
@@ -14,21 +13,22 @@ public class User : BaseEntity
         Assignments = new HashSet<Assignment>();
         TicketSolutions = new HashSet<TicketSolution>();
     }
-    public string? FirstName { get; set; }
 
-    public string? LastName { get; set; }
+    public string FirstName { get; set; }
 
-    public string? Username { get; set; }
+    public string LastName { get; set; }
 
-    public string? Password { get; set; }
+    public string Username { get; set; }
+    
+    public string Password { get; set; }
+    
+    public string Email { get; set; }
 
-    public string? Email { get; set; }
-
-    public string? Address { get; set; }
+    public Role Role { get; set; }
 
     public string? AvatarUrl { get; set; }
 
-    public Role? Role { get; set; }
+    public string? Address { get; set; }
 
     public string? PhoneNumber { get; set; }
 
@@ -38,13 +38,12 @@ public class User : BaseEntity
 
     public Gender? Gender { get; set; }
 
-    [JsonIgnore]
-    public virtual ICollection<Ticket>? Tickets { get; set; }
-    [JsonIgnore]
-    public virtual ICollection<TeamMember>? TeamMembers { get; set; }
-    [JsonIgnore]
-    public virtual ICollection<Assignment>? Assignments { get; set; }
-    [JsonIgnore]
-    public virtual ICollection<TicketSolution>? TicketSolutions { get; set; }
+    public string? PasswordResetToken { get; set; }
 
+    public DateTime? ResetTokenExpires { get; set; }
+
+    [JsonIgnore] public virtual ICollection<Ticket>? Tickets { get; set; }
+    [JsonIgnore] public virtual ICollection<TeamMember>? TeamMembers { get; set; }
+    [JsonIgnore] public virtual ICollection<Assignment>? Assignments { get; set; }
+    [JsonIgnore] public virtual ICollection<TicketSolution>? TicketSolutions { get; set; }
 }
