@@ -28,7 +28,7 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public Impact? Impact { get; set; }
     public string? ImpactDetail { get; set; }
     public Urgency? Urgency { get; set; }
-    public List<string>? AttachmentUrl { get; set; }
+    public List<string>? AttachmentUrls { get; set; }
     public DateTime? ScheduledStartTime { get; set; }
     public DateTime? ScheduledEndTime { get; set; }
     public DateTime? DueTime { get; set; }

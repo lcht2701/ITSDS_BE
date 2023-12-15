@@ -12,6 +12,7 @@ public interface IDashboardService
     //Ticket
     Task<CustomerTicketDashboard> GetCustomerTicketDashboard(int userId);
     Task<TechnicianTicketDashboard> GetTechnicianTicketDashboard(int userId);
+    Task<ManagerDashboard> GetManagerDashboard(); 
     Task<ManagerTicketDashboard> GetManagerTicketDashboard();
     Task<ManagerTicketsDashboardTable> GetManagerTicketsByCategory();
     Task<ManagerTicketsDashboardTable> GetManagerTicketsByPriority();
@@ -38,5 +39,4 @@ public interface IDashboardService
     Task<List<TeamUpdatedDashboardData>> GetRecentUpdatedTeam(int amount);
 
 
-    Task<ManagerDashboard> GetManagerDashboard(); 
 }

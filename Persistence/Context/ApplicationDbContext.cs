@@ -48,6 +48,10 @@ namespace Persistence.Context
                 .WithMany()
                 .HasForeignKey(ts => ts.CreatedById);
 
+            builder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+            
             base.OnModelCreating(builder);
 
             foreach (var entityType in builder.Model.GetEntityTypes())

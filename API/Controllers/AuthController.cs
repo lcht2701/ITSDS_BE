@@ -1,105 +1,132 @@
 ﻿using API.DTOs.Requests.Auths;
-using API.DTOs.Responses.Auths;
+using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Constants.Enums;
 using Domain.Exceptions;
-using Domain.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using Persistence.Repositories.Interfaces;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace API.Controllers;
 
 [Route("/v1/itsds/auth")]
 public class AuthController : BaseController
 {
-    private readonly IRepositoryBase<User> _userRepository;
-    private readonly IConfiguration _configuration;
+    private readonly IAuthService _authService;
 
-    public AuthController(IRepositoryBase<User> userRepository, IConfiguration configuration)
+    public AuthController(IAuthService authService)
     {
-        _userRepository = userRepository;
-        _configuration = configuration;
+        _authService = authService;
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest model)
     {
-        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username!.Equals(model.Username)) ?? throw new BadRequestException("User is not found");
-        var passwordHasher = new PasswordHasher<User>();
-        var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, model.Password) == PasswordVerificationResult.Success;
-        if (!isMatchPassword)
+        try
         {
-            throw new UnauthorizedException("Password is incorrect");
+            var entity = await _authService.Login(model);
+            SetCookie(ConstantItems.ACCESS_TOKEN, entity.AccessToken);
+            return Ok(entity);
         }
-        if (user.IsActive == false)
+        catch (KeyNotFoundException ex)
         {
-            throw new UnauthorizedException("Your account has been suspended");
+            return NotFound(ex.Message);
         }
-
-        var entity = Mapper.Map(user, new LoginResponse());
-        entity.AccessToken = GenerateToken(user);
-        SetCookie(ConstantItems.ACCESS_TOKEN, entity.AccessToken);
-        return Ok(entity);
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPost("login-admin")]
     public async Task<IActionResult> LoginAdmin([FromBody] LoginRequest model)
     {
-        var user = await _userRepository.FirstOrDefaultAsync(x => x.Username!.Equals(model.Username)) ?? throw new KeyNotFoundException("User is not found");
-        if (user.IsActive == false)
+        try
         {
-            throw new UnauthorizedException("Your account has been suspended");
+            var entity = await _authService.LoginAdmin(model);
+            SetCookie(ConstantItems.ACCESS_TOKEN, entity.AccessToken);
+            return Ok(entity);
         }
-
-        if (user.Role != Role.Admin)
+        catch (KeyNotFoundException ex)
         {
-            throw new UnauthorizedException("You are not allowed to enter");
+            return NotFound(ex.Message);
         }
-
-        var passwordHasher = new PasswordHasher<User>();
-        var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, model.Password) == PasswordVerificationResult.Success;
-
-        if (!isMatchPassword)
+        catch (UnauthorizedException ex)
         {
-            throw new UnauthorizedException("Password is incorrect");
+            return Unauthorized(ex.Message);
         }
-
-        var entity = Mapper.Map(user, new LoginResponse());
-        entity.AccessToken = GenerateToken(user);
-        SetCookie(ConstantItems.ACCESS_TOKEN, entity.AccessToken);
-        return Ok(entity);
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
-    [Authorize]
     [HttpPatch("change-password")]
-    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest model)
     {
-        var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(CurrentUserID), new KeyNotFoundException("User is not found"));
+        try
+        {
+            await _authService.ChangePassword(model, CurrentUserID);
+            return Ok("Update Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (BadRequestException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
-        var passwordHasher = new PasswordHasher<User>();
-        var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, req.CurrentPassword) == PasswordVerificationResult.Success;
-        if (!isMatchPassword)
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(string email)
+    {
+        try
         {
-            throw new BadRequestException("Your current password is incorrect.");
+            await _authService.ForgotPassword(email);
+            return Ok("A password reset email has been sent to your registered email address. Please check your inbox and follow the instructions to reset your password.");
         }
-        if (req.NewPassword!.Equals(req.CurrentPassword))
+        catch (KeyNotFoundException ex)
         {
-            throw new BadRequestException("New password should not be the same as old password.");
+            return NotFound(ex.Message);
         }
-        if (!req.NewPassword.Equals(req.ConfirmNewPassword))
+        catch (BadRequestException ex)
         {
-            throw new BadRequestException("Password and Confirm Password does not match.");
+            return Unauthorized(ex.Message);
         }
-        user.Password = passwordHasher.HashPassword(user, req.NewPassword);
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
-        await _userRepository.UpdateAsync(user);
-        return Ok("Update Successfully");
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(int uid, string token, [FromBody] ResetPasswordRequest model)
+    {
+        try
+        {
+            await _authService.ResetPassword(uid, token, model);
+            return Ok("Password reset successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     //[HttpPost("logout")]
@@ -108,34 +135,6 @@ public class AuthController : BaseController
     //    RemoveCookie(ConstantItems.ACCESS_TOKEN);
     //    return Ok();
     //}
-
-    #region Generate JWT Token
-    private string GenerateToken(User user)
-    {
-        var claims = new[] {
-                new Claim("id", user.Id.ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user.Username!),
-                new Claim(ClaimTypes.Role, user.Role.ToString()!)
-            };
-        //Remember to change back to 2 hours
-        //return new JwtSecurityTokenHandler().WriteToken(
-        //    GenerateTokenByClaims(claims, DateTime.Now.AddMinutes(120))
-        //    );
-        return new JwtSecurityTokenHandler().WriteToken(
-            GenerateTokenByClaims(claims, DateTime.Now.AddDays(1)));
-    }
-
-    private SecurityToken GenerateTokenByClaims(Claim[] claims, DateTime expires)
-    {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-        return new JwtSecurityToken(_configuration["JWT:Issuer"],
-             _configuration["JWT:Audience"],
-             claims,
-             expires: expires,
-             signingCredentials: credentials);
-    }
-    #endregion
 
     #region Handle Cookie
     private void RemoveCookie(string key)

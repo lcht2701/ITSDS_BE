@@ -80,7 +80,7 @@ public class TicketService : ITicketService
                 var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
                 entity.Assignment = assMapping;
             }
-            entity.AttachmentUrl = (await _attachmentService.Get(Tables.TICKET, entity.Id)).Select(x => x.Url).ToList();
+            entity.AttachmentUrls = (await _attachmentService.Get(Tables.TICKET, entity.Id)).Select(x => x.Url).ToList();
         }
 
         return response;
@@ -158,7 +158,7 @@ public class TicketService : ITicketService
             var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
             entity.Assignment = assMapping;
         }
-
+        entity.AttachmentUrls = (await _attachmentService.Get(Tables.TICKET, entity.Id)).Select(x => x.Url).ToList();
         return entity;
     }
 

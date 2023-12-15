@@ -22,5 +22,6 @@ namespace API.Services.Interfaces
         Task<User> UploadAvatarByUrl(int userId, UpdateAvatarUrlRequest model);
         Task CreateUserDocument(User user);
         Task UpdateUserDocument(User user);
+        Task SendUserCreatedNotification(CreateUserRequest dto);
     }
 }
