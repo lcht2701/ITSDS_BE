@@ -28,6 +28,6 @@ namespace API.DTOs.Requests.TicketSolutions
 
         public bool? IsPublic { get; set; }
 
-        public string? AttachmentUrl { get; set; }
+        public List<string>? AttachmentUrls { get; set; }
     }
 }

@@ -5,7 +5,9 @@ using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
+using Persistence.Helpers.Caching;
 using Persistence.Repositories.Interfaces;
+using System.Collections.Generic;
 
 namespace API.Services.Implements;
 
@@ -13,18 +15,22 @@ public class CategoryService : ICategoryService
 {
     private readonly IRepositoryBase<Category> _categoryRepository;
     private readonly IRepositoryBase<User> _userrepository;
+    private readonly ICacheService _cacheService;
     private readonly IMapper _mapper;
 
-    public CategoryService(IRepositoryBase<Category> categoryRepository, IRepositoryBase<User> userrepository, IMapper mapper)
+    public CategoryService(IRepositoryBase<Category> categoryRepository, IRepositoryBase<User> userrepository, ICacheService cacheService, IMapper mapper)
     {
         _categoryRepository = categoryRepository;
         _userrepository = userrepository;
+        _cacheService = cacheService;
         _mapper = mapper;
     }
 
     public async Task<List<Category>> Get()
     {
-        return await _categoryRepository.ToListAsync();
+        return await _cacheService.GetAsync(
+            "categories",
+            async() => await _categoryRepository.ToListAsync());
     }
 
     public async Task<Category> GetById(int id)
