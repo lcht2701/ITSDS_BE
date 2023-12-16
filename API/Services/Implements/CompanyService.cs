@@ -2,6 +2,7 @@
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Models.Contracts;
+using Persistence.Helpers.Caching;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
@@ -9,17 +10,23 @@ namespace API.Services.Implements;
 public class CompanyService : ICompanyService
 {
     private readonly IRepositoryBase<Company> _companyRepository;
+    private readonly ICacheService _cacheService;
     private readonly IMapper _mapper;
 
-    public CompanyService(IRepositoryBase<Company> companyRepository, IMapper mapper)
+    public CompanyService(IRepositoryBase<Company> companyRepository, ICacheService cacheService, IMapper mapper)
     {
         _companyRepository = companyRepository;
+        _cacheService = cacheService;
         _mapper = mapper;
     }
 
     public async Task<List<Company>> Get()
     {
-        return await _companyRepository.ToListAsync();
+        return await _cacheService.GetAsync(
+            "companies",
+            async () => (await _companyRepository
+            .GetAsync(navigationProperties: new string[] { "CustomerAdmin" }))
+            .ToList());
     }
 
     public async Task<Company> GetById(int id)

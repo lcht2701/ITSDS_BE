@@ -2,6 +2,7 @@
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Models.Contracts;
+using Persistence.Helpers.Caching;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
@@ -9,18 +10,21 @@ namespace API.Services.Implements;
 public class ServiceService : IServiceService
 {
     private readonly IRepositoryBase<Service> _serviceRepository;
+    private readonly ICacheService _cacheService;
     private readonly IMapper _mapper;
 
-    public ServiceService(IRepositoryBase<Service> serviceRepository, IMapper mapper)
+    public ServiceService(IRepositoryBase<Service> serviceRepository, ICacheService cacheService, IMapper mapper)
     {
         _serviceRepository = serviceRepository;
+        _cacheService = cacheService;
         _mapper = mapper;
     }
 
     public async Task<List<Service>> Get()
     {
-        var result = await _serviceRepository.ToListAsync();
-        return result;
+        return await _cacheService.GetAsync(
+            "services",
+            async () => await _serviceRepository.ToListAsync());
     }
 
     public async Task<List<Service>> GetByCategory(int categoryId)

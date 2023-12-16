@@ -2,6 +2,7 @@
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Models.Tickets;
+using Persistence.Helpers.Caching;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
@@ -9,18 +10,23 @@ namespace API.Services.Implements;
 public class TeamService : ITeamService
 {
     private readonly IRepositoryBase<Team> _teamRepository;
+    private readonly ICacheService _cacheService;
     private readonly IMapper _mapper;
 
-    public TeamService(IRepositoryBase<Team> teamRepository, IMapper mapper)
+    public TeamService(IRepositoryBase<Team> teamRepository, ICacheService cacheService, IMapper mapper)
     {
         _teamRepository = teamRepository;
+        _cacheService = cacheService;
         _mapper = mapper;
     }
 
     public async Task<List<Team>> Get()
     {
-        var result = (await _teamRepository.GetAsync(navigationProperties: new string[] { "Manager" })).ToList();
-        return result;
+        return await _cacheService.GetAsync(
+            "teams",
+            async () => (await _teamRepository
+                .GetAsync(navigationProperties: new string[] { "Manager" }))
+                .ToList());
     }
 
     public async Task<Team> GetById(int id)
