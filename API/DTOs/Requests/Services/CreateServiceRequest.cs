@@ -6,12 +6,10 @@ namespace API.DTOs.Requests.Services
 {
     public class CreateServiceRequest : IMapTo<Service>
     {
-        [Required(ErrorMessage = "Type code is required")]
         public string Type { get; set; }
 
         public string Description { get; set; }
 
-        [Required(ErrorMessage = "Amount is required")]
-        public string Amount { get; set; }
+        public double Amount { get; set; }
     }
 }

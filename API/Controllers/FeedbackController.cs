@@ -1,12 +1,9 @@
 ﻿using API.DTOs.Requests.Feedbacks;
 using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Constants.Enums;
-using Domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
-using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
 
@@ -70,8 +67,8 @@ public class FeedbackController : BaseController
     {
         try
         {
-            await _feedbackService.Create(model, CurrentUserID);
-            return Ok("Created Successfully");
+            var result = await _feedbackService.Create(model, CurrentUserID);
+            return Ok(new { Message = "Feedback Added Successfully", Data = result });
         }
         catch (KeyNotFoundException ex)
         {
@@ -89,8 +86,8 @@ public class FeedbackController : BaseController
     {
         try
         {
-            await _feedbackService.CreateReply(model, CurrentUserID);
-            return Ok("Created Successfully");
+            var result = await _feedbackService.CreateReply(model, CurrentUserID);
+            return Ok(new { Message = "Reply Added Successfully", Data = result });
         }
         catch (KeyNotFoundException ex)
         {
@@ -109,11 +106,11 @@ public class FeedbackController : BaseController
         try
         {
             var result = await _feedbackService.Update(feedbackId, model, CurrentUserID);
-            return Ok(result);
+            return Ok(new { Message = "Feedback Updated Successfully", Data = result });
         }
-        catch (KeyNotFoundException)
+        catch (KeyNotFoundException ex)
         {
-            return BadRequest("Feedback is not exist");
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
@@ -128,7 +125,7 @@ public class FeedbackController : BaseController
         try
         {
             await _feedbackService.Delete(feedbackId);
-            return Ok("Deleted Successfully");
+            return Ok("Feedback Deleted Successfully");
         }
         catch (KeyNotFoundException)
         {

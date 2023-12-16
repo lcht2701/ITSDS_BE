@@ -82,10 +82,8 @@ public class TicketTaskService : ITicketTaskService
         else
         {
             var taskList = new List<TicketTask>();
-            var assignments = await _assignmentRepository
-                .WhereAsync(x => x.TechnicianId == userId);
-
-            var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
+            var ticketIds = (await _assignmentRepository
+                .WhereAsync(x => x.TechnicianId == userId)).Select(assignment => assignment.TicketId);
 
             var ticketList = await _ticketRepository
                 .WhereAsync(ticket => ticketIds.Contains(ticket.Id) &&
@@ -101,6 +99,15 @@ public class TicketTaskService : ITicketTaskService
             }
             response = _mapper.Map<List<GetTicketTaskResponse>>(taskList);
         }
+        return response;
+    }
+
+    public async Task<GetTicketTaskResponse> GetById(int id)
+    {
+        var result = await _taskRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),
+            new string[] { "Technician", "CreateBy", "Team", "Ticket" }) ?? throw new KeyNotFoundException("Task is not exist");
+        var response = _mapper.Map(result, new GetTicketTaskResponse());
+        DataResponse.CleanNullableDateTime(response);
         return response;
     }
 
@@ -145,9 +152,13 @@ public class TicketTaskService : ITicketTaskService
         var target = await _taskRepository.FirstOrDefaultAsync(c => c.Id.Equals(taskId)) ??
                      throw new KeyNotFoundException();
         target.TaskStatus = newStatus;
-        if (newStatus == TicketTaskStatus.InProgress && target.ActualStartTime == null)
+        if (newStatus == TicketTaskStatus.InProgress)
         {
-            target.ActualStartTime = DateTime.Now;
+            if (target.ActualStartTime == null)
+            {
+                target.ActualStartTime = DateTime.Now;
+            }
+            target.ActualEndTime = null;
         }
         else if (newStatus == TicketTaskStatus.Completed || newStatus == TicketTaskStatus.Cancelled)
         {

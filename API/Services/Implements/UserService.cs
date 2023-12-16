@@ -4,13 +4,18 @@ using API.DTOs.Responses.Teams;
 using API.DTOs.Responses.Users;
 using API.Services.Interfaces;
 using AutoMapper;
+using Domain.Application.AppConfig;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 using Google.Cloud.Firestore;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
+using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 
@@ -25,8 +30,12 @@ public class UserService : IUserService
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IFirebaseService _firebaseService;
     private readonly IMapper _mapper;
+    private readonly MailSettings _mailSettings;
 
-    public UserService(IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IFirebaseService firebaseService, IMapper mapper)
+    public UserService(IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository,
+        IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<Company> companyRepository,
+        IRepositoryBase<CompanyMember> companyMemberRepository, IFirebaseService firebaseService, IMapper mapper,
+        IOptions<MailSettings> mailSettings)
     {
         _userRepository = userRepository;
         _teamRepository = teamRepository;
@@ -35,6 +44,7 @@ public class UserService : IUserService
         _companyMemberRepository = companyMemberRepository;
         _firebaseService = firebaseService;
         _mapper = mapper;
+        _mailSettings = mailSettings.Value;
     }
 
     public async Task<User> Create(CreateUserRequest model)
@@ -57,12 +67,14 @@ public class UserService : IUserService
             DataResponse.CleanNullableDateTime(entity);
             response.Add(entity);
         }
+
         return response;
     }
 
     public async Task<GetUserResponse> GetById(int id)
     {
-        var result = await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new KeyNotFoundException("User is not exist"));
+        var result =
+            await _userRepository.FoundOrThrow(u => u.Id.Equals(id), new KeyNotFoundException("User is not exist"));
         var entity = _mapper.Map(result, new GetUserResponse());
         DataResponse.CleanNullableDateTime(entity);
         return entity;
@@ -82,18 +94,21 @@ public class UserService : IUserService
         {
             await GetTeamsOfUser(user, entity);
         }
+
         return entity;
     }
 
     public async Task Remove(int id)
     {
-        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("User is not exist"));
+        var target =
+            await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("User is not exist"));
         await _userRepository.SoftDeleteAsync(target);
     }
 
     public async Task<User> Update(int id, UpdateUserRequest model)
     {
-        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("User is not exist"));
+        var target =
+            await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("User is not exist"));
         User user = _mapper.Map(model, target);
         await _userRepository.UpdateAsync(user);
         return user;
@@ -111,7 +126,7 @@ public class UserService : IUserService
     public async Task<User> UploadAvatarByUrl(int userId, UpdateAvatarUrlRequest model)
     {
         var user = await _userRepository.FoundOrThrow(c => c.Id.Equals(userId),
-                new KeyNotFoundException("User is not found"));
+            new KeyNotFoundException("User is not found"));
         user.AvatarUrl = model.AvatarUrl;
         await _userRepository.UpdateAsync(user);
         return user;
@@ -125,6 +140,7 @@ public class UserService : IUserService
         {
             throw new BadRequestException("No file uploaded.");
         }
+
         var stream = new MemoryStream();
         await file.CopyToAsync(stream);
         stream.Position = 0;
@@ -143,7 +159,8 @@ public class UserService : IUserService
 
         if (teamMember != null)
         {
-            var team = await _teamRepository.FirstOrDefaultAsync(x => x.Id == teamMember.TeamId, new string[] { "Manager" });
+            var team = await _teamRepository.FirstOrDefaultAsync(x => x.Id == teamMember.TeamId,
+                new string[] { "Manager" });
             if (team != null)
             {
                 entity.Team = _mapper.Map(team, new GetTeamResponse());
@@ -157,7 +174,8 @@ public class UserService : IUserService
 
         if (companyMember != null)
         {
-            var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id == companyMember.CompanyId, new string[] { "CustomerAdmin" });
+            var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id == companyMember.CompanyId,
+                new string[] { "CustomerAdmin" });
             if (company != null)
             {
                 entity.Company = _mapper.Map(company, new GetCompanyResponse());
@@ -219,4 +237,123 @@ public class UserService : IUserService
             // You can choose to create a new document or handle the error as needed.
         }
     }
+
+    public async Task SendUserCreatedNotification(CreateUserRequest dto)
+    {
+        using (MimeMessage emailMessage = new MimeMessage())
+        {
+            var fullname = $"{dto.FirstName} {dto.LastName}";
+            MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
+            emailMessage.From.Add(emailFrom);
+            MailboxAddress emailTo = new MailboxAddress(fullname,
+                dto.Email);
+            emailMessage.To.Add(emailTo);
+
+            emailMessage.Subject = "Welcome to ITSDS - Your New Account Details";
+            string emailTemplateText = @"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+  <meta charset=""UTF-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>Welcome to ITSDS System!</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+    }
+    .header {
+      background-color: #3498db;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    .content {
+      padding: 20px;
+    }
+    .footer {
+      background-color: #f1f1f1;
+      padding: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class=""container"">
+    <div class=""header"">
+      <h1>Welcome to ITSDS  System!</h1>
+    </div>
+    <div class=""content"">
+      <p>Dear {0},</p>
+      <p>We are delighted to welcome you to ITSDS! Your new account has been successfully created, and we're excited to have you on board. Below are your account details:</p>
+      <ul>
+        <li><strong>Username:</strong> {1}</li>
+        <li><strong>Password:</strong> {2}</li>
+        <li><strong>Email:</strong> {3}</li>
+        <li><strong>Role:</strong> {4}</li>
+      </ul>
+      <p>Please keep this information secure, and do not share your password with anyone. If you have any questions or concerns regarding your account, feel free to contact our support team at itsdskns@gmail.com.</p>
+      <p>We recommend logging in at <a href=""https://dichvuit.hisoft.vn/"">https://dichvuit.hisoft.vn/</a> to update your password for added security.</p>
+    </div>
+    <div class=""footer"">
+      <p>Best regards, ITSDS</p>
+    </div>
+  </div>
+</body>
+</html>
+";
+
+            emailTemplateText = string.Format(emailTemplateText, fullname, dto.Username, dto.Password, dto.Email,
+                DataResponse.GetEnumDescription(dto.Role));
+
+            BodyBuilder emailBodyBuilder = new BodyBuilder();
+            emailBodyBuilder.HtmlBody = emailTemplateText;
+            emailBodyBuilder.TextBody = "Plain Text goes here to avoid marked as spam for some email servers.";
+
+            emailMessage.Body = emailBodyBuilder.ToMessageBody();
+
+            using (SmtpClient mailClient = new SmtpClient())
+            {
+                await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port,
+                    SecureSocketOptions.StartTls);
+                await mailClient.AuthenticateAsync(_mailSettings.SenderEmail, _mailSettings.Password);
+                await mailClient.SendAsync(emailMessage);
+                await mailClient.DisconnectAsync(true);
+            }
+        }
+    }
+
+    #region Selection List By Roles
+
+    public async Task<List<User>> GetManagers()
+    {
+        return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Manager))).ToList();
+    }
+
+    public async Task<List<User>> GetTechnicians()
+    {
+        return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Technician))).ToList();
+    }
+
+    public async Task<List<User>> GetCustomers()
+    {
+        return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Customer))).ToList();
+    }
+
+    public async Task<List<User>> GetAdmins()
+    {
+        return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Admin))).ToList();
+    }
+
+    public async Task<List<User>> GetAccountants()
+    {
+        return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Accountant))).ToList();
+    }
+
+    #endregion
 }

@@ -2,7 +2,6 @@
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace Persistence.Context
 {
@@ -13,10 +12,10 @@ namespace Persistence.Context
         }
 
         public virtual DbSet<User>? Users { get; set; }
-        public virtual DbSet<Configuration>? Configurations { get; set; }
         public virtual DbSet<AuditLog>? AuditLogs { get; set; }
         public virtual DbSet<Messaging>? Messagings { get; set; }
         public virtual DbSet<DeviceToken>? DeviceTokens { get; set; }
+        public virtual DbSet<Attachment>? Attachments { get; set; }
         //Ticket
         public virtual DbSet<Team>? Teams { get; set; }
         public virtual DbSet<TeamMember>? TeamMembers { get; set; }
@@ -30,12 +29,12 @@ namespace Persistence.Context
         //Contract
         public virtual DbSet<Company>? Companies { get; set; }
         public virtual DbSet<CompanyMember>? CompanyMembers { get; set; }
+        public virtual DbSet<Renewal>? Renewals { get; set; }
         public virtual DbSet<Contract>? Contracts { get; set; }
-        public virtual DbSet<ContractDetail>? ContractDetails { get; set; }
+        public virtual DbSet<ServiceContract>? ServiceContracts { get; set; }
         public virtual DbSet<Payment>? Payments { get; set; }
         public virtual DbSet<PaymentTerm>? PaymentTerms { get; set; }
         public virtual DbSet<Service>? Services { get; set; }
-        public virtual DbSet<ServicePack>? ServicePacks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -44,6 +43,15 @@ namespace Persistence.Context
                     .WithMany()
                     .HasForeignKey(ts => ts.CreatedById);
 
+            builder.Entity<Ticket>()
+                .HasOne(t => t.CreatedBy)
+                .WithMany()
+                .HasForeignKey(ts => ts.CreatedById);
+
+            builder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+            
             base.OnModelCreating(builder);
 
             foreach (var entityType in builder.Model.GetEntityTypes())

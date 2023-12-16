@@ -7,13 +7,14 @@ namespace Domain.Models.Tickets
         public TicketSolution()
         {
             Feedbacks = new HashSet<Feedback>();
+            Reactions = new HashSet<Reaction>();
         }
 
-        public string? Title { get; set; }
+        public string Title { get; set; }
 
         public string? Content { get; set; }
 
-        public int? CategoryId { get; set; }
+        public int CategoryId { get; set; }
 
         public int? OwnerId { get; set; }
 
@@ -27,11 +28,9 @@ namespace Domain.Models.Tickets
 
         public string? InternalComments { get; set; }
 
-        public bool? IsApproved { get; set; }
+        public bool IsApproved { get; set; }
 
-        public bool? IsPublic { get; set; }
-
-        public string? AttachmentUrl { get; set; }
+        public bool IsPublic { get; set; }
 
         public virtual User? Owner { get; set; }
 
@@ -41,5 +40,8 @@ namespace Domain.Models.Tickets
 
         [JsonIgnore]
         public virtual ICollection<Feedback>? Feedbacks { get; set; }
+
+        [JsonIgnore]
+        public virtual ICollection<Reaction>? Reactions { get; set; }
     }
 }

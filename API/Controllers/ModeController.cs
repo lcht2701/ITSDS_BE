@@ -1,83 +1,121 @@
-﻿using API.DTOs.Requests.Categories;
-using API.DTOs.Requests.Modes;
-using AutoMapper;
+﻿using API.DTOs.Requests.Modes;
+using API.Services.Interfaces;
 using Domain.Constants;
-using Domain.Exceptions;
-using Domain.Models.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Utilities.IO;
 using Persistence.Helpers;
-using Persistence.Repositories.Interfaces;
 
-namespace API.Controllers
+namespace API.Controllers;
+
+[Route("/v1/itsds/mode")]
+public class ModeController : BaseController
 {
-    [Route("/v1/itsds/mode")]
-    public class ModeController : BaseController
+    private readonly IModeService _modeService;
+
+    public ModeController(IModeService modeService)
     {
-        private readonly IRepositoryBase<Mode> _moderepository;
+        _modeService = modeService;
+    }
 
-        public ModeController(IRepositoryBase<Mode> moderepository)
+    [Authorize]
+    [HttpGet("all")]
+
+    public async Task<IActionResult> GetAllMode()
+    {
+        var result = await _modeService.Get();
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetModes(
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5)
+    {
+        var result = await _modeService.Get();
+        var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+        return Ok(pagedResponse);
+    }
+
+    [Authorize(Roles = Roles.ADMIN)]
+    [HttpGet("{modeId}")]
+    public async Task<IActionResult> GetModeById(int modeId)
+    {
+        try
         {
-            _moderepository = moderepository;
-        }
-
-        [Authorize]
-        [HttpGet("all")]
-
-        public async Task<IActionResult> GetAllMode()
-        {
-            var result = await _moderepository.ToListAsync();
+            var result = await _modeService.GetById(modeId);
             return Ok(result);
         }
-
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetModes(
-        [FromQuery] string? filter,
-        [FromQuery] string? sort,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 5)
+        catch (KeyNotFoundException ex)
         {
-            var result = await _moderepository.ToListAsync();
-            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(pagedResponse);
+            return NotFound(ex.Message);
         }
-
-        [Authorize(Roles = Roles.ADMIN)]
-        [HttpGet("{modeId}")]
-        public async Task<IActionResult> GetModeById(int modeId)
+        catch (Exception ex)
         {
-            var result = await _moderepository.FoundOrThrow(x => x.Id.Equals(modeId), new BadRequestException("Mode not found"));
-            return Ok(result);
+            return BadRequest(ex.Message);
         }
+    }
 
-        [Authorize(Roles = Roles.ADMIN)]
-        [HttpPost]
-        public async Task<IActionResult> CreateMode([FromBody] CreateModeRequest model)
+    [Authorize(Roles = Roles.ADMIN)]
+    [HttpPost]
+    public async Task<IActionResult> CreateMode([FromBody] CreateModeRequest model)
+    {
+        try
         {
-            var entity = Mapper.Map(model, new Mode());
-            await _moderepository.CreateAsync(entity);
-            return Ok();
+            var entity = await _modeService.Create(model);
+            return Ok(new
+            {
+                Message = "Mode Created Successfully",
+                Data = entity
+            });
         }
-
-        [Authorize(Roles = Roles.ADMIN)]
-        [HttpPut("{modeId}")]
-        public async Task<IActionResult> UpdateMode(int modeId, [FromBody] UpdateModeRequest req)
+        catch (Exception ex)
         {
-            var target = await _moderepository.FoundOrThrow(c => c.Id.Equals(modeId), new BadRequestException("Mode not found"));
-            Mode entity = Mapper.Map(req, target);
-            await _moderepository.UpdateAsync(entity);
-            return Accepted("Update Successfully");
+            return BadRequest(ex.Message);
         }
+    }
 
-        [Authorize(Roles = Roles.ADMIN)]
-        [HttpDelete("{modeId}")]
-        public async Task<IActionResult> DeleteMode(int modeId)
+    [Authorize(Roles = Roles.ADMIN)]
+    [HttpPut("{modeId}")]
+    public async Task<IActionResult> UpdateMode(int modeId, [FromBody] UpdateModeRequest model)
+    {
+        try
         {
-            var target = await _moderepository.FoundOrThrow(c => c.Id.Equals(modeId), new BadRequestException("Mode not found"));
-            await _moderepository.SoftDeleteAsync(target);
-            return Ok("Delete Successfully");
+            var entity = await _modeService.Update(modeId, model);
+            return Ok(new
+            {
+                Message = "Mode Updated Successfully",
+                Data = entity
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.ADMIN)]
+    [HttpDelete("{modeId}")]
+    public async Task<IActionResult> DeleteMode(int modeId)
+    {
+        try
+        {
+            await _modeService.Remove(modeId);
+            return Ok("Mode Deleted Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
         }
     }
 }

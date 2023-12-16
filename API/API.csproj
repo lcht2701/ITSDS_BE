@@ -10,6 +10,17 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="DTOs\Responses\Dashboards\Contracts\**" />
+	  <Compile Remove="DTOs\Responses\Dashboards\TicketTasks\**" />
+	  <Content Remove="DTOs\Responses\Dashboards\Contracts\**" />
+	  <Content Remove="DTOs\Responses\Dashboards\TicketTasks\**" />
+	  <EmbeddedResource Remove="DTOs\Responses\Dashboards\Contracts\**" />
+	  <EmbeddedResource Remove="DTOs\Responses\Dashboards\TicketTasks\**" />
+	  <None Remove="DTOs\Responses\Dashboards\Contracts\**" />
+	  <None Remove="DTOs\Responses\Dashboards\TicketTasks\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="12.0.1" />
 		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
 		<PackageReference Include="AutoWrapper.Core" Version="4.5.1" />
@@ -17,6 +28,7 @@
 		<PackageReference Include="Firebase.Auth" Version="1.0.0" />
 		<PackageReference Include="FirebaseAdmin" Version="2.4.0" />
 		<PackageReference Include="FirebaseStorage.net" Version="1.0.3" />
+		<PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
 		<PackageReference Include="Google.Cloud.Firestore" Version="3.4.0" />
 		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.6" />
 		<PackageReference Include="Hangfire.Core" Version="1.8.6" />
@@ -35,6 +47,19 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Persistence\Persistence.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Update="appsettings.Development.json">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="admin_sdk.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="DTOs\Responses\Reactions\" />
 	</ItemGroup>
 
 </Project>

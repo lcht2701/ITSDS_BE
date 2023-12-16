@@ -36,7 +36,7 @@ public class MessagingController : BaseController
     {
         try
         {
-            await _messagingService.SendNotification("ITSDS", model.Message!, CurrentUserID);
+            await _messagingService.SendNotification("ITSDS", model.Message, CurrentUserID);
             return Ok("Send Notification Successfully");
         }
         catch (Exception ex)
@@ -51,8 +51,12 @@ public class MessagingController : BaseController
     {
         try
         {
-            await _messagingService.MarkAsRead(id);
-            return Ok("Successfully");
+            var result = await _messagingService.MarkAsRead(id);
+            return Ok(new
+            {
+                Message = "Mark As Read Successfully",
+                Data = result
+            });
         }
         catch (KeyNotFoundException ex)
         {

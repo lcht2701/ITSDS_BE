@@ -1,6 +1,5 @@
 ﻿using API.DTOs.Requests.TicketSolutions;
 using API.Services.Interfaces;
-using Azure;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +11,14 @@ namespace API.Controllers;
 public class TicketSolutionController : BaseController
 {
     private readonly ITicketSolutionService _ticketSolutionService;
+    private readonly IReactionService _reactionService;
 
-    public TicketSolutionController(ITicketSolutionService ticketSolutionService)
+    public TicketSolutionController(ITicketSolutionService ticketSolutionService, IReactionService reactionService)
     {
         _ticketSolutionService = ticketSolutionService;
+        _reactionService = reactionService;
     }
+
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
     [HttpGet]
@@ -39,12 +41,27 @@ public class TicketSolutionController : BaseController
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllSolutions()
+    {
+        try
+        {
+            var result = await _ticketSolutionService.Get(CurrentUserID);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
     [HttpGet("{solutionId}")]
     public async Task<IActionResult> GetSolutionById(int solutionId)
     {
         try
         {
-            var result = await _ticketSolutionService.GetById(solutionId);
+            var result = await _ticketSolutionService.GetById(solutionId, CurrentUserID);
             return Ok(result);
         }
         catch (KeyNotFoundException)
@@ -167,6 +184,35 @@ public class TicketSolutionController : BaseController
             return BadRequest(ex.Message);
         }
     }
+    [Authorize]
+    [HttpPost("{solutionId}/like")]
+    public async Task<IActionResult> Like(int solutionId)
+    {
+        try
+        {
+            string response = await _reactionService.Like(solutionId, CurrentUserID);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    [Authorize]
+    [HttpPost("{solutionId}/dislike")]
+    public async Task<IActionResult> Dislike(int solutionId)
+    {
+        try
+        {
+            string response = await _reactionService.Dislike(solutionId, CurrentUserID);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 
     // [Authorize(Roles = Roles.TECHNICIAN)]
     // [HttpPatch("submit-approval")]

@@ -10,10 +10,16 @@ namespace API.DTOs.Responses.Tickets;
 
 public class GetTicketResponse : IMapFrom<Ticket>
 {
-    public int? Id { get; set; }
+    public int Id { get; set; }
     public int? RequesterId { get; set; }
+    public int? CreatedById { get; set; }
     public string? Title { get; set; }
     public string? Description { get; set; }
+    public string? Type { get; set; }
+    public string? Street { get; set; }
+    public int? Ward { get; set; }
+    public int? District { get; set; }
+    public int? City { get; set; }
     public int? ModeId { get; set; }
     public int? ServiceId { get; set; }
     public int? CategoryId { get; set; }
@@ -22,7 +28,7 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public Impact? Impact { get; set; }
     public string? ImpactDetail { get; set; }
     public Urgency? Urgency { get; set; }
-    public string? AttachmentUrl { get; set; }
+    public List<string>? AttachmentUrls { get; set; }
     public DateTime? ScheduledStartTime { get; set; }
     public DateTime? ScheduledEndTime { get; set; }
     public DateTime? DueTime { get; set; }
@@ -32,6 +38,7 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public DateTime? DeletedAt { get; set; }
     public GetAssignmentResponse? Assignment { get; set; }
     public virtual User? Requester { get; set; }
+    public virtual User? CreatedBy { get; set; }
     public virtual Service? Service { get; set; }
     public virtual Category? Category { get; set; }
     public virtual Mode? Mode { get; set; }
