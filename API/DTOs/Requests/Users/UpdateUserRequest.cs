@@ -7,24 +7,22 @@ namespace API.DTOs.Requests.Users
 {
     public class UpdateUserRequest : IMapTo<User>
     {
-        public string FirstName { get; set; }
+        public string? FirstName { get; set; }
 
-        public string LastName { get; set; }
+        public string? LastName { get; set; }
 
-        [EmailAddress]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
-        [Phone]
-        public string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
 
-        public Gender Gender { get; set; }
+        public Gender? Gender { get; set; }
 
-        public bool isActive { get; set; }
+        public bool? IsActive { get; set; }
 
-        public DateTime DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
 
-        public string Address { get; set; }
+        public string? Address { get; set; }
 
-        public string AvatarUrl { get; set; }
+        public string? AvatarUrl { get; set; }
     }
 }

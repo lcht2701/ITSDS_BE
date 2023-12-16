@@ -4,15 +4,15 @@ namespace Domain.Models.Tickets;
 
 public partial class TicketTask : BaseEntity
 {
-    public int? TicketId { get; set; }
+    public int TicketId { get; set; }
 
-    public int? CreateById { get; set; }
+    public int CreateById { get; set; }
 
     public int? TechnicianId { get; set; }
 
     public int? TeamId { get; set; }
 
-    public string? Title { get; set; }
+    public string Title { get; set; }
 
     public string? Description { get; set; }
 
@@ -31,8 +31,6 @@ public partial class TicketTask : BaseEntity
     public int? Progress { get; set; }
 
     public TicketTaskStatus? TaskStatus { get; set; }
-
-    public string? AttachmentUrl { get; set; }
 
     public virtual User? Technician { get; set; }
 

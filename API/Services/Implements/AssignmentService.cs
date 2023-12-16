@@ -6,8 +6,6 @@ using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
-using Hangfire;
-using Microsoft.AspNetCore.Mvc;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
@@ -112,8 +110,9 @@ public class AssignmentService : IAssignmentService
         }
         else
         {
-            var teamMembers = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId));
-            var userIds = teamMembers.Select(tm => tm.MemberId).ToList();
+            var userIds = (await _teamMemberRepository.WhereAsync(
+                u => u.TeamId.Equals(teamId)))
+                .Select(tm => tm.MemberId).ToList();
             users = (List<User>)await _userRepository.WhereAsync(u => userIds.Contains(u.Id) && u.Role == Role.Technician);
         }
 
@@ -144,7 +143,7 @@ public class AssignmentService : IAssignmentService
 
     public async Task<object> GetById(int id)
     {
-        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Team", "Technician" }) ?? throw new KeyNotFoundException();
+        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Team", "Technician" }) ?? throw new KeyNotFoundException("Assignment is not exist");
         var response = _mapper.Map<GetAssignmentResponse>(entity);
         return response;
     }
@@ -156,9 +155,16 @@ public class AssignmentService : IAssignmentService
         var existingAssignment = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId == ticketId);
         if (existingAssignment != null)
         {
-            throw new BadRequestException("Ticket has been assigned");
+            await UpdateExistingAssignment(model, existingAssignment);
         }
+        else
+        {
+            await CreateNewAssignment(ticketId, model, ticket);
+        }
+    }
 
+    private async Task CreateNewAssignment(int ticketId, AssignTicketManualRequest model, Ticket ticket)
+    {
         if (model.TechnicianId != null || model.TeamId != null)
         {
             if (model.TechnicianId != null && model.TeamId != null)
@@ -176,10 +182,46 @@ public class AssignmentService : IAssignmentService
                 TeamId = model.TeamId
             };
             await _assignmentRepository.CreateAsync(assignment);
-            await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
+            if (ticket.TicketStatus == TicketStatus.Open)
+                await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
         }
     }
 
+    private async Task UpdateExistingAssignment(AssignTicketManualRequest model, Assignment existingAssignment)
+    {
+        Assignment entity;
+
+        switch (GetAssignmentCase(model.TechnicianId, model.TeamId))
+        {
+            case AssignmentCase.NullNull:
+                await _assignmentRepository.SoftDeleteAsync(existingAssignment);
+                break;
+
+            case AssignmentCase.NotNullNull:
+                entity = _mapper.Map(model, existingAssignment);
+                entity.TeamId = null;
+                await _assignmentRepository.UpdateAsync(entity);
+                break;
+
+            case AssignmentCase.NullNotNull:
+                entity = _mapper.Map(model, existingAssignment);
+                entity.TechnicianId = null;
+                await _assignmentRepository.UpdateAsync(entity);
+                break;
+
+            case AssignmentCase.NotNullNotNull:
+                if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
+                {
+                    throw new BadRequestException("This technician is not a member of the specified team.");
+                }
+                entity = _mapper.Map(model, existingAssignment);
+                await _assignmentRepository.UpdateAsync(entity);
+                break;
+
+            default:
+                throw new BadRequestException("Invalid modeluest.");
+        }
+    }
 
     public async Task Update(int ticketId, UpdateTicketAssignmentManualRequest model)
     {
@@ -225,7 +267,7 @@ public class AssignmentService : IAssignmentService
 
     public async Task Remove(int ticketId)
     {
-        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(ticketId)) ?? throw new KeyNotFoundException();
+        var entity = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(ticketId)) ?? throw new KeyNotFoundException("Assignment is not exist");
         await _assignmentRepository.SoftDeleteAsync(entity);
     }
 

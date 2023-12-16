@@ -6,8 +6,8 @@ namespace API.DTOs.Requests.Modes
 {
     public class UpdateModeRequest : IMapTo<Mode>
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
     }
 }

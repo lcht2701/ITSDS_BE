@@ -8,10 +8,8 @@ namespace API.DTOs.Requests.TicketTasks
 {
     public class UpdateTicketTaskRequest : IMapTo<TicketTask>
     {
-        [Required]
         public string? Title { get; set; }
         public string? Description { get; set; }
-        [Required]
         public TicketTaskStatus? TaskStatus { get; set; }
         public int? TechnicianId { get; set; }
         public int? TeamId { get; set; }
@@ -19,7 +17,7 @@ namespace API.DTOs.Requests.TicketTasks
         public DateTime? ScheduledStartTime { get; set; }
         public DateTime? ScheduledEndTime { get; set; }
         public int? Progress { get; set; }
-        public string? AttachmentUrl { get; set; }
+        public List<string>? AttachmentUrls { get; set; }
         public string? Note { get; set; }
     }
 }

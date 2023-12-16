@@ -7,7 +7,6 @@ using Domain.Models;
 using Domain.Models.Tickets;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using static Grpc.Core.Metadata;
 
 namespace API.Services.Implements;
 
@@ -35,7 +34,7 @@ public class FeedbackService : IFeedbackService
 
         if (user.Role == Role.Customer)
         {
-            feedbackQuery = (IList<Feedback>)feedbackQuery.Where(x => x.IsPublic == true);
+            feedbackQuery = feedbackQuery.Where(x => x.IsPublic == true).ToList();
         }
 
         var result = feedbackQuery.ToList() ?? throw new KeyNotFoundException();
@@ -64,7 +63,6 @@ public class FeedbackService : IFeedbackService
         return response;
     }
 
-
     public async Task<object> GetById(int id)
     {
         var feedback = await _feedbackRepository
@@ -83,7 +81,7 @@ public class FeedbackService : IFeedbackService
         }
     }
 
-    public async Task Create(CreateFeedbackRequest model, int userId)
+    public async Task<object> Create(CreateFeedbackRequest model, int userId)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
         var solution = await _solutionRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.SolutionId)) ?? throw new KeyNotFoundException("Solution does not exist");
@@ -94,9 +92,10 @@ public class FeedbackService : IFeedbackService
             entity.IsPublic = true;
         }
         await _feedbackRepository.CreateAsync(entity);
+        return entity;
     }
 
-    public async Task CreateReply(CreateReplyRequest model, int userId)
+    public async Task<object> CreateReply(CreateReplyRequest model, int userId)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
         var parentFeedback = await _feedbackRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ParentFeedbackId)) ?? throw new KeyNotFoundException("Parent feedback is not found");
@@ -111,12 +110,13 @@ public class FeedbackService : IFeedbackService
             entity.IsPublic = true;
         }
         await _feedbackRepository.CreateAsync(entity);
+        return entity;
     }
 
     public async Task<object> Update(int id, UpdateFeedbackRequest model, int userId)
     {
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
-        var target = await _feedbackRepository.FirstOrDefaultAsync(c => c.Id.Equals(id)) ?? throw new KeyNotFoundException();
+        var target = await _feedbackRepository.FirstOrDefaultAsync(c => c.Id.Equals(id)) ?? throw new KeyNotFoundException("Feedback is not found");
         Feedback entity = _mapper.Map(model, target);
         if (user.Role == Role.Customer)
         {
@@ -128,7 +128,7 @@ public class FeedbackService : IFeedbackService
 
     public async Task Delete(int id)
     {
-        var target = await _feedbackRepository.FirstOrDefaultAsync(c => c.Id.Equals(id)) ?? throw new KeyNotFoundException();
+        var target = await _feedbackRepository.FirstOrDefaultAsync(c => c.Id.Equals(id)) ?? throw new KeyNotFoundException("Feedback is not found");
         if (target.ParentFeedbackId == null)
         {
             var replies = await _feedbackRepository.WhereAsync(x => x.Id.Equals(target.ParentFeedbackId));

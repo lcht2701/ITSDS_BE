@@ -24,7 +24,7 @@ namespace Domain.Models.Contracts
 
         public string? FieldOfBusiness { get; set; }
 
-        public bool? isActive { get; set; }
+        public bool? IsActive { get; set; }
 
         public int? CustomerAdminId { get; set; }
 

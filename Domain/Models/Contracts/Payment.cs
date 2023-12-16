@@ -9,23 +9,26 @@ namespace Domain.Models.Contracts
             PaymentTerms = new HashSet<PaymentTerm>();
         }
 
+        public int? ContractId { get; set; }
+
         public string? Description { get; set; }
 
-        public string? PaymentType { get; set; }
+        public int NumberOfTerms { get; set; }
 
-        public DateTime? PaymentStart { get; set; }
+        public DateTime FirstDateOfPayment { get; set; }
 
-        public DateTime? PaymentEnd { get; set; }
+        public int Duration { get; set; }
 
-        public string? PaymentStatus { get; set; }
+        public double InitialPaymentAmount { get; set; }
+
+        public bool? IsFullyPaid { get; set; }
 
         public DateTime? PaymentFinishTime { get; set; }
 
         public string? Note { get; set; }
 
-        public int? ContractId { get; set; }
-
         public virtual Contract? Contract { get; set; }
+
         [JsonIgnore]
         public virtual ICollection<PaymentTerm>? PaymentTerms { get; set; }
     }

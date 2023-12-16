@@ -12,5 +12,6 @@ public static class Roles
     //Combo for ticket flow
     public const string TICKETSUPPORTMEMBERS = nameof(Role.Manager) + "," + nameof(Role.Technician);
     public const string TICKETPARTICIPANTS = nameof(Role.Customer) + "," + nameof(Role.Manager) + "," + nameof(Role.Technician);
+    public const string ITSDSEmployees = nameof(Role.Admin) + "," + nameof(Role.Manager) + "," + nameof(Role.Technician) + "," + nameof(Role.Accountant);
 }
 

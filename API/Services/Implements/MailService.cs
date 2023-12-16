@@ -98,6 +98,54 @@ public class MailService : IMailService
         }
     }
 
+    //public async Task<bool> SendPaymentNotification(HTMLMailData htmlMailData, int termId)
+    //{
+    //    var term = await _termRepository.FirstOrDefaultAsync(x => x.Id.Equals(termId)) ?? throw new KeyNotFoundException("Payment Term is not exist");
+    //    var company = term.Payment.Contract.Company ?? throw new KeyNotFoundException("Company not found for the given termId");
+
+    //    //var payment = await _paymentRepository.FirstOrDefaultAsync(x => x.Id.Equals(term.PaymentId));
+    //    //var contract = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(payment.ContractId));
+    //    //var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id.Equals(contract.CompanyId));
+    //    try
+    //    {
+    //        using (MimeMessage emailMessage = new MimeMessage())
+    //        {
+    //            MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
+    //            emailMessage.From.Add(emailFrom);
+
+    //            MailboxAddress emailTo = new MailboxAddress(htmlMailData.EmailToName, htmlMailData.EmailToId);
+    //            emailMessage.To.Add(emailTo);
+
+    //            emailMessage.Subject = "Hello";
+
+    //            string emailTemplateText = File.ReadAllText(Directory.GetCurrentDirectory() + "\\Templates\\PaymentNotification.html");
+
+    //            emailTemplateText = string.Format(emailTemplateText, company.CompanyName, term.Description, term.TermAmount, term.TermEnd , DateTime.Now.Year.ToString());
+
+    //            BodyBuilder emailBodyBuilder = new BodyBuilder();
+    //            emailBodyBuilder.HtmlBody = emailTemplateText;
+    //            emailBodyBuilder.TextBody = "Plain Text goes here to avoid marked as spam for some email servers.";
+
+    //            emailMessage.Body = emailBodyBuilder.ToMessageBody();
+
+    //            using (SmtpClient mailClient = new SmtpClient())
+    //            {
+    //                await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port, MailKit.Security.SecureSocketOptions.StartTls);
+    //                await mailClient.AuthenticateAsync(_mailSettings.SenderEmail, _mailSettings.Password);
+    //                await mailClient.SendAsync(emailMessage);
+    //                await mailClient.DisconnectAsync(true);
+    //            }
+    //        }
+
+    //        return true;
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        // Exception Details
+    //        return false;
+    //    }
+    //}
+
     public async Task<bool> SendMailWithAttachmentsAsync(MailDataWithAttachment mailDataWithAttachment)
     {
         try
@@ -156,4 +204,5 @@ public class MailService : IMailService
             return false;
         }
     }
+
 }

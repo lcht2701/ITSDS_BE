@@ -1,11 +1,5 @@
 ﻿using Domain.Constants.Enums;
-using Domain.Models.Tickets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Domain.Models.Contracts
 {
@@ -13,33 +7,40 @@ namespace Domain.Models.Contracts
     {
         public Contract()
         {
+            Renewals = new HashSet<Renewal>();
+            ServiceContracts = new HashSet<ServiceContract>();
             Payments = new HashSet<Payment>();
-            ContractDetails = new HashSet<ContractDetail>();
         }
 
-        public int? AccountantId { get; set; }
+        public string? Name { get; set; }
 
-        public string? AttachmentURl { get; set; }
-
-        public DateTime? StartDate { get; set; }
-
-        public int? Duration { get; set; }
+        public string? Description { get; set; }
 
         public double? Value { get; set; }
 
-        public TicketStatus? Status { get; set; }
+        public DateTime? StartDate { get; set; }
 
-        public int? TeamId { get; set; }
+        public DateTime? EndDate { get; set; }
+
+        public bool? IsRenewed { get; set; }
+
+        public int? ParentContractId { get; set; }
+
+        public int? AccountantId { get; set; }
 
         public int? CompanyId { get; set; }
 
-        public virtual Team? Team { get; set; }
+        public ContractStatus? Status { get; set; }
+
+        public virtual User? Accountant { get; set; }
 
         public virtual Company? Company { get; set; }
 
         [JsonIgnore]
-        public virtual ICollection<Payment>? Payments { get; set; }
+        public virtual ICollection<ServiceContract>? ServiceContracts { get; set; }
         [JsonIgnore]
-        public virtual ICollection<ContractDetail>? ContractDetails { get; set; }
+        public virtual ICollection<Renewal> Renewals { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Payment> Payments { get; set; }
     }
 }

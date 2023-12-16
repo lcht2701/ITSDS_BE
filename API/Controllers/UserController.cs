@@ -19,9 +19,85 @@ public class UserController : BaseController
         _firebaseService = firebaseService;
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}")]
-    [HttpGet("all")]
+    #region Selection List By Roles
+    [Authorize(Roles = Roles.ITSDSEmployees)]
+    [HttpGet("list/managers")]
+    public async Task<IActionResult> GetManagers()
+    {
+        try
+        {
+            var result = await _userService.GetManagers();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
+    [Authorize(Roles = Roles.ITSDSEmployees)]
+    [HttpGet("list/accountants")]
+    public async Task<IActionResult> GetAccountants()
+    {
+        try
+        {
+            var result = await _userService.GetAccountants();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.ITSDSEmployees)]
+    [HttpGet("list/customers")]
+    public async Task<IActionResult> GetCustomers()
+    {
+        try
+        {
+            var result = await _userService.GetCustomers();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.ITSDSEmployees)]
+    [HttpGet("list/admins")]
+    public async Task<IActionResult> GetAdmins()
+    {
+        try
+        {
+            var result = await _userService.GetAdmins();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.ITSDSEmployees)]
+    [HttpGet("list/technicians")]
+    public async Task<IActionResult> GetTechnicians()
+    {
+        try
+        {
+            var result = await _userService.GetTechnicians();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    #endregion
+
+    [Authorize]
+    [HttpGet("all")]
     public async Task<IActionResult> GetAllUsers()
     {
         try
@@ -84,6 +160,7 @@ public class UserController : BaseController
             if (user != null && await _firebaseService.SignUp(model.Email, model.Password) == true)
             {
                 await _userService.CreateUserDocument(user!);
+                await _userService.SendUserCreatedNotification(model);
             }
             return Ok("Created Successfully");
         }

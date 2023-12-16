@@ -7,17 +7,13 @@ namespace API.DTOs.Requests.Tickets
 {
     public class UpdateTicketManagerRequest : IMapTo<Ticket>
     {
-        [Required]
         public int? RequesterId { get; set; }
 
-        [Required]
         public string? Title { get; set; }
 
         public string? Description { get; set; }
 
         public int? ModeId { get; set; }
-
-        public int? ServiceId { get; set; }
 
         public TicketStatus? TicketStatus { get; set; }
 
@@ -31,7 +27,21 @@ namespace API.DTOs.Requests.Tickets
 
         public int? CategoryId { get; set; }
 
-        public string? AttachmentUrl { get; set; }
+        public int? ServiceId { get; set; }
+
+        public bool? IsPeriodic { get; set; }
+
+        public string? Type { get; set; }
+
+        public string? Street { get; set; }
+
+        public int? Ward { get; set; }
+
+        public int? District { get; set; }
+
+        public int? City { get; set; }
+
+        public List<string>? AttachmentUrls { get; set; }
 
         public DateTime? ScheduledStartTime { get; set; }
 

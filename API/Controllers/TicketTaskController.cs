@@ -75,6 +75,25 @@ public class TicketTaskController : BaseController
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        try
+        {
+            var result = await _ticketTaskService.GetById(id);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpPost("new")]
     public async Task<IActionResult> CreateTask([FromBody] CreateTicketTaskRequest model)
     {
@@ -121,8 +140,9 @@ public class TicketTaskController : BaseController
     {
         try
         {
+            var task = await _ticketTaskService.GetById(taskId);
+            await _messagingService.SendNotification("ITSDS", $"Task [{task.Title}] has been removed", CurrentUserID);
             await _ticketTaskService.Remove(taskId);
-            await _messagingService.SendNotification("ITSDS", $"Task has been removed", CurrentUserID);
             return Ok("Deleted Successfully");
         }
         catch (KeyNotFoundException)

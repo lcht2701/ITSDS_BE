@@ -1,5 +1,6 @@
 ﻿using API.Mappings;
 using Domain.Models.Tickets;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs.Requests.TicketSolutions
@@ -27,6 +28,6 @@ namespace API.DTOs.Requests.TicketSolutions
 
         public bool? IsPublic { get; set; }
 
-        public string? AttachmentUrl { get; set; }
+        public List<string>? AttachmentUrls { get; set; }
     }
 }

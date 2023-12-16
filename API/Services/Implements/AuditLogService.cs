@@ -1,13 +1,8 @@
 ﻿using API.Services.Interfaces;
-using Domain.Constants;
-using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Asn1.X509;
 using Persistence.Context;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;

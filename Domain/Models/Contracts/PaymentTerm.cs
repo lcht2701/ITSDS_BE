@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-
-namespace Domain.Models.Contracts
+﻿namespace Domain.Models.Contracts
 {
     public partial class PaymentTerm : BaseEntity
     {
@@ -13,7 +6,24 @@ namespace Domain.Models.Contracts
         {
 
         }
+
         public int? PaymentId { get; set; }
+
+        public string? Description { get; set; }
+
+        public double? TermAmount { get; set; }
+
+        public DateTime? TermStart { get; set; }
+
+        public DateTime? TermEnd { get; set; }
+
+        public bool? IsPaid { get; set; }
+
+        public DateTime? TermFinishTime { get; set; }
+
+        public string? Note { get; set; }
+
+        public string? AttachmentUrl { get; set; }
 
         public virtual Payment? Payment { get; set; }
     }

@@ -11,19 +11,34 @@ public partial class Ticket : BaseEntity
     {
         TicketTasks = new HashSet<TicketTask>();
     }
+
     public int? RequesterId { get; set; }
 
-    public string? Title { get; set; }
+    public int? CreatedById { get; set; }
+
+    public string Title { get; set; }
 
     public string? Description { get; set; }
 
+    public bool IsPeriodic { get; set; }
+
+    public string Type { get; set; }
+
+    public string? Street { get; set; }
+
+    public int? Ward { get; set; }
+
+    public int? District { get; set; }
+
+    public int? City { get; set; }
+
+    public int ServiceId { get; set; }
+
+    public int CategoryId { get; set; }
+    
     public int? ModeId { get; set; }
 
-    public int? ServiceId { get; set; }
-    
-    public int? CategoryId { get; set; }
-
-    public TicketStatus? TicketStatus { get; set; }
+    public TicketStatus TicketStatus { get; set; }
 
     public Priority? Priority { get; set; }
 
@@ -41,9 +56,9 @@ public partial class Ticket : BaseEntity
     
     public Urgency? Urgency { get; set; }
 
-    public string? AttachmentUrl { get; set; }
-
     public virtual User? Requester { get; set; }
+
+    public virtual User? CreatedBy { get; set; }
 
     public virtual Service? Service { get; set; }
 

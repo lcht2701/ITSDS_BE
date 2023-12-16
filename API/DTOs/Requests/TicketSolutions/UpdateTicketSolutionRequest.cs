@@ -23,5 +23,7 @@ namespace API.DTOs.Requests.TicketSolutions
         public string InternalComments { get; set; }
 
         public bool? IsPublic { get; set; }
+
+        public List<string>? AttachmentUrls { get; set; }
     }
 }
