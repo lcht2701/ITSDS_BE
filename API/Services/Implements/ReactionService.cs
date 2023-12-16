@@ -2,7 +2,6 @@
 using API.Services.Interfaces;
 using Domain.Models.Tickets;
 using Persistence.Repositories.Interfaces;
-using System.Diagnostics;
 
 namespace API.Services.Implements
 {
@@ -15,8 +14,9 @@ namespace API.Services.Implements
             _reactRepo = reactRepo;
         }
 
-        public async Task Dislike(int solutionId, int userId)
+        public async Task<string> Dislike(int solutionId, int userId)
         {
+            string response;
             var reaction = await _reactRepo.FirstOrDefaultAsync(x => x.SolutionId == solutionId && x.UserId == userId);
             if (reaction == null)
             {
@@ -27,7 +27,7 @@ namespace API.Services.Implements
                     ReactionType = 1,
                 };
                 await _reactRepo.CreateAsync(newReaction);
-                return;
+                response = "Your reaction has been successfully recorded!";
             }
             else
                 switch (reaction.ReactionType)
@@ -36,22 +36,27 @@ namespace API.Services.Implements
                         {
                             reaction.ReactionType = 1;
                             await _reactRepo.UpdateAsync(reaction);
+                            response = "Your reaction has been updated successfully!";
                             break;
                         }
                     case 1:
                         {
                             await _reactRepo.DeleteAsync(reaction);
+                            response = "Your reaction has been removed.";
                             break;
                         }
                     default:
                         {
-                            return;
+                            response = "No new updated!";
+                            break;
                         }
                 }
+            return response;
         }
 
-        public async Task Like(int solutionId, int userId)
+        public async Task<string> Like(int solutionId, int userId)
         {
+            string response;
             var reaction = await _reactRepo.FirstOrDefaultAsync(x => x.SolutionId == solutionId && x.UserId == userId);
             if (reaction == null)
             {
@@ -62,7 +67,7 @@ namespace API.Services.Implements
                     ReactionType = 0,
                 };
                 await _reactRepo.CreateAsync(newReaction);
-                return;
+                response = "Your reaction has been successfully recorded!";
             }
             else
                 switch (reaction.ReactionType)
@@ -70,19 +75,24 @@ namespace API.Services.Implements
                     case 0:
                         {
                             await _reactRepo.DeleteAsync(reaction);
+                            response = "Your reaction has been removed.";
                             break;
                         }
                     case 1:
                         {
                             reaction.ReactionType = 0;
                             await _reactRepo.UpdateAsync(reaction);
+                            response = "Your reaction has been updated successfully!";
                             break;
                         }
                     default:
                         {
-                            return;
+                            response = "No new updated!";
+                            break;
                         }
                 }
+            return response;
         }
     }
+
 }

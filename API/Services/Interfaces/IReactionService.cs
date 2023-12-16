@@ -4,7 +4,7 @@ namespace API.Services.Interfaces
 {
     public interface IReactionService
     {
-        Task Like(int solutionId, int userId);
-        Task Dislike(int solutionId, int userId);
+        Task<string> Like(int solutionId, int userId);
+        Task<string> Dislike(int solutionId, int userId);
     }
 }
