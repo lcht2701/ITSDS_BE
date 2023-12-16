@@ -74,7 +74,7 @@ namespace API.Services.Implements
                         }
                     case 1:
                         {
-                            reaction.ReactionType = 1;
+                            reaction.ReactionType = 0;
                             await _reactRepo.UpdateAsync(reaction);
                             break;
                         }
