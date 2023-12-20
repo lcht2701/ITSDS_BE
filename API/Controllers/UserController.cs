@@ -160,7 +160,6 @@ public class UserController : BaseController
             if (user != null && await _firebaseService.SignUp(model.Email, model.Password) == true)
             {
                 await _userService.CreateUserDocument(user!);
-                await _userService.SendUserCreatedNotification(model);
             }
             return Ok("Created Successfully");
         }
