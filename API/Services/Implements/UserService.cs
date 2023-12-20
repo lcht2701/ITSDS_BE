@@ -47,16 +47,6 @@ public class UserService : IUserService
         _mailSettings = mailSettings.Value;
     }
 
-    public async Task<User> Create(CreateUserRequest model)
-    {
-        User entity = _mapper.Map(model, new User());
-        var passwordHasher = new PasswordHasher<User>();
-        entity.Password = passwordHasher.HashPassword(entity, model.Password);
-        entity.IsActive = true;
-        await _userRepository.CreateAsync(entity);
-        return entity;
-    }
-
     public async Task<List<GetUserResponse>> Get()
     {
         var result = await _userRepository.ToListAsync();
@@ -98,11 +88,15 @@ public class UserService : IUserService
         return entity;
     }
 
-    public async Task Remove(int id)
+    public async Task<User> Create(CreateUserRequest model)
     {
-        var target =
-            await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("User is not exist"));
-        await _userRepository.SoftDeleteAsync(target);
+        User entity = _mapper.Map(model, new User());
+        var passwordHasher = new PasswordHasher<User>();
+        entity.Password = passwordHasher.HashPassword(entity, model.Password);
+        entity.IsActive = true;
+        await _userRepository.CreateAsync(entity);
+        await SendUserCreatedNotification(model);
+        return entity;
     }
 
     public async Task<User> Update(int id, UpdateUserRequest model)
@@ -112,6 +106,13 @@ public class UserService : IUserService
         User user = _mapper.Map(model, target);
         await _userRepository.UpdateAsync(user);
         return user;
+    }
+
+    public async Task Remove(int id)
+    {
+        var target =
+            await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("User is not exist"));
+        await _userRepository.SoftDeleteAsync(target);
     }
 
     public async Task<User> UpdateProfile(int id, UpdateProfileRequest model)
@@ -151,7 +152,6 @@ public class UserService : IUserService
         await UpdateUserDocument(user);
         return linkImage;
     }
-
 
     private async Task GetTeamsOfUser(User user, GetUserProfileResponse entity)
     {
@@ -238,11 +238,12 @@ public class UserService : IUserService
         }
     }
 
-    public async Task SendUserCreatedNotification(CreateUserRequest dto)
+    private async Task SendUserCreatedNotification(CreateUserRequest dto)
     {
         using (MimeMessage emailMessage = new MimeMessage())
         {
-            var fullname = $"{dto.FirstName} {dto.LastName}";
+            string fullname = $"{dto.FirstName} {dto.LastName}";
+            string roleName = DataResponse.GetEnumDescription(dto.Role);
             MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
             emailMessage.From.Add(emailFrom);
             MailboxAddress emailTo = new MailboxAddress(fullname,
@@ -256,60 +257,35 @@ public class UserService : IUserService
   <meta charset=""UTF-8"">
   <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
   <title>Welcome to ITSDS System!</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 600px;
-      margin: 20px auto;
-    }
-    .header {
-      background-color: #3498db;
-      color: #fff;
-      padding: 20px;
-      text-align: center;
-    }
-    .content {
-      padding: 20px;
-    }
-    .footer {
-      background-color: #f1f1f1;
-      padding: 10px;
-      text-align: center;
-    }
-  </style>
 </head>
-<body>
-  <div class=""container"">
-    <div class=""header"">
-      <h1>Welcome to ITSDS  System!</h1>
+<body style=""font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f8f9fa;"">
+
+  <div style=""max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);"">
+    <div style=""background-color: #007bff; color: #fff; padding: 20px; text-align: center; border-top-left-radius: 5px; border-top-right-radius: 5px;"">
+      <h1>Welcome to ITSDS System!</h1>
     </div>
-    <div class=""content"">
+    <div style=""padding: 20px;"">
       <p>Dear {0},</p>
       <p>We are delighted to welcome you to ITSDS! Your new account has been successfully created, and we're excited to have you on board. Below are your account details:</p>
-      <ul>
-        <li><strong>Username:</strong> {1}</li>
-        <li><strong>Password:</strong> {2}</li>
-        <li><strong>Email:</strong> {3}</li>
-        <li><strong>Role:</strong> {4}</li>
+      <ul style=""list-style-type: none; padding: 0;"">
+        <li style=""margin-bottom: 10px;""><strong>Username:</strong> {1}</li>
+        <li style=""margin-bottom: 10px;""><strong>Password:</strong> {2}</li>
+        <li style=""margin-bottom: 10px;""><strong>Email:</strong> {3}</li>
+        <li style=""margin-bottom: 10px;""><strong>Role:</strong> {4}</li>
       </ul>
-      <p>Please keep this information secure, and do not share your password with anyone. If you have any questions or concerns regarding your account, feel free to contact our support team at itsdskns@gmail.com.</p>
+      <p>Please keep this information secure, and do not share your password with anyone. If you have any questions or concerns regarding your account, feel free to contact our support team at <a href=""mailto:itsdskns@gmail.com"">itsdskns@gmail.com</a>.</p>
       <p>We recommend logging in at <a href=""https://dichvuit.hisoft.vn/"">https://dichvuit.hisoft.vn/</a> to update your password for added security.</p>
     </div>
-    <div class=""footer"">
+    <div style=""background-color: #f1f1f1; padding: 10px; text-align: center; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;"">
       <p>Best regards, ITSDS</p>
     </div>
   </div>
+
 </body>
 </html>
 ";
-
             emailTemplateText = string.Format(emailTemplateText, fullname, dto.Username, dto.Password, dto.Email,
-                DataResponse.GetEnumDescription(dto.Role));
+                roleName);
 
             BodyBuilder emailBodyBuilder = new BodyBuilder();
             emailBodyBuilder.HtmlBody = emailTemplateText;
