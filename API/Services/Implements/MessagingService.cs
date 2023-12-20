@@ -85,25 +85,29 @@ public class MessagingService : IMessagingService
         }
     }
 
-    public async Task GetToken(int userId, string? token)
+    public async Task GetToken(int userId, string token)
     {
-        if (token != null)
+        var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId.Equals(userId));
+        if (existToken == null)
         {
-            var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.Token!.Equals(token) && x.UserId.Equals(userId));
-            if (existToken == null)
+            var newToken = new DeviceToken()
             {
-                var newToken = new DeviceToken()
-                {
-                    Token = token,
-                    UserId = userId,
-                };
-                await _tokenRepository.CreateAsync(newToken);
-            }
-            else
+                Token = token,
+                UserId = userId,
+            };
+            await _tokenRepository.CreateAsync(newToken);
+        }
+        else
+        {
+            if (existToken.Token != token)
             {
                 existToken.UserId = userId;
                 existToken.Token = token;
                 await _tokenRepository.UpdateAsync(existToken);
+            }
+            else
+            {
+                return;
             }
         }
     }

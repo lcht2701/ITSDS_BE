@@ -2,6 +2,7 @@
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Models.Tickets;
+using Persistence.Helpers.Caching;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
@@ -9,17 +10,21 @@ namespace API.Services.Implements;
 public class ModeService : IModeService
 {
     private readonly IRepositoryBase<Mode> _moderepository;
+    private readonly ICacheService _cacheService;
     private readonly IMapper _mapper;
 
-    public ModeService(IRepositoryBase<Mode> moderepository, IMapper mapper)
+    public ModeService(IRepositoryBase<Mode> moderepository, ICacheService cacheService, IMapper mapper)
     {
         _moderepository = moderepository;
+        _cacheService = cacheService;
         _mapper = mapper;
     }
 
     public async Task<List<Mode>> Get()
     {
-        return await _moderepository.ToListAsync();
+        return await _cacheService.GetAsync(
+            "modes",
+            async () => await _moderepository.ToListAsync());
     }
 
     public async Task<Mode> GetById(int id)

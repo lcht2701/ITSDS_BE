@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Requests.Tickets;
+using API.DTOs.Responses.Tickets;
 using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Constants.Enums;
@@ -10,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using static Grpc.Core.Metadata;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
@@ -50,19 +51,25 @@ public class TicketController : BaseController
         return Ok(result);
     }
 
-    [Authorize]
+    [Authorize(Roles = Roles.MANAGER)]
     [HttpGet]
+    [SwaggerResponse(200, "Get List Of Tickets", typeof(List<GetTicketResponse>))]
     public async Task<IActionResult> GetTickets(
         [FromQuery] string? filter,
         [FromQuery] string? sort,
+        [FromQuery] TicketStatus? ticketStatus,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 5)
     {
         var response = await _ticketService.Get();
+        if (ticketStatus.HasValue)
+        {
+            response = response.Where(x => x.TicketStatus == ticketStatus).ToList();
+        }
         var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
         return Ok(pagedResponse);
     }
-    
+
     [Authorize]
     [HttpGet("period")]
     public async Task<IActionResult> GetPeriodicTickets(int numOfDays)
@@ -77,12 +84,17 @@ public class TicketController : BaseController
     public async Task<IActionResult> GetTicketsOfUser(int userId,
         [FromQuery] string? filter,
         [FromQuery] string? sort,
+        [FromQuery] TicketStatus? ticketStatus,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 5)
     {
         try
         {
             var response = await _ticketService.GetByUser(userId);
+            if (ticketStatus.HasValue)
+            {
+                response = response.Where(x => x.TicketStatus == ticketStatus).ToList();
+            }
             var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
             return Ok(pagedResponse);
         }
@@ -115,6 +127,31 @@ public class TicketController : BaseController
         {
             var response = await _ticketService.GetTicketAvailable(CurrentUserID);
             return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.TECHNICIAN)]
+    [HttpGet("assign/all")]
+    public async Task<IActionResult> GetTicketsOfTechnician(
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] TicketStatus? ticketStatus,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
+    {
+        try
+        {
+            var response = await _ticketService.GetTicketsOfTechnician(CurrentUserID);
+            if (ticketStatus.HasValue)
+            {
+                response = response.Where(x => x.TicketStatus == ticketStatus).ToList();
+            }
+            var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
         }
         catch (Exception ex)
         {
