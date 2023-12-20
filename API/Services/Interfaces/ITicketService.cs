@@ -11,6 +11,7 @@ public interface ITicketService
     Task<List<GetTicketResponse>> GetByUser(int userId);
     Task<List<GetTicketResponse>> GetTicketHistory(int userId);
     Task<List<GetTicketResponse>> GetTicketAvailable(int userId);
+    Task<List<GetTicketResponse>> GetTicketsOfTechnician(int userId);
     Task<List<GetTicketResponse>> GetAssignedTickets(int userId);
     Task<List<GetTicketResponse>> GetCompletedAssignedTickets(int userId);
     Task<List<GetTicketStatusesResponse>> GetTicketStatuses();
