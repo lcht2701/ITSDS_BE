@@ -490,7 +490,7 @@ public class DashboardService : IDashboardService
         data.TotalTicketOfDay = (await _ticketRepository.WhereAsync(x => x.CreatedAt >= today && x.CreatedAt < tomorrow)).Count;
         data.TotalContractOfDay = (await _contractRepository.WhereAsync(x => x.CreatedAt >= today && x.CreatedAt < tomorrow)).Count;
         data.TotalSolutionOfDay = (await _solutionRepository.WhereAsync(x => x.CreatedAt >= today && x.CreatedAt < tomorrow)).Count;
-        data.TotalPaymentOfDay = (await _termRepository.WhereAsync(x => x.IsPaid == true && x.CreatedAt >= today && x.CreatedAt < tomorrow)).Count;
+        data.TotalPaymentOfDay = (await _termRepository.WhereAsync(x => x.IsPaid == true && x.CreatedAt.Value.Date == DateTime.Today)).Sum(x => x.TermAmount);
         return data;
     }
 
