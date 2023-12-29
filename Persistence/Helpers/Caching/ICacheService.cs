@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Persistence.Helpers.Caching;
+﻿namespace Persistence.Helpers.Caching;
 
 public interface ICacheService
 {

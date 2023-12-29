@@ -22,19 +22,38 @@ public class ModeService : IModeService
 
     public async Task<List<Mode>> Get()
     {
-        return await _moderepository.ToListAsync();
+        var cacheData = _cacheService.GetData<List<Mode>>("modes");
+        if (cacheData == null || !cacheData.Any())
+        {
+            cacheData = await _moderepository.ToListAsync();
+            var expiryTime = DateTimeOffset.Now.AddSeconds(30);
+            _cacheService.SetData("modes", cacheData, expiryTime);
+        }
+        return cacheData;
     }
 
     public async Task<Mode> GetById(int id)
     {
-        var result = await _moderepository.FoundOrThrow(x => x.Id.Equals(id), new KeyNotFoundException("Mode is not exist"));
-        return result;
+        var cacheData = _cacheService.GetData<Mode>($"mode-{id}");
+        if (cacheData == null)
+        {
+            cacheData = await _moderepository.FoundOrThrow(x => x.Id.Equals(id), new KeyNotFoundException("Mode is not exist"));
+            var expiryTime = DateTimeOffset.Now.AddSeconds(30);
+            _cacheService.SetData($"mode-{cacheData.Id}", cacheData, expiryTime);
+        }
+        return cacheData;
     }
 
     public async Task<Mode> Create(CreateModeRequest model)
     {
         var entity = _mapper.Map(model, new Mode());
-        await _moderepository.CreateAsync(entity);
+        var result = await _moderepository.CreateAsync(entity);
+        #region Cache
+        var expiryTime = DateTimeOffset.Now.AddSeconds(30);
+        _cacheService.SetData($"mode-{result.Id}", result, expiryTime);
+        var cacheList = await _moderepository.ToListAsync();
+        _cacheService.SetData("modes", cacheList, expiryTime);
+        #endregion
         return entity;
     }
 
@@ -42,7 +61,13 @@ public class ModeService : IModeService
     {
         var target = await _moderepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Mode is not exist"));
         Mode entity = _mapper.Map(model, target);
-        await _moderepository.UpdateAsync(entity);
+        var result = await _moderepository.UpdateAsync(entity);
+        #region Cache
+        var expiryTime = DateTimeOffset.Now.AddSeconds(30);
+        _cacheService.SetData($"mode-{result.Id}", result, expiryTime);
+        var cacheList = await _moderepository.ToListAsync();
+        _cacheService.SetData("modes", cacheList, expiryTime);
+        #endregion
         return entity;
     }
 
@@ -50,5 +75,11 @@ public class ModeService : IModeService
     {
         var target = await _moderepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Mode is not exist"));
         await _moderepository.SoftDeleteAsync(target);
+        #region Cache
+        var expiryTime = DateTimeOffset.Now.AddSeconds(30);
+        _cacheService.RemoveData($"mode-{target.Id}");
+        var cacheList = await _moderepository.ToListAsync();
+        _cacheService.SetData("modes", cacheList, expiryTime);
+        #endregion
     }
 }
