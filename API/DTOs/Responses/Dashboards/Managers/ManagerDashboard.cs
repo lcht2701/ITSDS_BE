@@ -2,12 +2,12 @@
 {
     public class ManagerDashboard
     {
-        public int? CurrentResolvedTicketCount { get; set; }
+        public int? TotalContractOfDay { get; set; }
 
-        public int? AvailableContractsCount { get; set; }
+        public int? TotalTicketOfDay { get; set; }
 
-        public int? TeamsCount { get; set; }
+        public int? TotalSolutionOfDay { get; set; }
 
-        public int? SolutionsCount { get; set; }
+        public double? TotalPaymentOfDay { get; set; }
     }
 }
