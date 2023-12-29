@@ -64,6 +64,7 @@ builder.Services.AddScoped<IFirebaseService, FirebaseService>();
 builder.Services.AddScoped<IHangfireJobService, HangfireJobService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddScoped<IReactionService, ReactionService>();
+builder.Services.AddScoped<IExportService, ExportService>();
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSingleton<ICacheService, CacheService>();

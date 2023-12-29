@@ -483,11 +483,14 @@ public class DashboardService : IDashboardService
 
     public async Task<ManagerDashboard> GetManagerDashboard()
     {
+        var today = DateTime.Today;
+        var tomorrow = today.AddDays(1);
+
         ManagerDashboard data = new();
-        data.CurrentResolvedTicketCount = (await _ticketRepository.WhereAsync(x => x.TicketStatus.Equals(TicketStatus.Resolved))).Count;
-        data.AvailableContractsCount = (await _contractRepository.WhereAsync(x => x.Status != ContractStatus.Expired)).Count;
-        data.TeamsCount = (await _teamRepository.ToListAsync()).Count;
-        data.SolutionsCount = (await _solutionRepository.ToListAsync()).Count;
+        data.TotalTicketOfDay = (await _ticketRepository.WhereAsync(x => x.CreatedAt >= today && x.CreatedAt < tomorrow)).Count;
+        data.TotalContractOfDay = (await _contractRepository.WhereAsync(x => x.CreatedAt >= today && x.CreatedAt < tomorrow)).Count;
+        data.TotalSolutionOfDay = (await _solutionRepository.WhereAsync(x => x.CreatedAt >= today && x.CreatedAt < tomorrow)).Count;
+        data.TotalPaymentOfDay = (await _termRepository.WhereAsync(x => x.IsPaid == true && x.CreatedAt.Value.Date == DateTime.Today)).Sum(x => x.TermAmount);
         return data;
     }
 
