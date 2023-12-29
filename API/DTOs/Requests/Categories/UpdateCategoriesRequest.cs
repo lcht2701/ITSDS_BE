@@ -9,7 +9,5 @@ namespace API.DTOs.Requests.Categories
 
         public string? Description { get; set; }
 
-        public int? AssignedTechnicalId { get; set; }
-
     }
 }

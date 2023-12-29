@@ -13,9 +13,6 @@ namespace API.Validations.Categories
 
             RuleFor(x => x.Description)
                 .MaximumLength(500).WithMessage("Description should not exceed 500 characters.");
-
-            RuleFor(x => x.AssignedTechnicalId)
-                .GreaterThanOrEqualTo(0).WithMessage("AssignedTechnicalId should be greater than or equal to 0.");
         }
     }
 }

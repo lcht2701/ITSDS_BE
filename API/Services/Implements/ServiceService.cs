@@ -40,33 +40,53 @@ public class ServiceService : IServiceService
 
     public async Task<Service> GetById(int id)
     {
-        var result = await _serviceRepository.FirstOrDefaultAsync(u => u.Id.Equals(id)) ?? throw new KeyNotFoundException("Service is not exist");
-        return result;
+        var cacheData = _cacheService.GetData<Service>($"service-{id}");
+        if (cacheData == null)
+        {
+            cacheData = await _serviceRepository.FirstOrDefaultAsync(u => u.Id.Equals(id)) ?? throw new KeyNotFoundException("Service is not exist");
+            var expiryTime = DateTimeOffset.Now.AddSeconds(30);
+            _cacheService.SetData($"service-{cacheData.Id}", cacheData, expiryTime);
+        }
+        return cacheData;
     }
 
     public async Task<Service> Create(CreateServiceRequest model)
     {
         var entity = _mapper.Map(model, new Service());
-        //cache
+        var result = await _serviceRepository.CreateAsync(entity);
+        #region Cache
         var expiryTime = DateTimeOffset.Now.AddSeconds(30);
-        _cacheService.SetData<Service>($"service{entity.Id}", entity, expiryTime);
-        await _serviceRepository.CreateAsync(entity);
-        return entity;
+        _cacheService.SetData($"service-{result.Id}", result, expiryTime);
+        var cacheList = await _serviceRepository.ToListAsync();
+        _cacheService.SetData("services", cacheList, expiryTime);
+        #endregion
+        return result;
     }
 
     public async Task<Service> Update(int id, UpdateServiceRequest model)
     {
         var target = await _serviceRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Service is not exist"));
         Service entity = _mapper.Map(model, target);
-        await _serviceRepository.UpdateAsync(entity);
-        return entity;
+        var result = await _serviceRepository.UpdateAsync(entity);
+        #region Cache
+        var expiryTime = DateTimeOffset.Now.AddSeconds(30);
+        _cacheService.SetData($"service-{result.Id}", result, expiryTime);
+        var cacheList = await _serviceRepository.ToListAsync();
+        _cacheService.SetData("services", cacheList, expiryTime);
+        #endregion
+        return result;
     }
 
     public async Task Remove(int id)
     {
         var target = await _serviceRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Service is not exist"));
         await _serviceRepository.SoftDeleteAsync(target);
-        _cacheService.RemoveData($"service{target.Id}");
+        #region Cache
+        var expiryTime = DateTimeOffset.Now.AddSeconds(30);
+        _cacheService.RemoveData($"service-{target.Id}");
+        var cacheList = await _serviceRepository.ToListAsync();
+        _cacheService.SetData("services", cacheList, expiryTime);
+        #endregion
     }
 
 }
