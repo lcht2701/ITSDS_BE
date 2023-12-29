@@ -22,9 +22,14 @@ public class ServiceService : IServiceService
 
     public async Task<List<Service>> Get()
     {
-        return await _cacheService.GetAsync(
-            "services",
-            async () => await _serviceRepository.ToListAsync());
+        var cacheData = _cacheService.GetData<List<Service>>("services");
+        if (cacheData == null || !cacheData.Any())
+        {
+            cacheData = await _serviceRepository.ToListAsync();
+            var expiryTime = DateTimeOffset.Now.AddSeconds(30);
+            _cacheService.SetData("services", cacheData, expiryTime);
+        }
+        return cacheData;
     }
 
     public async Task<List<Service>> GetByCategory(int categoryId)
@@ -42,6 +47,9 @@ public class ServiceService : IServiceService
     public async Task<Service> Create(CreateServiceRequest model)
     {
         var entity = _mapper.Map(model, new Service());
+        //cache
+        var expiryTime = DateTimeOffset.Now.AddSeconds(30);
+        _cacheService.SetData<Service>($"service{entity.Id}", entity, expiryTime);
         await _serviceRepository.CreateAsync(entity);
         return entity;
     }
@@ -58,6 +66,7 @@ public class ServiceService : IServiceService
     {
         var target = await _serviceRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Service is not exist"));
         await _serviceRepository.SoftDeleteAsync(target);
+        _cacheService.RemoveData($"service{target.Id}");
     }
 
 }

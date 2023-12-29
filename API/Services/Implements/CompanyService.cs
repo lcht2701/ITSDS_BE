@@ -22,11 +22,8 @@ public class CompanyService : ICompanyService
 
     public async Task<List<Company>> Get()
     {
-        return await _cacheService.GetAsync(
-            "companies",
-            async () => (await _companyRepository
-            .GetAsync(navigationProperties: new string[] { "CustomerAdmin" }))
-            .ToList());
+        return (await _companyRepository
+            .GetAsync(navigationProperties: new string[] { "CustomerAdmin" })).ToList();
     }
 
     public async Task<Company> GetById(int id)
