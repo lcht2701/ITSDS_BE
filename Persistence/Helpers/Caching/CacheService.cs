@@ -1,71 +1,41 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
-using Newtonsoft.Json;
-using System.Collections.Concurrent;
+﻿using StackExchange.Redis;
+using System.Text.Json;
 
 namespace Persistence.Helpers.Caching;
 
 public class CacheService : ICacheService
 {
-    private static readonly ConcurrentDictionary<string, bool> cacheKeys = new();
-    private readonly IDistributedCache _distributedCache;
+    private IDatabase _cacheDb;
 
-    public CacheService(IDistributedCache distributedCache)
+    public CacheService()
     {
-        _distributedCache = distributedCache;
+        var redis = ConnectionMultiplexer.Connect("13.211.162.183:6379");
+        //var redis = ConnectionMultiplexer.Connect("localhost:6379");
+        _cacheDb = redis.GetDatabase();
     }
 
-    public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
+    public T GetData<T>(string key)
     {
-        string? cachedValue = await _distributedCache.GetStringAsync(
-            key,
-            cancellationToken);
-        if (cachedValue is null)
+        var value = _cacheDb.StringGet(key);
+        if (!string.IsNullOrEmpty(value))
         {
-            return null;
+            return JsonSerializer.Deserialize<T>(value);
         }
-
-        T? value = JsonConvert.DeserializeObject<T>(cachedValue);
-        return value;
+        return default;
     }
 
-    public async Task<T> GetAsync<T>(string key, Func<Task<T>> function, CancellationToken cancellationToken = default) where T : class
+    public object RemoveData(string key)
     {
-        T? cachedValue = await GetAsync<T>(key, cancellationToken);
-        if (cachedValue is not null)
-        {
-            return cachedValue;
-        }
-        cachedValue = await function();
-        await SetAsync(key, cachedValue, cancellationToken);
-        return cachedValue;
+        var exist = _cacheDb.KeyExists(key);
+        if (exist)
+            return _cacheDb.KeyDelete(key);
+        return false;
     }
 
-    public async Task SetAsync<T>(string key, T value, CancellationToken cancellationToken = default) where T : class
+    public bool SetData<T>(string key, T value, DateTimeOffset expirationTime)
     {
-        string cacheValue = JsonConvert.SerializeObject(value);
-        await _distributedCache.SetStringAsync(key, cacheValue, cancellationToken);
-        cacheKeys.TryAdd(key, false);
-    }
-
-    public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)
-    {
-        await _distributedCache.RemoveAsync(key, cancellationToken);
-        cacheKeys.TryRemove(key, out bool _);
-    }
-
-    public async Task RemovePrefixAsync(string prefixKey, CancellationToken cancellationToken = default)
-    {
-        //foreach(string key in cacheKeys.Keys)
-        // {
-        //     if (key.StartsWith(prefixKey))
-        //     {
-        //         await RemoveAsync(key, cancellationToken);
-        //     }
-        // }
-        IEnumerable<Task> tasks = cacheKeys
-            .Keys
-            .Where(k => k.StartsWith(prefixKey))
-            .Select(k => RemoveAsync(k, cancellationToken));
-        await Task.WhenAll(tasks);
+        var expiryTime = expirationTime.DateTime.Subtract(DateTime.Now);
+        var isSet = _cacheDb.StringSet(key, JsonSerializer.Serialize(value), expiryTime);
+        return isSet;
     }
 }

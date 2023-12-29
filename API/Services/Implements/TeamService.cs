@@ -22,11 +22,9 @@ public class TeamService : ITeamService
 
     public async Task<List<Team>> Get()
     {
-        return await _cacheService.GetAsync(
-            "teams",
-            async () => (await _teamRepository
+        return (await _teamRepository
                 .GetAsync(navigationProperties: new string[] { "Manager" }))
-                .ToList());
+                .ToList();
     }
 
     public async Task<Team> GetById(int id)

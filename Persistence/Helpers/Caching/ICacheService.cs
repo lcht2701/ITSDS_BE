@@ -1,13 +1,10 @@
-﻿namespace Persistence.Helpers.Caching;
+﻿using System;
+
+namespace Persistence.Helpers.Caching;
 
 public interface ICacheService
 {
-    Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) 
-        where T : class;
-    Task<T> GetAsync<T>(string key, Func<Task<T>> function, CancellationToken cancellationToken = default) 
-        where T : class;
-    Task SetAsync<T>(string key, T value, CancellationToken cancellationToken = default) 
-        where T : class;
-    Task RemoveAsync(string key, CancellationToken cancellationToken = default);
-    Task RemovePrefixAsync(string prefixKey, CancellationToken cancellationToken = default);
+    T GetData<T>(string key);
+    bool SetData<T>(string key, T value, DateTimeOffset expirationTime);
+    object RemoveData(string key);
 }

@@ -22,9 +22,7 @@ public class ModeService : IModeService
 
     public async Task<List<Mode>> Get()
     {
-        return await _cacheService.GetAsync(
-            "modes",
-            async () => await _moderepository.ToListAsync());
+        return await _moderepository.ToListAsync();
     }
 
     public async Task<Mode> GetById(int id)

@@ -7,7 +7,6 @@ using Domain.Models;
 using Domain.Models.Tickets;
 using Persistence.Helpers.Caching;
 using Persistence.Repositories.Interfaces;
-using System.Collections.Generic;
 
 namespace API.Services.Implements;
 
@@ -28,9 +27,7 @@ public class CategoryService : ICategoryService
 
     public async Task<List<Category>> Get()
     {
-        return await _cacheService.GetAsync(
-            "categories",
-            async() => await _categoryRepository.ToListAsync());
+        return await _categoryRepository.ToListAsync();
     }
 
     public async Task<Category> GetById(int id)
