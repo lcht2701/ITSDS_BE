@@ -105,27 +105,12 @@ public class TicketController : BaseController
     }
 
     [Authorize(Roles = Roles.CUSTOMER)]
-    [HttpGet("user/history")]
-    public async Task<IActionResult> GetTicketHistory()
-    {
-        try
-        {
-            var response = await _ticketService.GetTicketHistory(CurrentUserID);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize(Roles = Roles.CUSTOMER)]
     [HttpGet("user/available")]
     public async Task<IActionResult> GetAvailableTicketsOfCurrentUser()
     {
         try
         {
-            var response = await _ticketService.GetTicketAvailable(CurrentUserID);
+            var response = await _ticketService.GetByUser(CurrentUserID);
             return Ok(response);
         }
         catch (Exception ex)
@@ -165,22 +150,7 @@ public class TicketController : BaseController
     {
         try
         {
-            var response = await _ticketService.GetAssignedTickets(CurrentUserID);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize(Roles = Roles.TECHNICIAN)]
-    [HttpGet("assign/done")]
-    public async Task<IActionResult> GetCompleteAssignedTickets()
-    {
-        try
-        {
-            var response = await _ticketService.GetCompletedAssignedTickets(CurrentUserID);
+            var response = await _ticketService.GetTicketsOfTechnician(CurrentUserID);
             return Ok(response);
         }
         catch (Exception ex)
