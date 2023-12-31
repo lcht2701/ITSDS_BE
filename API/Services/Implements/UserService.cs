@@ -25,8 +25,8 @@ public class UserService : IUserService
 {
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IRepositoryBase<Team> _teamRepository;
-    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IRepositoryBase<Company> _companyRepository;
+    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IFirebaseService _firebaseService;
     private readonly IMapper _mapper;
@@ -88,14 +88,24 @@ public class UserService : IUserService
         return entity;
     }
 
-    public async Task<User> Create(CreateUserRequest model)
+    public async Task<User> Create(CreateUserOrCustomerAdmin model)
     {
-        User entity = _mapper.Map(model, new User());
+        User entity = _mapper.Map(model.UserModel, new User());
         var passwordHasher = new PasswordHasher<User>();
-        entity.Password = passwordHasher.HashPassword(entity, model.Password);
+        entity.Password = passwordHasher.HashPassword(entity, model.UserModel.Password);
+        //Default when create new account
         entity.IsActive = true;
-        await _userRepository.CreateAsync(entity);
-        await SendUserCreatedNotification(model);
+        var result = await _userRepository.CreateAsync(entity);
+        if (model.CompanyId != null)
+        {
+            await _companyMemberRepository.CreateAsync(new CompanyMember()
+            {
+                MemberId = result.Id,
+                CompanyId = (int)model.CompanyId,
+                IsCompanyAdmin = model.isCompanyAdmin
+            });
+        }
+        await SendUserCreatedNotification(model.UserModel);
         return entity;
     }
 
@@ -113,6 +123,14 @@ public class UserService : IUserService
         var target =
             await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("User is not exist"));
         await _userRepository.SoftDeleteAsync(target);
+        #region Remove in Company Member
+        var companyMember = await _companyMemberRepository.WhereAsync(x => x.MemberId == target.Id);
+        foreach (var member in companyMember) await _companyMemberRepository.DeleteAsync(member);
+        #endregion
+        #region Remove In Team Member
+        var teamMember = await _teamMemberRepository.WhereAsync(x => x.MemberId == target.Id);
+        foreach (var member in teamMember) await _teamMemberRepository.DeleteAsync(member);
+        #endregion
     }
 
     public async Task<User> UpdateProfile(int id, UpdateProfileRequest model)

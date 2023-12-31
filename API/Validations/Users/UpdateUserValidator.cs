@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Requests.Users;
+using Domain.Constants.Enums;
 using FluentValidation;
 
 namespace API.Validations.Users
@@ -17,27 +18,29 @@ namespace API.Validations.Users
 
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required.")
-                .EmailAddress().WithMessage("Invalid email address format.")
-                .MaximumLength(100).WithMessage("Email should not exceed 100 characters.");
+                .EmailAddress().WithMessage("Invalid email address format.");
 
-            RuleFor(x => x.PhoneNumber)
-                .MaximumLength(15).When(x => x.DateOfBirth != null)
-                .WithMessage("Phone number should not exceed 15 characters.")
-                .Matches(@"^\+?[0-9-]*$").WithMessage("Invalid phone number format.");
-
-            RuleFor(x => x.Gender)
-                .IsInEnum().WithMessage("Invalid gender value.");
+            RuleFor(u => u.Role)
+            .IsInEnum()
+            .Must(role => role >= Role.Admin && role <= Role.Accountant)
+            .WithMessage("Role must be valid and is required.");
 
             RuleFor(x => x.IsActive)
                 .NotNull().WithMessage("IsActive is required.");
+
+            RuleFor(x => x.Gender)
+                .IsInEnum().WithMessage("Invalid gender value.")
+                .Must(gender => gender >= Gender.Male && gender <= Gender.PreferNotToSay)
+                .WithMessage("Role must be valid and is required.");
 
             RuleFor(x => x.DateOfBirth)
                 .LessThan(DateTime.Today).When(x => x.DateOfBirth != null)
                 .WithMessage("Date of birth should be in the past.");
 
-            RuleFor(x => x.Address)
-                .MaximumLength(200).When(x => x.DateOfBirth != null)
-                .WithMessage("Address should not exceed 200 characters.");
+            RuleFor(x => x.PhoneNumber)
+                .MaximumLength(15).When(x => x.DateOfBirth != null)
+                .WithMessage("Phone number should not exceed 15 characters.")
+                .Matches(@"^\+?[0-9-]*$").WithMessage("Invalid phone number format.");
         }
     }
 }

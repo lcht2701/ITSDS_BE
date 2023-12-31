@@ -26,10 +26,6 @@ namespace Domain.Models.Contracts
 
         public bool? IsActive { get; set; }
 
-        public int? CustomerAdminId { get; set; }
-
-        public virtual User? CustomerAdmin { get; set; }
-
         [JsonIgnore]
         public virtual ICollection<Contract>? Contracts { get; set; }
 
