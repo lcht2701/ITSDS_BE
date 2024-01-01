@@ -75,7 +75,7 @@ public class ContractService : IContractService
     {
         Contract result = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Accountant", "Company" }) ?? throw new KeyNotFoundException("Contract is not exist");
         var response = _mapper.Map(result, new GetContractResponse());
-        response.AttachmentUrl = (await _attachmentService.Get(Tables.CONTRACT, response.Id)).Select(x => x.Url).ToList();
+        response.AttachmentUrls = (await _attachmentService.Get(Tables.CONTRACT, response.Id)).Select(x => x.Url).ToList();
         return response;
     }
 
@@ -95,9 +95,9 @@ public class ContractService : IContractService
             if (!isValid) throw new BadRequestException($"Date must be within parent contract: From [{parent.StartDate}] to [{parent.EndDate}]");
         }
         var contract = await _contractRepository.CreateAsync(entity);
-        if (model.AttachmentUrl != null)
+        if (model.AttachmentUrls != null)
         {
-            await _attachmentService.Add(Tables.TICKET, contract.Id, model.AttachmentUrl);
+            await _attachmentService.Add(Tables.TICKET, contract.Id, model.AttachmentUrls);
         }
         return entity;
     }
@@ -181,7 +181,7 @@ public class ContractService : IContractService
         var response = _mapper.Map<List<GetContractResponse>>(result);
         foreach (var item in response)
         {
-            item.AttachmentUrl = (await _attachmentService.Get(Tables.CONTRACT, item.Id)).Select(x => x.Url).ToList();
+            item.AttachmentUrls = (await _attachmentService.Get(Tables.CONTRACT, item.Id)).Select(x => x.Url).ToList();
         }
 
         return response;

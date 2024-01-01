@@ -17,7 +17,6 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using static Grpc.Core.Metadata;
 using DateTime = System.DateTime;
 
 namespace API.Services.Implements;
@@ -66,27 +65,6 @@ public class TicketService : ITicketService
         return response;
     }
 
-    #region Modify Ticket List Response
-    private async Task<List<GetTicketResponse>> ModifyTicketListResponse(IEnumerable<Ticket> result)
-    {
-        var response = _mapper.Map<List<GetTicketResponse>>(result);
-        foreach (var entity in response)
-        {
-            DataResponse.CleanNullableDateTime(entity);
-            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
-                new string[] { "Team", "Technician" });
-            if (ass != null)
-            {
-                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
-                entity.Assignment = assMapping;
-            }
-            entity.AttachmentUrls = (await _attachmentService.Get(Tables.TICKET, entity.Id)).Select(x => x.Url).ToList();
-        }
-
-        return response;
-    }
-    #endregion
-
     public async Task<List<GetTicketResponse>> GetPeriodicTickets(int? numOfDays)
     {
         var result = await _ticketRepository
@@ -106,39 +84,6 @@ public class TicketService : ITicketService
         }
 
         List<GetTicketResponse> response = await ModifyTicketListResponse(result);
-
-        return response;
-    }
-
-
-    //For Technician
-    public async Task<List<GetTicketResponse>> GetAssignedTickets(int userId)
-    {
-        var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == userId);
-        var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
-        var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
-            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
-        var filterResult = result.Where(x =>
-            IsTicketDone(x.Id) == false);
-
-        // Map the tickets to response entities
-        List<GetTicketResponse> response = await ModifyTicketListResponse(filterResult);
-
-        return response;
-    }
-
-    //For Technician
-    public async Task<List<GetTicketResponse>> GetCompletedAssignedTickets(int userId)
-    {
-        var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == userId);
-        var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
-        var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
-            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
-        var filterResult = result.Where(x =>
-            IsTicketDone(x.Id) == true);
-
-        // Map the tickets to response entities
-        List<GetTicketResponse> response = await ModifyTicketListResponse(filterResult);
 
         return response;
     }
@@ -170,7 +115,7 @@ public class TicketService : ITicketService
         return response;
     }
 
-    //For Customer
+    #region For Customer
     public async Task<List<GetTicketResponse>> GetTicketAvailable(int userId)
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
@@ -180,7 +125,6 @@ public class TicketService : ITicketService
         return response;
     }
 
-    //For Customer
     public async Task<List<GetTicketResponse>> GetTicketHistory(int userId)
     {
         var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
@@ -189,6 +133,51 @@ public class TicketService : ITicketService
         List<GetTicketResponse> response = await ModifyTicketListResponse(filteredResult);
         return response;
     }
+    #endregion
+    #region For Technician
+    public async Task<List<GetTicketResponse>> GetTicketsOfTechnician(int userId)
+    {
+        var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == userId);
+        var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
+        var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
+            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
+
+        // Map the tickets to response entities
+        List<GetTicketResponse> response = await ModifyTicketListResponse(result);
+
+        return response;
+    }
+
+    public async Task<List<GetTicketResponse>> GetAssignedTickets(int userId)
+    {
+        var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == userId);
+        var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
+        var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
+            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
+        var filterResult = result.Where(x =>
+            IsTicketDone(x.Id) == false);
+
+        // Map the tickets to response entities
+        List<GetTicketResponse> response = await ModifyTicketListResponse(filterResult);
+
+        return response;
+    }
+
+    public async Task<List<GetTicketResponse>> GetCompletedAssignedTickets(int userId)
+    {
+        var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == userId);
+        var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
+        var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
+            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
+        var filterResult = result.Where(x =>
+            IsTicketDone(x.Id) == true);
+
+        // Map the tickets to response entities
+        List<GetTicketResponse> response = await ModifyTicketListResponse(filterResult);
+
+        return response;
+    }
+    #endregion
 
     public async Task<object> GetTicketLog(int id)
     {
@@ -252,18 +241,6 @@ public class TicketService : ITicketService
 
         return entity;
     }
-
-    #region Assignment Support
-
-    public async Task<object> IsTechnicianMemberOfTeamAsync(int? technicianId, int? teamId)
-    {
-        var check = await _teamMemberRepository.FirstOrDefaultAsync(x =>
-            x.MemberId.Equals(technicianId) && x.TeamId.Equals(teamId));
-
-        return check;
-    }
-
-    #endregion
 
     public async Task<Ticket> UpdateByCustomer(int id, UpdateTicketCustomerRequest model)
     {
@@ -478,7 +455,6 @@ public class TicketService : ITicketService
         }
 
         #endregion
-
         #region Mail Notification
 
         await SendTicketMailNotification(ticket);
@@ -525,7 +501,6 @@ public class TicketService : ITicketService
         return Task.FromResult(enumValues);
     }
     #endregion
-
     #region Background Services
 
     public async Task AssignSupportJob(int ticketId)
@@ -616,6 +591,37 @@ public class TicketService : ITicketService
     }
 
     #endregion
+    #region Modify Ticket List Response
+    private async Task<List<GetTicketResponse>> ModifyTicketListResponse(IEnumerable<Ticket> result)
+    {
+        var response = _mapper.Map<List<GetTicketResponse>>(result);
+        foreach (var entity in response)
+        {
+            DataResponse.CleanNullableDateTime(entity);
+            var ass = await _assignmentRepository.FirstOrDefaultAsync(x => x.TicketId.Equals(entity.Id),
+                new string[] { "Team", "Technician" });
+            if (ass != null)
+            {
+                var assMapping = _mapper.Map<GetAssignmentResponse>(ass);
+                entity.Assignment = assMapping;
+            }
+            entity.AttachmentUrls = (await _attachmentService.Get(Tables.TICKET, entity.Id)).Select(x => x.Url).ToList();
+        }
+
+        return response;
+    }
+    #endregion
+    #region Assignment Support
+
+    public async Task<object> IsTechnicianMemberOfTeamAsync(int? technicianId, int? teamId)
+    {
+        var check = await _teamMemberRepository.FirstOrDefaultAsync(x =>
+            x.MemberId.Equals(technicianId) && x.TeamId.Equals(teamId));
+
+        return check;
+    }
+
+    #endregion
 
     private string AutoCloseBackgroundService(Ticket ticket)
     {
@@ -631,19 +637,16 @@ public class TicketService : ITicketService
             "*/5 * * * * *"); //Every 5
         return jobId;
     }
-
     private async Task<int> GetNumberOfAssignmentsForTechnician(int technicianId)
     {
         var result = await _assignmentRepository.WhereAsync(x => x.TechnicianId == technicianId);
         return result.Count;
     }
-
     private async Task<List<int>> GetManagerIdsList()
     {
         var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
         return managerIds;
     }
-
     private async Task SendTicketMailNotification(Ticket ticket)
     {
         #region GetDetail
@@ -758,4 +761,5 @@ public class TicketService : ITicketService
             }
         }
     }
+
 }

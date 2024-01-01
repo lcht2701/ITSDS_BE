@@ -5,8 +5,6 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UserSecretsId>5412e253-d582-4e86-93fc-55cfe4c8d381</UserSecretsId>
-		<!--<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>-->
-		<!--<DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>-->
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -42,8 +40,8 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
-		<PackageReference Include="StackExchange.Redis" Version="2.6.122" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
 	</ItemGroup>
 
 	<ItemGroup>

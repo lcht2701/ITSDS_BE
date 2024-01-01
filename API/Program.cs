@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Persistence.Context;
+using Persistence.Helpers.Caching;
 using Persistence.Repositories;
 using Persistence.Repositories.Interfaces;
 using System.Reflection;
@@ -64,6 +65,8 @@ builder.Services.AddScoped<IHangfireJobService, HangfireJobService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddScoped<IReactionService, ReactionService>();
 builder.Services.AddScoped<IExportService, ExportService>();
+
+builder.Services.AddSingleton<ICacheService, CacheService>();
 
 builder.Services.AddControllers(options => options.Filters.Add<ValidateModelStateFilter>())
     .AddFluentValidation(c => c.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly()));

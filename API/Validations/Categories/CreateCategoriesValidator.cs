@@ -12,9 +12,6 @@ namespace API.Validations.Categories
 
             RuleFor(x => x.Description)
                 .NotEmpty().WithMessage("Description is required.");
-
-            RuleFor(x => x.AssignedTechnicalId)
-                .GreaterThanOrEqualTo(0).WithMessage("AssignedTechnicalId should be greater than or equal to 0.");
         }
     }
 }

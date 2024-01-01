@@ -190,8 +190,8 @@ public class TicketSolutionController : BaseController
     {
         try
         {
-            await _reactionService.Like(solutionId, CurrentUserID);
-            return Ok("Create Like successfully");
+            string response = await _reactionService.Like(solutionId, CurrentUserID);
+            return Ok(response);
         }
         catch (Exception ex)
         {
@@ -204,8 +204,8 @@ public class TicketSolutionController : BaseController
     {
         try
         {
-            await _reactionService.Dislike(solutionId, CurrentUserID);
-            return Ok("Create Dislike successfully");
+            string response = await _reactionService.Dislike(solutionId, CurrentUserID);
+            return Ok(response);
         }
         catch (Exception ex)
         {

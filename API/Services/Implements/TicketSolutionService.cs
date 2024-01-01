@@ -2,6 +2,7 @@
 using API.DTOs.Responses.TicketSolutions;
 using API.Services.Interfaces;
 using AutoMapper;
+using Domain.Constants;
 using Domain.Constants.Enums;
 using Domain.Models;
 using Domain.Models.Tickets;
@@ -17,13 +18,15 @@ public class TicketSolutionService : ITicketSolutionService
     private readonly IRepositoryBase<TicketSolution> _solutionRepository;
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IRepositoryBase<Reaction> _reactRepository;
+    private readonly IAttachmentService _attachmentService;
     private readonly IMapper _mapper;
 
-    public TicketSolutionService(IRepositoryBase<TicketSolution> solutionRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Reaction> reactRepository, IMapper mapper)
+    public TicketSolutionService(IRepositoryBase<TicketSolution> solutionRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Reaction> reactRepository, IAttachmentService attachmentService, IMapper mapper)
     {
         _solutionRepository = solutionRepository;
         _userRepository = userRepository;
         _reactRepository = reactRepository;
+        _attachmentService = attachmentService;
         _mapper = mapper;
     }
 
@@ -57,6 +60,7 @@ public class TicketSolutionService : ITicketSolutionService
                 entity.CurrentReactionUser = currentReactionUser.ReactionType;
             }
             //done logic
+            entity.AttachmentUrls = (await _attachmentService.Get(Tables.TICKETSOLUTION, entity.Id)).Select(x => x.Url).ToList();
             response.Add(entity);
         }
 
@@ -80,6 +84,7 @@ public class TicketSolutionService : ITicketSolutionService
         {
             response.CurrentReactionUser = currentReactionUser.ReactionType;
         }
+        response.AttachmentUrls = (await _attachmentService.Get(Tables.TICKETSOLUTION, response.Id)).Select(x => x.Url).ToList();
         return response;
     }
 
@@ -88,7 +93,11 @@ public class TicketSolutionService : ITicketSolutionService
         var entity = _mapper.Map(model, new TicketSolution());
         entity.CreatedById = createdById;
         entity.IsApproved = false;
-        await _solutionRepository.CreateAsync(entity);
+        var result = await _solutionRepository.CreateAsync(entity);
+        if (model.AttachmentUrls != null)
+        {
+            await _attachmentService.Add(Tables.TICKETSOLUTION, result.Id, model.AttachmentUrls);
+        }
     }
 
     public async Task Update(int solutionId, UpdateTicketSolutionRequest model)
@@ -96,13 +105,18 @@ public class TicketSolutionService : ITicketSolutionService
         var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ??
                      throw new KeyNotFoundException();
         var entity = _mapper.Map(model, target);
-        await _solutionRepository.UpdateAsync(entity);
+        var result = await _solutionRepository.UpdateAsync(entity);
+        if (model.AttachmentUrls != null)
+        {
+            await _attachmentService.Add(Tables.TICKETSOLUTION, result.Id, model.AttachmentUrls);
+        }
     }
 
     public async Task Remove(int solutionId)
     {
         var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ??
                      throw new KeyNotFoundException();
+        await _attachmentService.Delete(Tables.TICKETSOLUTION, target.Id);
         await _solutionRepository.SoftDeleteAsync(target);
     }
 

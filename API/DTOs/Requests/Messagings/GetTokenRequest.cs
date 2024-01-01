@@ -5,6 +5,6 @@ namespace API.DTOs.Requests.Messagings
 {
     public class GetTokenRequest : IMapTo<Messaging>
     {
-        public string? Token { get; set; }
+        public string Token { get; set; }
     }
 }
