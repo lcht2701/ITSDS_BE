@@ -12,6 +12,11 @@ namespace Persistence.Helpers
             // Apply sorting
             data = ApplySorting(data, sortOrder);
 
+            if (pageSize == -1)
+            {
+                return data.ToPagedList(page, data.Count());
+            }
+
             // Apply paging
             return data.ToPagedList(page, pageSize);
         }
