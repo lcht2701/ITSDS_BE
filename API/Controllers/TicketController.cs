@@ -72,6 +72,7 @@ public class TicketController : BaseController
 
     [Authorize]
     [HttpGet("period")]
+    [SwaggerResponse(200, "Get Period Ticket", typeof(List<GetTicketResponse>))]
     public async Task<IActionResult> GetPeriodicTickets(int numOfDays)
     {
         var response = await _ticketService.GetPeriodicTickets(numOfDays);
@@ -81,6 +82,7 @@ public class TicketController : BaseController
 
     [Authorize]
     [HttpGet("user/{userId}")]
+    [SwaggerResponse(200, "Get Ticket Of User", typeof(List<GetTicketResponse>))]
     public async Task<IActionResult> GetTicketsOfUser(int userId,
         [FromQuery] string? filter,
         [FromQuery] string? sort,
@@ -106,6 +108,7 @@ public class TicketController : BaseController
 
     [Authorize(Roles = Roles.CUSTOMER)]
     [HttpGet("user/history")]
+    [SwaggerResponse(200, "Get Ticket History", typeof(List<GetTicketResponse>))]
     public async Task<IActionResult> GetTicketHistory()
     {
         try
@@ -121,6 +124,7 @@ public class TicketController : BaseController
 
     [Authorize(Roles = Roles.CUSTOMER)]
     [HttpGet("user/available")]
+    [SwaggerResponse(200, "Get Available Ticket Of User", typeof(List<GetTicketResponse>))]
     public async Task<IActionResult> GetAvailableTicketsOfCurrentUser()
     {
         try
@@ -136,6 +140,7 @@ public class TicketController : BaseController
 
     [Authorize(Roles = Roles.TECHNICIAN)]
     [HttpGet("assign/all")]
+    [SwaggerResponse(200, "Get Available Ticket Of Technician", typeof(List<GetTicketResponse>))]
     public async Task<IActionResult> GetTicketsOfTechnician(
         [FromQuery] string? filter,
         [FromQuery] string? sort,
@@ -161,6 +166,7 @@ public class TicketController : BaseController
 
     [Authorize(Roles = Roles.TECHNICIAN)]
     [HttpGet("assign/available")]
+    [SwaggerResponse(200, "Get Assigned Ticket", typeof(List<GetTicketResponse>))]
     public async Task<IActionResult> GetAssignedTickets()
     {
         try
@@ -176,6 +182,7 @@ public class TicketController : BaseController
 
     [Authorize(Roles = Roles.TECHNICIAN)]
     [HttpGet("assign/done")]
+    [SwaggerResponse(200, "Get Complete Assigned Ticket", typeof(List<GetTicketResponse>))]
     public async Task<IActionResult> GetCompleteAssignedTickets()
     {
         try
@@ -191,6 +198,7 @@ public class TicketController : BaseController
 
     [Authorize]
     [HttpGet("{ticketId}")]
+    [SwaggerResponse(200, "Get Ticket By Id", typeof(GetTicketResponse))]
     public async Task<IActionResult> GetTicketById(int ticketId)
     {
         try
