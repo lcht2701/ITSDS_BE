@@ -155,6 +155,7 @@ public class TicketService : ITicketService
         {
             await _attachmentService.Add(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
+        BackgroundJob.Enqueue(() => AssignSupportJob(entity.Id));
         return entity;
     }
 
@@ -188,6 +189,10 @@ public class TicketService : ITicketService
                 if (entity.TicketStatus == TicketStatus.Open)
                     await UpdateTicketStatus(entity.Id, TicketStatus.Assigned);
             }
+        }
+        else
+        {
+            BackgroundJob.Enqueue(() => AssignSupportJob(entity.Id));
         }
 
         return entity;
@@ -452,20 +457,19 @@ public class TicketService : ITicketService
         return Task.FromResult(enumValues);
     }
     #endregion
+
     #region Background Services
 
     public async Task AssignSupportJob(int ticketId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
-        if (ticket == null)
-        {
-            return;
-        }
-
+        if (ticket == null) return;
+        
         var teamIds = (await _teamRepository.WhereAsync(team => team.CategoryId == ticket.CategoryId))
             .Select(team => team.Id);
 
-        if (!teamIds.Any()) return;
+        if (!teamIds.Any()) 
+            teamIds = (await _teamRepository.ToListAsync()).Select(team => team.Id);
 
         var memberIds = (await _teamMemberRepository.WhereAsync(teamMember => teamIds.Contains(teamMember.Id)))
             .Select(teamMember => teamMember.Id);
@@ -542,6 +546,7 @@ public class TicketService : ITicketService
     }
 
     #endregion
+
     #region Modify Ticket List Response
     private async Task<List<GetTicketResponse>> ModifyTicketListResponse(IEnumerable<Ticket> result)
     {
@@ -562,6 +567,7 @@ public class TicketService : ITicketService
         return response;
     }
     #endregion
+
     #region Assignment Support
 
     public async Task<object> IsTechnicianMemberOfTeamAsync(int? technicianId, int? teamId)

@@ -201,15 +201,6 @@ public class TicketController : BaseController
         {
             Ticket entity = await _ticketService.CreateByCustomer(CurrentUserID, model);
             await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
-            #region Background Job for auto assign
-            string jobId = BackgroundJob.Schedule(
-                        () => _ticketService.AssignSupportJob(entity.Id),
-                        TimeSpan.FromMinutes(5));
-            RecurringJob.AddOrUpdate(
-                jobId + "_Cancellation",
-                () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
-                "*/5 * * * * *"); //Every 5 secs
-            #endregion
             #region Notification
             await _messagingService.SendNotification("ITSDS", $"Ticket [{model.Title}] has been created and scheduled for assignment", CurrentUserID);
             foreach (var managerId in await GetManagerIdsList())
@@ -217,7 +208,7 @@ public class TicketController : BaseController
                 await _messagingService.SendNotification("ITSDS", $"New ticket [{model.Title}] has been created", managerId);
             }
             #endregion
-            return Ok("Ticket created and scheduled for assignment.");
+            return Ok("Ticket created and assigned successfully");
         }
         catch (Exception ex)
         {
@@ -276,23 +267,7 @@ public class TicketController : BaseController
                     (int)model!.RequesterId);
             }
             #endregion
-            if (await _ticketService.IsTicketAssigned(entity.Id))
-            {
-                return Ok(new { Message = "Ticket created successfully", Data = entity });
-            }
-            else
-            {
-                #region Background Job for auto assign
-                string jobId = BackgroundJob.Schedule(
-                            () => _ticketService.AssignSupportJob(entity.Id),
-                            TimeSpan.FromMinutes(5));
-                RecurringJob.AddOrUpdate(
-                    jobId + "_Cancellation",
-                    () => _ticketService.CancelAssignSupportJob(jobId, entity.Id),
-                    "*/5 * * * * *"); //Every 5 secs
-                #endregion
-                return Ok("Ticket created and scheduled for assignment.");
-            }
+            return Ok(new { Message = "Ticket created and assigned successfully", Data = entity });
         }
         catch (Exception ex)
         {
