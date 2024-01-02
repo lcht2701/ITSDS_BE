@@ -100,7 +100,7 @@ public class CompanyMemberService : ICompanyMemberService
     {
         var currentUser = await _userRepository.FoundOrThrow(x => x.Id.Equals(currentUserId), new KeyNotFoundException("User is not found"));
         var currentUserMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(currentUser.Id));
-        if (currentUserMember == null || !currentUserMember.IsCompanyAdmin)
+        if (currentUserMember == null || currentUserMember.IsCompanyAdmin == false)
         {
             throw new UnauthorizedException("User is not authorize for this action");
         }

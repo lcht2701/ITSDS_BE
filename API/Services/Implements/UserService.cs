@@ -11,6 +11,7 @@ using Domain.Models;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 using Google.Cloud.Firestore;
+using Hangfire;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Identity;
@@ -96,7 +97,7 @@ public class UserService : IUserService
         //Default when create new account
         entity.IsActive = true;
         var result = await _userRepository.CreateAsync(entity);
-        if (model.CompanyId != null)
+        if (model.UserModel.Role == Role.Customer && model.CompanyId != null)
         {
             await _companyMemberRepository.CreateAsync(new CompanyMember()
             {
@@ -105,7 +106,7 @@ public class UserService : IUserService
                 IsCompanyAdmin = model.isCompanyAdmin
             });
         }
-        await SendUserCreatedNotification(model.UserModel);
+        BackgroundJob.Enqueue(() => SendUserCreatedNotification(model.UserModel));
         return entity;
     }
 

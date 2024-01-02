@@ -82,8 +82,6 @@ public class AuditLogService : IAuditLogService
         await _dbContext.SaveChangesAsync();
     }
 
-
-
     private static string GetUpdateMessage(string propertyName, object updatedValue)
     {
         if (updatedValue is Enum enumValue)
@@ -134,7 +132,5 @@ public class AuditLogService : IAuditLogService
                 return null;
         }
     }
-
-
 }
 
