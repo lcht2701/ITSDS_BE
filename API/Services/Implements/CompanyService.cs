@@ -2,7 +2,6 @@
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Models.Contracts;
-using Domain.Models.Tickets;
 using Persistence.Helpers.Caching;
 using Persistence.Repositories.Interfaces;
 
