@@ -349,7 +349,7 @@ public class TicketService : ITicketService
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
                      throw new KeyNotFoundException("Ticket is not exist");
         if (ticket.RequesterId == userId &&
-            ticket.TicketStatus == TicketStatus.Open)
+            (ticket.TicketStatus == TicketStatus.Open || ticket.TicketStatus == TicketStatus.Assigned))
         {
             ticket.TicketStatus = TicketStatus.Cancelled;
             ticket.CompletedTime = DateTime.Now;

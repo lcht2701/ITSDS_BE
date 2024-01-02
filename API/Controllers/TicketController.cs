@@ -202,13 +202,13 @@ public class TicketController : BaseController
             Ticket entity = await _ticketService.CreateByCustomer(CurrentUserID, model);
             await _auditLogService.TrackCreated(entity.Id, Tables.TICKET, CurrentUserID);
             #region Notification
-            await _messagingService.SendNotification("ITSDS", $"Ticket [{model.Title}] has been created and scheduled for assignment", CurrentUserID);
+            await _messagingService.SendNotification("ITSDS", $"Ticket [{model.Title}] has been created", CurrentUserID);
             foreach (var managerId in await GetManagerIdsList())
             {
                 await _messagingService.SendNotification("ITSDS", $"New ticket [{model.Title}] has been created", managerId);
             }
             #endregion
-            return Ok("Ticket created and assigned successfully");
+            return Ok("Ticket created successfully");
         }
         catch (Exception ex)
         {
@@ -258,7 +258,7 @@ public class TicketController : BaseController
             #region Notification
             foreach (var managerId in await GetManagerIdsList())
             {
-                await _messagingService.SendNotification("ITSDS", $"Status of ticket [{model!.Title}] has been updated", managerId);
+                await _messagingService.SendNotification("ITSDS", $"Ticket [{model!.Title}] has been created", managerId);
 
             }
             if (model!.RequesterId != null)
