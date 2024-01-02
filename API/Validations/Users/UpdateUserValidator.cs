@@ -23,7 +23,7 @@ namespace API.Validations.Users
 
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required.")
-                .UniqueEmail(email => _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result == null).WithMessage("Email Address is already in use.")
+                .UniqueEmail(email => _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result != null).WithMessage("Email Address is already in use.")
                 .EmailAddress().WithMessage("Invalid email address format.");
 
             RuleFor(u => u.Role)
