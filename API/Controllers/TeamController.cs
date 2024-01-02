@@ -4,6 +4,7 @@ using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
@@ -36,6 +37,7 @@ public class TeamController : BaseController
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpGet]
+    [SwaggerResponse(200, "Get Team", typeof(List<Domain.Models.Tickets.Team>))]
     public async Task<IActionResult> GetTeams(
     [FromQuery] string? filter,
     [FromQuery] string? sort,
@@ -57,6 +59,7 @@ public class TeamController : BaseController
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER}")]
     [HttpGet("my-teams")]
+    [SwaggerResponse(200, "Get Team By Manager", typeof(List<Domain.Models.Tickets.Team>))]
     public async Task<IActionResult> GetTeamsByManager()
     {
         try
@@ -72,6 +75,7 @@ public class TeamController : BaseController
 
     [Authorize(Roles = $"{Roles.ADMIN},{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpGet("{teamId}")]
+    [SwaggerResponse(200, "Get Team By Id", typeof(Domain.Models.Tickets.Team))]
     public async Task<IActionResult> GetTeamById(int teamId)
     {
         try

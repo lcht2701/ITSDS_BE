@@ -1,9 +1,12 @@
 using API.DTOs.Requests.Users;
+using API.DTOs.Responses.TicketTasks;
+using API.DTOs.Responses.Users;
 using API.Services.Interfaces;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
@@ -113,6 +116,7 @@ public class UserController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}")]
     [HttpGet]
+    [SwaggerResponse(200, "Get User", typeof(List<GetUserResponse>))]
     public async Task<IActionResult> GetUsers(
     [FromQuery] string? filter,
     [FromQuery] string? sort,
@@ -133,6 +137,7 @@ public class UserController : BaseController
 
     [Authorize]
     [HttpGet("{id}")]
+    [SwaggerResponse(200, "Get User", typeof(GetUserResponse))]
     public async Task<IActionResult> GetUserById(int id)
     {
         try

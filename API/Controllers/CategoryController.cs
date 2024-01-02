@@ -1,10 +1,12 @@
 ﻿using API.DTOs.Requests.Categories;
+using API.DTOs.Responses.Tickets;
 using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers
 {
@@ -29,6 +31,7 @@ namespace API.Controllers
 
         [Authorize]
         [HttpGet]
+        [SwaggerResponse(200, "Get List Categories", typeof(List<Domain.Models.Tickets.Category>))]
         public async Task<IActionResult> GetCategories(
         [FromQuery] string? filter,
         [FromQuery] string? sort,
@@ -42,6 +45,7 @@ namespace API.Controllers
 
         [Authorize(Roles = Roles.MANAGER)]
         [HttpGet("{categoryId}")]
+        [SwaggerResponse(200, "Get Categories By Id", typeof(List<Domain.Models.Tickets.Category>))]
         public async Task<IActionResult> GetCategoryById(int categoryId)
         {
             try

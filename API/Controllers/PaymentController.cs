@@ -6,6 +6,7 @@ using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
@@ -36,6 +37,7 @@ public class PaymentController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpGet]
+    [SwaggerResponse(200, "Get Payment", typeof(List<Domain.Models.Contracts.Payment>))]
     public async Task<IActionResult> Get(
     [FromQuery] string? filter,
     [FromQuery] string? sort,
@@ -57,6 +59,7 @@ public class PaymentController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpGet("contract/{contractId}")]
+    [SwaggerResponse(200, "Get Payment By Contract", typeof(List<Domain.Models.Contracts.Payment>))]
     public async Task<IActionResult> GetByContract(int contractId)
     {
         try
@@ -76,6 +79,7 @@ public class PaymentController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpGet("{id}")]
+    [SwaggerResponse(200, "Get Payment By Id", typeof(Domain.Models.Contracts.Payment))]
     public async Task<IActionResult> GetById(int id)
     {
         try

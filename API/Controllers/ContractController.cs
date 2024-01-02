@@ -1,11 +1,13 @@
 ﻿
 using API.DTOs.Requests.Contracts;
 using API.DTOs.Requests.ServiceContracts;
+using API.DTOs.Responses.Contracts;
 using API.Services.Interfaces;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
@@ -31,6 +33,7 @@ public class ContractController : BaseController
 
     [Authorize]
     [HttpGet]
+    [SwaggerResponse(200, "Get List Contracts", typeof(List<GetContractResponse>))]
     public async Task<IActionResult> GetContracts(
     [FromQuery] string? filter,
     [FromQuery] string? sort,
@@ -44,6 +47,7 @@ public class ContractController : BaseController
 
     [Authorize]
     [HttpGet("parent-contracts")]
+    [SwaggerResponse(200, "Get Parent Contracts", typeof(List<GetContractResponse>))]
 
     public async Task<IActionResult> GetParentContracts()
     {
@@ -53,6 +57,7 @@ public class ContractController : BaseController
 
     [Authorize]
     [HttpGet("child")]
+    [SwaggerResponse(200, "Get Child Contracts", typeof(List<GetContractResponse>))]
     public async Task<IActionResult> GetChildContracts(int contractId)
     {
         try
@@ -68,6 +73,7 @@ public class ContractController : BaseController
 
     [Authorize]
     [HttpGet("renew")]
+    [SwaggerResponse(200, "Get Renewal Contracts", typeof(List<Domain.Models.Contracts.Renewal>))]
     public async Task<IActionResult> GetRenewals(int contractId)
     {
         try
@@ -83,6 +89,7 @@ public class ContractController : BaseController
 
     [Authorize(Roles = $"{Roles.ACCOUNTANT}")]
     [HttpGet("accountant")]
+    [SwaggerResponse(200, "Get Contract By Accountant", typeof(List<GetContractResponse>))]
     public async Task<IActionResult> GetByAccountant()
     {
         try
@@ -98,6 +105,7 @@ public class ContractController : BaseController
 
     [Authorize]
     [HttpGet("customer")]
+    [SwaggerResponse(200, "Get Contract By Customer", typeof(List<GetContractResponse>))]
     public async Task<IActionResult> GetByCustomer()
     {
         try
@@ -113,6 +121,7 @@ public class ContractController : BaseController
 
     [Authorize]
     [HttpGet("{id}")]
+    [SwaggerResponse(200, "Get Contract By Id", typeof(GetContractResponse))]
     public async Task<IActionResult> GetContractById(int id)
     {
         try

@@ -1,11 +1,14 @@
 ﻿using API.DTOs.Requests.CompanyMembers;
+using API.DTOs.Responses.Contracts;
 using API.Services.Implements;
 using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Exceptions;
+using Domain.Models.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
@@ -41,6 +44,7 @@ public class CompanyMemberController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpGet("select-list")]
+    [SwaggerResponse(200, "Get Select List", typeof(List<Domain.Models.User>))]
     public async Task<IActionResult> GetSelectList(int companyId)
     {
         try
@@ -60,6 +64,7 @@ public class CompanyMemberController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpGet("{id}")]
+    [SwaggerResponse(200, "Get Category by Id", typeof(CompanyMember))]
     public async Task<IActionResult> GetCategoryById(int id)
     {
         try

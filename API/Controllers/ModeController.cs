@@ -1,9 +1,11 @@
 ﻿using API.DTOs.Requests.Modes;
+using API.DTOs.Responses.Dashboards.Accountants;
 using API.Services.Interfaces;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
@@ -28,6 +30,7 @@ public class ModeController : BaseController
 
     [Authorize]
     [HttpGet]
+    [SwaggerResponse(200, "Get Mode", typeof(List<Domain.Models.Tickets.Mode>))]
     public async Task<IActionResult> GetModes(
     [FromQuery] string? filter,
     [FromQuery] string? sort,
@@ -41,6 +44,7 @@ public class ModeController : BaseController
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpGet("{modeId}")]
+    [SwaggerResponse(200, "Get Mode By Id", typeof(Domain.Models.Tickets.Mode))]
     public async Task<IActionResult> GetModeById(int modeId)
     {
         try
