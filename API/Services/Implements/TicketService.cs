@@ -31,6 +31,7 @@ public class TicketService : ITicketService
     private readonly IAuditLogService _auditLogService;
     private readonly IMessagingService _messagingService;
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
+    private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IRepositoryBase<Team> _teamRepository;
     private readonly IAttachmentService _attachmentService;
     private readonly IMapper _mapper;
@@ -40,7 +41,8 @@ public class TicketService : ITicketService
         IRepositoryBase<TicketTask> taskRepository, IRepositoryBase<User> userRepository,
         IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService,
         IMessagingService messagingService, IRepositoryBase<TeamMember> teamMemberRepository, IMapper mapper,
-        IOptions<MailSettings> mailSettings, IRepositoryBase<Team> teamRepository, IAttachmentService attachmentService)
+        IOptions<MailSettings> mailSettings, IRepositoryBase<Team> teamRepository, IAttachmentService attachmentService,
+        IRepositoryBase<CompanyMember> companyMemberRepository)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -54,6 +56,7 @@ public class TicketService : ITicketService
         _mapper = mapper;
         _mailSettings = mailSettings.Value;
         _attachmentService = attachmentService;
+        _companyMemberRepository = companyMemberRepository;
     }
 
     public async Task<List<GetTicketResponse>> Get()
@@ -109,11 +112,23 @@ public class TicketService : ITicketService
 
     public async Task<List<GetTicketResponse>> GetByUser(int userId)
     {
-        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
-            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
+        List<Ticket> result = new();
+        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(userId));
+        if (companyMember.IsCompanyAdmin)
+        {
+            var memberIds = (await _companyMemberRepository.WhereAsync(x => x.CompanyId.Equals(companyMember.CompanyId))).Select(x => x.MemberId);
+            result = (List<Ticket>)await _ticketRepository.WhereAsync(x => memberIds.Contains((int)x.RequesterId!),
+                new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
+        }
+        else
+        {
+            result = (List<Ticket>)await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
+                new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
+        }
         List<GetTicketResponse> response = await ModifyTicketListResponse(result);
         return response;
     }
+
 
     #region For Technician
     public async Task<List<GetTicketResponse>> GetTicketsOfTechnician(int userId)
@@ -155,6 +170,7 @@ public class TicketService : ITicketService
         {
             await _attachmentService.Add(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
+        BackgroundJob.Enqueue(() => AssignSupportJob(entity.Id));
         return entity;
     }
 
@@ -188,6 +204,10 @@ public class TicketService : ITicketService
                 if (entity.TicketStatus == TicketStatus.Open)
                     await UpdateTicketStatus(entity.Id, TicketStatus.Assigned);
             }
+        }
+        else
+        {
+            BackgroundJob.Enqueue(() => AssignSupportJob(entity.Id));
         }
 
         return entity;
@@ -344,7 +364,7 @@ public class TicketService : ITicketService
         var ticket = await _ticketRepository.FirstOrDefaultAsync(c => c.Id.Equals(ticketId)) ??
                      throw new KeyNotFoundException("Ticket is not exist");
         if (ticket.RequesterId == userId &&
-            ticket.TicketStatus == TicketStatus.Open)
+            (ticket.TicketStatus == TicketStatus.Open || ticket.TicketStatus == TicketStatus.Assigned))
         {
             ticket.TicketStatus = TicketStatus.Cancelled;
             ticket.CompletedTime = DateTime.Now;
@@ -452,20 +472,19 @@ public class TicketService : ITicketService
         return Task.FromResult(enumValues);
     }
     #endregion
+
     #region Background Services
 
     public async Task AssignSupportJob(int ticketId)
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
-        if (ticket == null)
-        {
-            return;
-        }
-
+        if (ticket == null) return;
+        
         var teamIds = (await _teamRepository.WhereAsync(team => team.CategoryId == ticket.CategoryId))
             .Select(team => team.Id);
 
-        if (!teamIds.Any()) return;
+        if (!teamIds.Any()) 
+            teamIds = (await _teamRepository.ToListAsync()).Select(team => team.Id);
 
         var memberIds = (await _teamMemberRepository.WhereAsync(teamMember => teamIds.Contains(teamMember.Id)))
             .Select(teamMember => teamMember.Id);
@@ -542,6 +561,7 @@ public class TicketService : ITicketService
     }
 
     #endregion
+
     #region Modify Ticket List Response
     private async Task<List<GetTicketResponse>> ModifyTicketListResponse(IEnumerable<Ticket> result)
     {
@@ -562,6 +582,7 @@ public class TicketService : ITicketService
         return response;
     }
     #endregion
+
     #region Assignment Support
 
     public async Task<object> IsTechnicianMemberOfTeamAsync(int? technicianId, int? teamId)
@@ -712,5 +733,4 @@ public class TicketService : ITicketService
             }
         }
     }
-
 }
