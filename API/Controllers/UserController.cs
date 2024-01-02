@@ -11,12 +11,29 @@ namespace API.Controllers;
 public class UserController : BaseController
 {
     private readonly IUserService _userService;
+    private readonly IServiceContractService _serviceContractService;
     private readonly IFirebaseService _firebaseService;
 
-    public UserController(IUserService userService, IFirebaseService firebaseService)
+    public UserController(IUserService userService, IServiceContractService serviceContractService, IFirebaseService firebaseService)
     {
         _userService = userService;
+        _serviceContractService = serviceContractService;
         _firebaseService = firebaseService;
+    }
+
+    [Authorize]
+    [HttpGet("active-services")]
+
+    public async Task<IActionResult> GetActiveServices()
+    {
+        try
+        {
+            return Ok(await _serviceContractService.GetActiveServicesOfMemberCompany(CurrentUserID));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     #region Selection List By Roles

@@ -11,12 +11,10 @@ namespace API.Controllers;
 public class CompanyController : BaseController
 {
     private readonly ICompanyService _companyService;
-    private readonly IServiceContractService _serviceContractService;
 
-    public CompanyController(ICompanyService companyService, IServiceContractService serviceContractService)
+    public CompanyController(ICompanyService companyService)
     {
         _companyService = companyService;
-        _serviceContractService = serviceContractService;
     }
 
     [Authorize]
@@ -27,21 +25,6 @@ public class CompanyController : BaseController
         try
         {
             return Ok((await _companyService.Get()).Where(x => x.IsActive == true));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize]
-    [HttpGet("active-services")]
-
-    public async Task<IActionResult> GetActiveServices()
-    {
-        try
-        {
-            return Ok(await _serviceContractService.GetActiveServicesOfMemberCompany(CurrentUserID));
         }
         catch (Exception ex)
         {
