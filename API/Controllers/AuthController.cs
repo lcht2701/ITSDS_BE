@@ -85,34 +85,12 @@ public class AuthController : BaseController
         }
     }
 
-    [HttpPost("forgot-password")]
-    public async Task<IActionResult> ForgotPassword(string email)
-    {
-        try
-        {
-            await _authService.ForgotPassword(email);
-            return Ok("A password reset email has been sent to your registered email address. Please check your inbox and follow the instructions to reset your password.");
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (BadRequestException ex)
-        {
-            return Unauthorized(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
     [HttpPost("reset-password")]
-    public async Task<IActionResult> ResetPassword(int uid, string token, [FromBody] ResetPasswordRequest model)
+    public async Task<IActionResult> ResetPassword(string email)
     {
         try
         {
-            await _authService.ResetPassword(uid, token, model);
+            await _authService.ResetPassword(email);
             return Ok("Password reset successfully");
         }
         catch (KeyNotFoundException ex)

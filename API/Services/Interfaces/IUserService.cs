@@ -14,7 +14,7 @@ namespace API.Services.Interfaces
         Task<List<GetUserResponse>> Get();
         Task<GetUserProfileResponse> GetProfile(int userId);
         Task<GetUserResponse> GetById(int id);
-        Task<User> Create(CreateUserRequest model);
+        Task<User> Create(CreateUserOrCustomerAdmin model);
         Task<User> Update(int id, UpdateUserRequest model);
         Task Remove(int id);
         Task<User> UpdateProfile(int id, UpdateProfileRequest model);

@@ -19,18 +19,18 @@ public class PaymentService : IPaymentService
     private readonly IRepositoryBase<PaymentTerm> _termRepository;
     private readonly IRepositoryBase<Contract> _contractRepository;
     private readonly IRepositoryBase<Company> _companyRepository;
+    private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IRepositoryBase<User> _userRepository;
     private readonly MailSettings _mailSettings;
     private readonly IMapper _mapper;
 
-    public PaymentService(IRepositoryBase<Payment> paymentRepository, IRepositoryBase<PaymentTerm> termRepository,
-        IRepositoryBase<Contract> contractRepository, IRepositoryBase<Company> companyRepository,
-        IRepositoryBase<User> userRepository, IOptions<MailSettings> mailSettings, IMapper mapper)
+    public PaymentService(IRepositoryBase<Payment> paymentRepository, IRepositoryBase<PaymentTerm> termRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<User> userRepository, IOptions<MailSettings> mailSettings, IMapper mapper)
     {
         _paymentRepository = paymentRepository;
         _termRepository = termRepository;
         _contractRepository = contractRepository;
         _companyRepository = companyRepository;
+        _companyMemberRepository = companyMemberRepository;
         _userRepository = userRepository;
         _mailSettings = mailSettings.Value;
         _mapper = mapper;
@@ -178,22 +178,25 @@ public class PaymentService : IPaymentService
         var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id.Equals(contract.CompanyId))
                       ?? throw new KeyNotFoundException($"Company with ID {contract.CompanyId} is not exist");
 
-        var customerAdmin = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(company.CustomerAdminId))
+        var customerAdminIds = (await _companyMemberRepository.WhereAsync(x => x.CompanyId == company.Id && x.IsCompanyAdmin == true)).Select(x => x.MemberId);
+
+        var customerAdmins = await _userRepository.WhereAsync(x => customerAdminIds.Contains(x.Id))
                             ?? throw new KeyNotFoundException(
                                 $"Customer Admin not found for the given termId: {termId}");
 
         #endregion
-
-        using (MimeMessage emailMessage = new MimeMessage())
+        foreach (var customerAdmin in customerAdmins)
         {
-            MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
-            emailMessage.From.Add(emailFrom);
-            MailboxAddress emailTo = new MailboxAddress($"{customerAdmin.FirstName} {customerAdmin.LastName}",
-                customerAdmin.Email);
-            emailMessage.To.Add(emailTo);
+            using (MimeMessage emailMessage = new MimeMessage())
+            {
+                MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
+                emailMessage.From.Add(emailFrom);
+                MailboxAddress emailTo = new MailboxAddress($"{customerAdmin.FirstName} {customerAdmin.LastName}",
+                    customerAdmin.Email);
+                emailMessage.To.Add(emailTo);
 
-            emailMessage.Subject = "Payment Term Notification";
-            string emailTemplateText = @"<!DOCTYPE html>
+                emailMessage.Subject = "Payment Term Notification";
+                string emailTemplateText = @"<!DOCTYPE html>
 <html lang=""en"" xmlns=""http://www.w3.org/1999/xhtml"">
 <head>
     <meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />
@@ -243,22 +246,23 @@ public class PaymentService : IPaymentService
 </body>
 </html>
 ";
-            emailTemplateText = string.Format(emailTemplateText, company.CompanyName, term.Description, term.TermEnd,
-                $"{term.TermAmount:N0} VND", DateTime.Now.Year.ToString());
+                emailTemplateText = string.Format(emailTemplateText, company.CompanyName, term.Description, term.TermEnd,
+                    $"{term.TermAmount:N0} VND", DateTime.Now.Year.ToString());
 
-            BodyBuilder emailBodyBuilder = new BodyBuilder();
-            emailBodyBuilder.HtmlBody = emailTemplateText;
-            emailBodyBuilder.TextBody = "Plain Text goes here to avoid marked as spam for some email servers.";
+                BodyBuilder emailBodyBuilder = new BodyBuilder();
+                emailBodyBuilder.HtmlBody = emailTemplateText;
+                emailBodyBuilder.TextBody = "Plain Text goes here to avoid marked as spam for some email servers.";
 
-            emailMessage.Body = emailBodyBuilder.ToMessageBody();
+                emailMessage.Body = emailBodyBuilder.ToMessageBody();
 
-            using (SmtpClient mailClient = new SmtpClient())
-            {
-                await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port,
-                    MailKit.Security.SecureSocketOptions.StartTls);
-                await mailClient.AuthenticateAsync(_mailSettings.SenderEmail, _mailSettings.Password);
-                await mailClient.SendAsync(emailMessage);
-                await mailClient.DisconnectAsync(true);
+                using (SmtpClient mailClient = new SmtpClient())
+                {
+                    await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port,
+                        MailKit.Security.SecureSocketOptions.StartTls);
+                    await mailClient.AuthenticateAsync(_mailSettings.SenderEmail, _mailSettings.Password);
+                    await mailClient.SendAsync(emailMessage);
+                    await mailClient.DisconnectAsync(true);
+                }
             }
         }
     }

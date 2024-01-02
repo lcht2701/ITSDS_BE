@@ -2,11 +2,13 @@
 {
     public partial class CompanyMember :  BaseEntity
     { 
-        public int? MemberId { get; set; }
+        public int MemberId { get; set; }
 
-        public int? CompanyId { get; set; }
+        public int CompanyId { get; set; }
 
         public string? MemberPosition { get; set; }
+
+        public bool IsCompanyAdmin { get; set; }
 
         public virtual User? Member { get; set; }
 

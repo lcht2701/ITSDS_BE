@@ -152,12 +152,12 @@ public class UserController : BaseController
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpPost]
-    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest model)
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserOrCustomerAdmin model)
     {
         try
         {
             var user = await _userService.Create(model);
-            if (user != null && await _firebaseService.SignUp(model.Email, model.Password) == true)
+            if (user != null && await _firebaseService.SignUp(model.UserModel.Email, model.UserModel.Password) == true)
             {
                 await _userService.CreateUserDocument(user!);
             }
