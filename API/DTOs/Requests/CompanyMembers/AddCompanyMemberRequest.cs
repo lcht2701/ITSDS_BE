@@ -10,5 +10,7 @@ namespace API.DTOs.Requests.CompanyMembers
         public bool IsCompanyAdmin { get; set; }
 
         public string? MemberPosition { get; set; }
+
+        public int DepartmentId { get; set; }
     }
 }

@@ -17,7 +17,7 @@ public class LoginResponse : IMapFrom<User>
     public string? PhoneNumber { get; set; }
     public DateTime? DateOfBirth { get; set; }
     public Gender? Gender { get; set; }
-    public bool IsCustomerAdmin { get; set; }
+    public bool IsCompanyAdmin { get; set; }
 
     public string AccessToken { get; set; }
 }

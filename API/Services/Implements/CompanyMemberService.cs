@@ -62,7 +62,8 @@ public class CompanyMemberService : ICompanyMemberService
             MemberId = userResult.Id,
             CompanyId = currentUserMember.CompanyId,
             IsCompanyAdmin = model.IsCompanyAdmin,
-            MemberPosition = model.MemberPosition
+            MemberPosition = model.MemberPosition,
+            DepartmentId = model.DepartmentId
         };
         await _companyMemberRepository.CreateAsync(member);
         return member;

@@ -55,7 +55,7 @@ public class AuthService : IAuthService
 
         var entity = _mapper.Map(user, new LoginResponse());
         var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
-        entity.IsCustomerAdmin = companyMember != null && companyMember.IsCompanyAdmin;
+        entity.IsCompanyAdmin = companyMember != null && companyMember.IsCompanyAdmin;
         entity.AccessToken = GenerateToken(user);
         return entity;
     }
@@ -83,7 +83,7 @@ public class AuthService : IAuthService
 
         var entity = _mapper.Map(user, new LoginResponse());
         var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
-        entity.IsCustomerAdmin = companyMember != null && companyMember.IsCompanyAdmin;
+        entity.IsCompanyAdmin = companyMember != null && companyMember.IsCompanyAdmin;
         entity.AccessToken = GenerateToken(user);
         return entity;
     }
