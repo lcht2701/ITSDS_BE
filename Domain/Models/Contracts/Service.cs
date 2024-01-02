@@ -17,8 +17,6 @@ namespace Domain.Models.Contracts
 
         public string? Type { get; set; }
 
-        public double? Amount { get; set; }
-
         public virtual Category? Category { get; set; }
 
         [JsonIgnore]
