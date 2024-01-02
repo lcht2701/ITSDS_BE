@@ -1,15 +1,16 @@
-﻿using API.DTOs.Requests.Users;
+﻿using API.DTOs.Requests.CompanyMembers;
 using Domain.Constants.Enums;
 using Domain.Models;
 using FluentValidation;
 using Persistence.Repositories.Interfaces;
 
-namespace API.Validations.Users
+namespace API.Validations.CompanyMembers
 {
-    public class UpdateUserValidator : AbstractValidator<UpdateUserRequest>
+    public class AddAccountInformationValidator : AbstractValidator<AddAccountInformationRequest>
     {
         private readonly IRepositoryBase<User> _userRepository;
-        public UpdateUserValidator(IRepositoryBase<User> userRepository)
+
+        public AddAccountInformationValidator(IRepositoryBase<User> userRepository)
         {
             _userRepository = userRepository;
 
@@ -21,18 +22,17 @@ namespace API.Validations.Users
                 .NotEmpty().WithMessage("Last name is required.")
                 .MaximumLength(50).WithMessage("Last name should not exceed 50 characters.");
 
-            RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email is required.")
+            RuleFor(u => u.Username)
+                .NotEmpty().WithMessage("Username is required");
+
+            RuleFor(u => u.Password)
+                .NotEmpty().WithMessage("Password is required")
+                .MinimumLength(6).WithMessage("Password must be at least 6 characters long");
+
+            RuleFor(u => u.Email)
+                .EmailAddress().WithMessage("Email Address is invalid")
                 .UniqueEmail(email => _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result == null).WithMessage("Email Address is already in use.")
-                .EmailAddress().WithMessage("Invalid email address format.");
-
-            RuleFor(u => u.Role)
-                .IsInEnum()
-                .Must(role => role >= Role.Admin && role <= Role.Accountant)
-                .WithMessage("Role must be valid and is required.");
-
-            RuleFor(x => x.IsActive)
-                .NotNull().WithMessage("IsActive is required.");
+                .NotEmpty().WithMessage("Email Address is required.");
 
             RuleFor(x => x.Gender)
                 .IsInEnum().WithMessage("Invalid gender value.")
@@ -48,6 +48,7 @@ namespace API.Validations.Users
                 .WithMessage("Phone number should not exceed 15 characters.")
                 .Matches(@"^\+?[0-9-]*$").WithMessage("Invalid phone number format.");
         }
+
         private bool BeUniqueEmail(string email)
         {
             // Implement the logic to check if the email is unique in your service or repository
@@ -55,5 +56,3 @@ namespace API.Validations.Users
         }
     }
 }
-
-

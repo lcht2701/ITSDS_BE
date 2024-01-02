@@ -1,13 +1,18 @@
 ﻿using API.DTOs.Requests.Users;
 using Domain.Constants.Enums;
+using Domain.Models;
 using FluentValidation;
+using Persistence.Repositories.Interfaces;
 
 namespace API.Validations.Users;
 
 public class CreateUserValidator : AbstractValidator<CreateUserRequest>
 {
-    public CreateUserValidator()
+    private readonly IRepositoryBase<User> _userRepository;
+    public CreateUserValidator(IRepositoryBase<User> userRepository)
     {
+        _userRepository = userRepository;
+
         RuleFor(x => x.FirstName)
                 .NotEmpty().WithMessage("First name is required.")
                 .MaximumLength(50).WithMessage("First name should not exceed 50 characters.");
@@ -25,6 +30,7 @@ public class CreateUserValidator : AbstractValidator<CreateUserRequest>
 
         RuleFor(u => u.Email)
             .EmailAddress().WithMessage("Email Address is invalid")
+            .UniqueEmail(email => _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result == null).WithMessage("Email Address is already in use.")
             .NotEmpty().WithMessage("Email Address is required.");
 
         RuleFor(u => u.Role)
@@ -33,9 +39,9 @@ public class CreateUserValidator : AbstractValidator<CreateUserRequest>
             .WithMessage("Role must be valid and is required.");
 
         RuleFor(x => x.Gender)
-                .IsInEnum().WithMessage("Invalid gender value.")
-                .Must(gender => gender >= Gender.Male && gender <= Gender.PreferNotToSay)
-                .WithMessage("Role must be valid and is required.");
+            .IsInEnum().WithMessage("Invalid gender value.")
+            .Must(gender => gender >= Gender.Male && gender <= Gender.PreferNotToSay)
+            .WithMessage("Role must be valid and is required.");
 
         RuleFor(x => x.DateOfBirth)
             .LessThan(DateTime.Today).When(x => x.DateOfBirth != null)

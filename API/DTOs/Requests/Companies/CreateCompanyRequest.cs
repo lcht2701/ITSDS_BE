@@ -1,7 +1,6 @@
 ﻿using API.Mappings;
 using Domain.Models.Contracts;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs.Requests.Companies;
 
@@ -25,6 +24,4 @@ public class CreateCompanyRequest : IMapTo<Company>
 
     [DefaultValue(true)]
     public bool? IsActive { get; set; }
-
-    public int? CustomerAdminId { get; set; }
 }

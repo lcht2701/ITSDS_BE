@@ -18,15 +18,17 @@ public class HangfireJobService : IHangfireJobService
     private readonly IRepositoryBase<Ticket> _ticketRepository;
     private readonly IRepositoryBase<Contract> _contractRepository;
     private readonly IRepositoryBase<Company> _companyRepository;
+    private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IMessagingService _messagingService;
     private readonly MailSettings _mailSettings;
 
-    public HangfireJobService(IRepositoryBase<User> userRepository, IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Company> companyRepository, IMessagingService messagingService, IOptions<MailSettings> mailSettings)
+    public HangfireJobService(IRepositoryBase<User> userRepository, IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IMessagingService messagingService, IOptions<MailSettings> mailSettings)
     {
         _userRepository = userRepository;
         _ticketRepository = ticketRepository;
         _contractRepository = contractRepository;
         _companyRepository = companyRepository;
+        _companyMemberRepository = companyMemberRepository;
         _messagingService = messagingService;
         _mailSettings = mailSettings.Value;
     }
@@ -106,20 +108,23 @@ public class HangfireJobService : IHangfireJobService
         foreach (var contract in nearExpiredContracts)
         {
             var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id == contract.CompanyId);
-            var customerAdmin = await _userRepository.FirstOrDefaultAsync(x => x.Id == company.CustomerAdminId);
-            if (customerAdmin == null)
+            var customerAdminIds = (await _companyMemberRepository.WhereAsync(x => x.Id == contract.CompanyId && x.IsCompanyAdmin == true)).Select(x => x.MemberId);
+            var customerAdmins = await _userRepository.WhereAsync(x => customerAdminIds.Contains(x.Id));
+            if (customerAdmins == null)
                 return;
-            using (MimeMessage emailMessage = new MimeMessage())
+            foreach (var customerAdmin in customerAdmins)
             {
-                var customerAdminName = $"{customerAdmin.FirstName} {customerAdmin.LastName}";
-                MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
-                emailMessage.From.Add(emailFrom);
-                MailboxAddress emailTo = new MailboxAddress(customerAdminName,
-                    customerAdmin.Email);
-                emailMessage.To.Add(emailTo);
+                using (MimeMessage emailMessage = new MimeMessage())
+                {
+                    var customerAdminName = $"{customerAdmin.FirstName} {customerAdmin.LastName}";
+                    MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
+                    emailMessage.From.Add(emailFrom);
+                    MailboxAddress emailTo = new MailboxAddress(customerAdminName,
+                        customerAdmin.Email);
+                    emailMessage.To.Add(emailTo);
 
-                emailMessage.Subject = "Contract Expiry Notification";
-                string emailTemplateText = @"<!DOCTYPE html>
+                    emailMessage.Subject = "Contract Expiry Notification";
+                    string emailTemplateText = @"<!DOCTYPE html>
 <html lang=""en"">
 <head>
     <meta charset=""UTF-8"">
@@ -166,21 +171,22 @@ public class HangfireJobService : IHangfireJobService
 </html>
 ";
 
-                emailTemplateText = string.Format(emailTemplateText, contract.Name, contract.Description, contract.StartDate.ToString(), contract.EndDate.ToString(), company.CompanyName);
+                    emailTemplateText = string.Format(emailTemplateText, contract.Name, contract.Description, contract.StartDate.ToString(), contract.EndDate.ToString(), company.CompanyName);
 
-                BodyBuilder emailBodyBuilder = new BodyBuilder();
-                emailBodyBuilder.HtmlBody = emailTemplateText;
-                emailBodyBuilder.TextBody = "Plain Text goes here to avoid marked as spam for some email servers.";
+                    BodyBuilder emailBodyBuilder = new BodyBuilder();
+                    emailBodyBuilder.HtmlBody = emailTemplateText;
+                    emailBodyBuilder.TextBody = "Plain Text goes here to avoid marked as spam for some email servers.";
 
-                emailMessage.Body = emailBodyBuilder.ToMessageBody();
+                    emailMessage.Body = emailBodyBuilder.ToMessageBody();
 
-                using (SmtpClient mailClient = new SmtpClient())
-                {
-                    await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port,
-                        SecureSocketOptions.StartTls);
-                    await mailClient.AuthenticateAsync(_mailSettings.SenderEmail, _mailSettings.Password);
-                    await mailClient.SendAsync(emailMessage);
-                    await mailClient.DisconnectAsync(true);
+                    using (SmtpClient mailClient = new SmtpClient())
+                    {
+                        await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port,
+                            SecureSocketOptions.StartTls);
+                        await mailClient.AuthenticateAsync(_mailSettings.SenderEmail, _mailSettings.Password);
+                        await mailClient.SendAsync(emailMessage);
+                        await mailClient.DisconnectAsync(true);
+                    }
                 }
 
             }

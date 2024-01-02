@@ -133,7 +133,6 @@ public class ServiceContractService : IServiceContractService
         var service = await _serviceRepo.FirstOrDefaultAsync(x => x.Id.Equals(serviceContract.ServiceId));
         var contract = await _contractRepo.FirstOrDefaultAsync(x => x.Id.Equals(serviceContract.ContractId));
         var company = await _companyRepo.FirstOrDefaultAsync(x => x.Id.Equals(contract.CompanyId));
-        var customer = await _userRepo.FirstOrDefaultAsync(x => x.Id.Equals(company.CustomerAdminId));
         #endregion
 
         TimeSpan? totalDate = serviceContract.EndDate - serviceContract.StartDate;
@@ -143,7 +142,6 @@ public class ServiceContractService : IServiceContractService
         {
             Ticket newTicket = new()
             {
-                RequesterId = customer.Id,
                 CreatedById = currentUserId,
                 Title = $"Periodic Ticket #{i} - {service.Description}",
                 Description = $"Periodic Service Support #{i} for {company.CompanyName} - {service.Description}",
