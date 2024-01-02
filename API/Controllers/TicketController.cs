@@ -45,6 +45,7 @@ public class TicketController : BaseController
 
     [Authorize]
     [HttpGet("ticket-status")]
+    [SwaggerResponse(200, "Get Status Ticket", typeof(List<GetTicketStatusesResponse>))]
     public async Task<IActionResult> GetStatuses()
     {
         var result = await _ticketService.GetTicketStatuses();
