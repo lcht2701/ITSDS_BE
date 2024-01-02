@@ -40,7 +40,7 @@ public class CompanyMemberController : BaseController
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT},{Roles.CUSTOMER}")]
-    [HttpGet]
+    [HttpGet("company-admins")]
     public async Task<IActionResult> GetCompanyAdmins(int companyId)
     {
         try
