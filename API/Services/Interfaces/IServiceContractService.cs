@@ -7,6 +7,7 @@ namespace API.Services.Interfaces
     public interface IServiceContractService
     {
         Task<List<ServiceContract>> Get(int contractId);
+        Task<List<Service>> GetActiveServicesOfMemberCompany(int userId);
         Task<ServiceContract> GetById(int id);
         Task<List<ServiceContract>> ModifyServices(ModifyServicesInContract model);
         Task<List<Service>> GetServicesList(int contractId);

@@ -11,10 +11,12 @@ namespace API.Controllers;
 public class CompanyController : BaseController
 {
     private readonly ICompanyService _companyService;
+    private readonly IServiceContractService _serviceContractService;
 
-    public CompanyController(ICompanyService companyService)
+    public CompanyController(ICompanyService companyService, IServiceContractService serviceContractService)
     {
         _companyService = companyService;
+        _serviceContractService = serviceContractService;
     }
 
     [Authorize]
@@ -25,6 +27,21 @@ public class CompanyController : BaseController
         try
         {
             return Ok((await _companyService.Get()).Where(x => x.IsActive == true));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpGet("active-services")]
+
+    public async Task<IActionResult> GetActiveServices()
+    {
+        try
+        {
+            return Ok(await _serviceContractService.GetActiveServicesOfMemberCompany(CurrentUserID));
         }
         catch (Exception ex)
         {
@@ -73,7 +90,7 @@ public class CompanyController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpPost]
-    public async Task<IActionResult> CreateTeam([FromBody] CreateCompanyRequest model)
+    public async Task<IActionResult> Create([FromBody] CreateCompanyRequest model)
     {
         try
         {
@@ -89,7 +106,7 @@ public class CompanyController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateTeam(int id, [FromBody] UpdateCompanyRequest model)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateCompanyRequest model)
     {
         try
         {
@@ -108,7 +125,7 @@ public class CompanyController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER}")]
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTeam(int id)
+    public async Task<IActionResult> Delete(int id)
     {
         try
         {
