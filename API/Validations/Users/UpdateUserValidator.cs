@@ -48,11 +48,6 @@ namespace API.Validations.Users
                 .WithMessage("Phone number should not exceed 15 characters.")
                 .Matches(@"^\+?[0-9-]*$").WithMessage("Invalid phone number format.");
         }
-        private bool BeUniqueEmail(string email)
-        {
-            // Implement the logic to check if the email is unique in your service or repository
-            return _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result == null;
-        }
     }
 }
 
