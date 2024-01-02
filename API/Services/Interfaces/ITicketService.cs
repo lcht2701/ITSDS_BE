@@ -9,11 +9,7 @@ public interface ITicketService
 {
     Task<List<GetTicketResponse>> Get();
     Task<List<GetTicketResponse>> GetByUser(int userId);
-    Task<List<GetTicketResponse>> GetTicketHistory(int userId);
-    Task<List<GetTicketResponse>> GetTicketAvailable(int userId);
     Task<List<GetTicketResponse>> GetTicketsOfTechnician(int userId);
-    Task<List<GetTicketResponse>> GetAssignedTickets(int userId);
-    Task<List<GetTicketResponse>> GetCompletedAssignedTickets(int userId);
     Task<List<GetTicketStatusesResponse>> GetTicketStatuses();
     Task<List<GetTicketResponse>> GetPeriodicTickets(int? numOfDays);
     Task<object> GetTicketLog(int id);

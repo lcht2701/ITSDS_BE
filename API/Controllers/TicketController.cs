@@ -107,29 +107,13 @@ public class TicketController : BaseController
     }
 
     [Authorize(Roles = Roles.CUSTOMER)]
-    [HttpGet("user/history")]
-    [SwaggerResponse(200, "Get Ticket History", typeof(List<GetTicketResponse>))]
-    public async Task<IActionResult> GetTicketHistory()
-    {
-        try
-        {
-            var response = await _ticketService.GetTicketHistory(CurrentUserID);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize(Roles = Roles.CUSTOMER)]
     [HttpGet("user/available")]
     [SwaggerResponse(200, "Get Available Ticket Of User", typeof(List<GetTicketResponse>))]
     public async Task<IActionResult> GetAvailableTicketsOfCurrentUser()
     {
         try
         {
-            var response = await _ticketService.GetTicketAvailable(CurrentUserID);
+            var response = await _ticketService.GetByUser(CurrentUserID);
             return Ok(response);
         }
         catch (Exception ex)
@@ -171,23 +155,7 @@ public class TicketController : BaseController
     {
         try
         {
-            var response = await _ticketService.GetAssignedTickets(CurrentUserID);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize(Roles = Roles.TECHNICIAN)]
-    [HttpGet("assign/done")]
-    [SwaggerResponse(200, "Get Complete Assigned Ticket", typeof(List<GetTicketResponse>))]
-    public async Task<IActionResult> GetCompleteAssignedTickets()
-    {
-        try
-        {
-            var response = await _ticketService.GetCompletedAssignedTickets(CurrentUserID);
+            var response = await _ticketService.GetTicketsOfTechnician(CurrentUserID);
             return Ok(response);
         }
         catch (Exception ex)

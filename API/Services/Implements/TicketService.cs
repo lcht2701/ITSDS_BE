@@ -115,25 +115,6 @@ public class TicketService : ITicketService
         return response;
     }
 
-    #region For Customer
-    public async Task<List<GetTicketResponse>> GetTicketAvailable(int userId)
-    {
-        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
-            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
-        var filteredResult = result.Where(x => !IsTicketDone(x.Id));
-        List<GetTicketResponse> response = await ModifyTicketListResponse(filteredResult);
-        return response;
-    }
-
-    public async Task<List<GetTicketResponse>> GetTicketHistory(int userId)
-    {
-        var result = await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
-            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
-        var filteredResult = result.Where(x => IsTicketDone(x.Id));
-        List<GetTicketResponse> response = await ModifyTicketListResponse(filteredResult);
-        return response;
-    }
-    #endregion
     #region For Technician
     public async Task<List<GetTicketResponse>> GetTicketsOfTechnician(int userId)
     {
@@ -144,36 +125,6 @@ public class TicketService : ITicketService
 
         // Map the tickets to response entities
         List<GetTicketResponse> response = await ModifyTicketListResponse(result);
-
-        return response;
-    }
-
-    public async Task<List<GetTicketResponse>> GetAssignedTickets(int userId)
-    {
-        var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == userId);
-        var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
-        var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
-            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
-        var filterResult = result.Where(x =>
-            IsTicketDone(x.Id) == false);
-
-        // Map the tickets to response entities
-        List<GetTicketResponse> response = await ModifyTicketListResponse(filterResult);
-
-        return response;
-    }
-
-    public async Task<List<GetTicketResponse>> GetCompletedAssignedTickets(int userId)
-    {
-        var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == userId);
-        var ticketIds = assignments.Select(assignment => assignment.TicketId).ToList();
-        var result = await _ticketRepository.WhereAsync(ticket => ticketIds.Contains(ticket.Id),
-            new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
-        var filterResult = result.Where(x =>
-            IsTicketDone(x.Id) == true);
-
-        // Map the tickets to response entities
-        List<GetTicketResponse> response = await ModifyTicketListResponse(filterResult);
 
         return response;
     }
