@@ -166,7 +166,7 @@ public class AuthService : IAuthService
     }
     #endregion
 
-    private async Task SendNewPassword(User user, string newPassword)
+    public async Task SendNewPassword(User user, string newPassword)
     {
         using (MimeMessage emailMessage = new MimeMessage())
         {

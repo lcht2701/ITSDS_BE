@@ -257,7 +257,7 @@ public class UserService : IUserService
         }
     }
 
-    private async Task SendUserCreatedNotification(CreateUserRequest dto)
+    public async Task SendUserCreatedNotification(CreateUserRequest dto)
     {
         using (MimeMessage emailMessage = new MimeMessage())
         {

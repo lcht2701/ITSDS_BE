@@ -102,13 +102,13 @@ public class CompanyMemberService : ICompanyMemberService
         var currentUserMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(currentUser.Id));
         if (currentUserMember == null || currentUserMember.IsCompanyAdmin == false)
         {
-            throw new UnauthorizedException("User is not authorize for this action");
+            throw new UnauthorizedAccessException("User is not authorize for this action");
         }
 
         return currentUserMember;
     }
 
-    private async Task SendUserCreatedNotification(AddAccountInformationRequest dto)
+    public async Task SendUserCreatedNotification(AddAccountInformationRequest dto)
     {
         using (MimeMessage emailMessage = new MimeMessage())
         {

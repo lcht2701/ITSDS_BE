@@ -616,7 +616,7 @@ public class TicketService : ITicketService
         var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
         return managerIds;
     }
-    private async Task SendTicketMailNotification(Ticket ticket)
+    public async Task SendTicketMailNotification(Ticket ticket)
     {
         #region GetDetail
 
