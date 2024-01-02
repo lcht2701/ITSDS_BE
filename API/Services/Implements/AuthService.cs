@@ -18,23 +18,25 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using MailKit.Net.Smtp;
-
+using Domain.Models.Contracts;
 
 namespace API.Services.Implements;
 
 public class AuthService : IAuthService
 {
     private readonly IRepositoryBase<User> _userRepository;
+    private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IConfiguration _configuration;
     private readonly IMapper _mapper;
     private readonly MailSettings _mailSettings;
 
-    public AuthService(IRepositoryBase<User> userRepository, IConfiguration configuration, IMapper mapper, IOptions<MailSettings> mailSettings)
+    public AuthService(IRepositoryBase<User> userRepository, IConfiguration configuration, IMapper mapper, IOptions<MailSettings> mailSettings, IRepositoryBase<CompanyMember> companyMemberRepository)
     {
         _userRepository = userRepository;
         _configuration = configuration;
         _mapper = mapper;
         _mailSettings = mailSettings.Value;
+        _companyMemberRepository = companyMemberRepository;
     }
 
     public async Task<LoginResponse> Login(LoginRequest model)
@@ -52,6 +54,8 @@ public class AuthService : IAuthService
         }
 
         var entity = _mapper.Map(user, new LoginResponse());
+        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
+        entity.IsCustomerAdmin = companyMember != null && companyMember.IsCompanyAdmin;
         entity.AccessToken = GenerateToken(user);
         return entity;
     }
@@ -78,6 +82,8 @@ public class AuthService : IAuthService
         }
 
         var entity = _mapper.Map(user, new LoginResponse());
+        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
+        entity.IsCustomerAdmin = companyMember != null && companyMember.IsCompanyAdmin;
         entity.AccessToken = GenerateToken(user);
         return entity;
     }
