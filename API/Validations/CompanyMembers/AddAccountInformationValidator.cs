@@ -31,7 +31,7 @@ namespace API.Validations.CompanyMembers
 
             RuleFor(u => u.Email)
                 .EmailAddress().WithMessage("Email Address is invalid")
-                .UniqueEmail(email => _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result == null).WithMessage("Email Address is already in use.")
+                .UniqueEmail(email => _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result != null).WithMessage("Email Address is already in use.")
                 .NotEmpty().WithMessage("Email Address is required.");
 
             RuleFor(x => x.Gender)

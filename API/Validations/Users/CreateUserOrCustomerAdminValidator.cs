@@ -7,7 +7,7 @@ namespace API.Validations.Users
     {
         public CreateUserOrCustomerAdminValidator()
         {
-            RuleFor(x => x.isCompanyAdmin)
+            RuleFor(x => x.IsCompanyAdmin)
                 .NotNull();
         }
     }

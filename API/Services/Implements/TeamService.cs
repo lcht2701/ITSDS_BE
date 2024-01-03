@@ -83,6 +83,7 @@ public class TeamService : ITeamService
         #endregion
         return target;
     }
+
     public async Task Remove(int id)
     {
         var target = await _teamRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Team is not exist"));

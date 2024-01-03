@@ -23,7 +23,7 @@ namespace API.Validations.Users
 
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required.")
-                .UniqueEmail(email => _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result == null).WithMessage("Email Address is already in use.")
+                .UniqueEmail(email => _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result != null).WithMessage("Email Address is already in use.")
                 .EmailAddress().WithMessage("Invalid email address format.");
 
             RuleFor(u => u.Role)
@@ -47,11 +47,6 @@ namespace API.Validations.Users
                 .MaximumLength(15).When(x => x.DateOfBirth != null)
                 .WithMessage("Phone number should not exceed 15 characters.")
                 .Matches(@"^\+?[0-9-]*$").WithMessage("Invalid phone number format.");
-        }
-        private bool BeUniqueEmail(string email)
-        {
-            // Implement the logic to check if the email is unique in your service or repository
-            return _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result == null;
         }
     }
 }

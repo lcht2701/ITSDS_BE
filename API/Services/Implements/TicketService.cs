@@ -129,8 +129,6 @@ public class TicketService : ITicketService
         return response;
     }
 
-
-    #region For Technician
     public async Task<List<GetTicketResponse>> GetTicketsOfTechnician(int userId)
     {
         var assignments = await _assignmentRepository.WhereAsync(x => x.TechnicianId == userId);
@@ -143,7 +141,6 @@ public class TicketService : ITicketService
 
         return response;
     }
-    #endregion
 
     public async Task<object> GetTicketLog(int id)
     {
@@ -369,7 +366,7 @@ public class TicketService : ITicketService
             ticket.TicketStatus = TicketStatus.Cancelled;
             ticket.CompletedTime = DateTime.Now;
             await _ticketRepository.UpdateAsync(ticket);
-            await SendTicketMailNotification(ticket);
+            BackgroundJob.Enqueue(() => SendTicketMailNotification(ticket));
         }
         else
         {
@@ -390,7 +387,7 @@ public class TicketService : ITicketService
             ticket.TicketStatus = TicketStatus.Closed;
             ticket.CompletedTime = DateTime.Now;
             await _ticketRepository.UpdateAsync(ticket);
-            await SendTicketMailNotification(ticket);
+            BackgroundJob.Enqueue(() => SendTicketMailNotification(ticket));
         }
         else
         {
@@ -428,7 +425,7 @@ public class TicketService : ITicketService
         #endregion
         #region Mail Notification
 
-        await SendTicketMailNotification(ticket);
+        BackgroundJob.Enqueue(() => SendTicketMailNotification(ticket));
 
         #endregion
     }
@@ -479,11 +476,11 @@ public class TicketService : ITicketService
     {
         var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
         if (ticket == null) return;
-        
+
         var teamIds = (await _teamRepository.WhereAsync(team => team.CategoryId == ticket.CategoryId))
             .Select(team => team.Id);
 
-        if (!teamIds.Any()) 
+        if (!teamIds.Any())
             teamIds = (await _teamRepository.ToListAsync()).Select(team => team.Id);
 
         var memberIds = (await _teamMemberRepository.WhereAsync(teamMember => teamIds.Contains(teamMember.Id)))
@@ -523,7 +520,7 @@ public class TicketService : ITicketService
 
             await _assignmentRepository.CreateAsync(assignment);
             await UpdateTicketStatus(ticket.Id, TicketStatus.Assigned);
-            await SendNotificationAfterAssignment(ticket);
+            BackgroundJob.Enqueue(() => SendNotificationAfterAssignment(ticket));
         }
         else
         {
@@ -619,7 +616,7 @@ public class TicketService : ITicketService
         var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
         return managerIds;
     }
-    private async Task SendTicketMailNotification(Ticket ticket)
+    public async Task SendTicketMailNotification(Ticket ticket)
     {
         #region GetDetail
 

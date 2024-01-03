@@ -6,7 +6,7 @@ namespace API.Services.Interfaces
 {
     public interface ICompanyMemberService
     {
-        Task<List<CompanyMember>> Get();
+        Task<List<CompanyMember>> Get(int userId);
         Task<List<CompanyMember>> GetCompanyAdmins(int companyId);
         Task<List<User>> GetMemberNotInCompany(int companyId);
         Task<CompanyMember> GetById(int id);

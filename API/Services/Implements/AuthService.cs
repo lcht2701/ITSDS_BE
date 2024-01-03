@@ -19,6 +19,7 @@ using System.Security.Cryptography;
 using System.Text;
 using MailKit.Net.Smtp;
 using Domain.Models.Contracts;
+using Hangfire;
 
 namespace API.Services.Implements;
 
@@ -55,7 +56,7 @@ public class AuthService : IAuthService
 
         var entity = _mapper.Map(user, new LoginResponse());
         var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
-        entity.IsCustomerAdmin = companyMember != null && companyMember.IsCompanyAdmin;
+        entity.IsCompanyAdmin = companyMember != null && companyMember.IsCompanyAdmin;
         entity.AccessToken = GenerateToken(user);
         return entity;
     }
@@ -83,7 +84,7 @@ public class AuthService : IAuthService
 
         var entity = _mapper.Map(user, new LoginResponse());
         var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
-        entity.IsCustomerAdmin = companyMember != null && companyMember.IsCompanyAdmin;
+        entity.IsCompanyAdmin = companyMember != null && companyMember.IsCompanyAdmin;
         entity.AccessToken = GenerateToken(user);
         return entity;
     }
@@ -123,7 +124,7 @@ public class AuthService : IAuthService
         string newPassword = CreateRandomPassword(8);
         user.Password = passwordHasher.HashPassword(user, newPassword);
         await _userRepository.UpdateAsync(user);
-        await SendNewPassword(user, newPassword);
+        BackgroundJob.Enqueue(() => SendNewPassword(user, newPassword));
     }
 
     private string CreateRandomPassword(int length)
@@ -165,7 +166,7 @@ public class AuthService : IAuthService
     }
     #endregion
 
-    private async Task SendNewPassword(User user, string newPassword)
+    public async Task SendNewPassword(User user, string newPassword)
     {
         using (MimeMessage emailMessage = new MimeMessage())
         {
