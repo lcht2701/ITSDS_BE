@@ -94,7 +94,8 @@ public class CompanyMemberService : ICompanyMemberService
             MemberId = userResult.Id,
             CompanyId = currentUserMember.CompanyId,
             IsCompanyAdmin = model.IsCompanyAdmin,
-            MemberPosition = model.MemberPosition != null ? model.MemberPosition : ""
+            MemberPosition = model.MemberPosition != null ? model.MemberPosition : "",
+            DepartmentId = model.DepartmentId
         };
         await _companyMemberRepository.CreateAsync(member);
         BackgroundJob.Enqueue(() => SendUserCreatedNotification(model.User!));

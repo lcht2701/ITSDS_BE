@@ -5,7 +5,7 @@ namespace API.Services.Interfaces
 {
     public interface IDepartmentService
     {
-        Task<List<Department>> GetByCompany(int companyId);
+        Task<List<Department>> Get(int companyId);
         Task<Department> GetById(int id);
         Task<Department> Create(int companyId, CreateDepartmentRequest model);
         Task<Department> Update(int id, UpdateDepartmentRequest model);

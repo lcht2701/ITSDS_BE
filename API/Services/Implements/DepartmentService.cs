@@ -1,6 +1,8 @@
 ﻿using API.DTOs.Requests.Departments;
 using API.Services.Interfaces;
 using AutoMapper;
+using Domain.Constants.Enums;
+using Domain.Models;
 using Domain.Models.Contracts;
 using Persistence.Repositories.Interfaces;
 
@@ -9,15 +11,19 @@ namespace API.Services.Implements
     public class DepartmentService : IDepartmentService
     {
         private readonly IRepositoryBase<Department> _departmentRepository;
+        private readonly IRepositoryBase<User> _userRepository;
+        private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
         private readonly IMapper _mapper;
 
-        public DepartmentService(IRepositoryBase<Department> departmentRepository, IMapper mapper)
+        public DepartmentService(IRepositoryBase<Department> departmentRepository, IRepositoryBase<User> userRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IMapper mapper)
         {
             _departmentRepository = departmentRepository;
+            _userRepository = userRepository;
+            _companyMemberRepository = companyMemberRepository;
             _mapper = mapper;
         }
 
-        public async Task<List<Department>> GetByCompany(int companyId)
+        public async Task<List<Department>> Get(int companyId)
         {
             var result = (await _departmentRepository.WhereAsync(x => x.CompanyId.Equals(companyId))).ToList();
             return result;

@@ -10,7 +10,7 @@
 
         public bool IsCompanyAdmin { get; set; }
 
-        public int DepartmentId { get; set; }
+        public int? DepartmentId { get; set; }
 
         public virtual User? Member { get; set; }
 

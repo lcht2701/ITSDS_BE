@@ -6,6 +6,8 @@ public class CreateUserOrCustomerAdmin
     
     public int? CompanyId { get; set; }
 
-    public bool isCompanyAdmin { get; set; }
+    public int? DepartmentId { get; set; }
+
+    public bool IsCompanyAdmin { get; set; }
 
 }

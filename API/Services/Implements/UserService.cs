@@ -10,7 +10,6 @@ using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
-using Google.Cloud.Firestore;
 using Hangfire;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -103,7 +102,8 @@ public class UserService : IUserService
             {
                 MemberId = result.Id,
                 CompanyId = (int)model.CompanyId,
-                IsCompanyAdmin = model.isCompanyAdmin
+                IsCompanyAdmin = model.IsCompanyAdmin,
+                DepartmentId = model.DepartmentId
             });
         }
         BackgroundJob.Enqueue(() => SendUserCreatedNotification(model.UserModel));

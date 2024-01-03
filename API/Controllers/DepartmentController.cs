@@ -3,6 +3,7 @@ using API.Services.Interfaces;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Persistence.Helpers;
 
 namespace API.Controllers;
 
@@ -17,11 +18,25 @@ public class DepartmentController : BaseController
     }
 
     [Authorize]
-    [HttpGet]
-    public async Task<IActionResult> GetByCompany(int companyId)
+    [HttpGet("{companyId}/select-list")]
+    public async Task<IActionResult> GetAll(int companyId)
     {
-        var result = await _departmentService.GetByCompany(companyId);
+        var result = await _departmentService.Get(companyId);
         return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet("{companyId}/list")]
+    public async Task<IActionResult> Get(
+    int companyId,
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5)
+    {
+        var result = await _departmentService.Get(companyId);
+        var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+        return Ok(pagedResponse);
     }
 
     [Authorize(Roles = Roles.ADMIN)]
