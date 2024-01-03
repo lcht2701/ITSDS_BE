@@ -85,6 +85,5 @@ public class CompanyService : ICompanyService
             .GetAsync(navigationProperties: new string[] { "CustomerAdmin" })).ToList();
         _cacheService.SetData("companies", cacheList, expiryTime);
         #endregion
-    }
-
+    }   
 }

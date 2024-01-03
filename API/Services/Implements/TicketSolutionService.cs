@@ -67,7 +67,6 @@ public class TicketSolutionService : ITicketSolutionService
         return response;
     }
 
-
     public async Task<object> GetById(int id, int userId)   
     {
         var result = await _solutionRepository.FirstOrDefaultAsync(x => x.Id.Equals(id),

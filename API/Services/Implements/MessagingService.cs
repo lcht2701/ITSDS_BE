@@ -62,8 +62,6 @@ public class MessagingService : IMessagingService
         }
     }
 
-
-
     public async Task<Messaging> MarkAsRead(int notificationId)
     {
         var notification = await _messagingRepository.FirstOrDefaultAsync(x => x.Id == notificationId) ?? throw new KeyNotFoundException("Notification is not exist");
