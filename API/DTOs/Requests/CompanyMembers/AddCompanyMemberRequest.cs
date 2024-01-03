@@ -4,7 +4,7 @@ namespace API.DTOs.Requests.CompanyMembers
 {
     public class AddCompanyMemberRequest
     {
-        public AddAccountInformationRequest? User { get; set; }
+        public AddAccountInformationRequest User { get; set; }
 
         [DefaultValue(false)]
         public bool IsCompanyAdmin { get; set; }

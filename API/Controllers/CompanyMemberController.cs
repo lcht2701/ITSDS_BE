@@ -3,9 +3,11 @@ using API.Services.Implements;
 using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Exceptions;
+using Domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
 
@@ -13,10 +15,14 @@ namespace API.Controllers;
 public class CompanyMemberController : BaseController
 {
     private readonly ICompanyMemberService _companyMemberService;
+    private readonly IFirebaseService _firebaseService;
+    private readonly IRepositoryBase<User> _userRepository;
 
-    public CompanyMemberController(ICompanyMemberService companyMemberService)
+    public CompanyMemberController(ICompanyMemberService companyMemberService, IFirebaseService firebaseService, IRepositoryBase<User> userRepository)
     {
         _companyMemberService = companyMemberService;
+        _firebaseService = firebaseService;
+        _userRepository = userRepository;
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT},{Roles.CUSTOMER}")]
@@ -29,7 +35,7 @@ public class CompanyMemberController : BaseController
     {
         try
         {
-            var result = await _companyMemberService.Get();
+            var result = await _companyMemberService.Get(CurrentUserID);
             var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
             return Ok(pagedResponse);
         }
@@ -103,6 +109,11 @@ public class CompanyMemberController : BaseController
         try
         {
             var result = await _companyMemberService.Add(model, CurrentUserID);
+            if (result != null && await _firebaseService.CreateFirebaseUser(model.User.Email, model.User.Password) == true)
+            {
+                var userModel = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(result.MemberId));
+                await _firebaseService.CreateUserDocument(userModel);
+            }
             return Ok(new { Message = "Member Added Successfully", Data = result });
         }
         catch (UnauthorizedException ex)
