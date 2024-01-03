@@ -27,14 +27,16 @@ public class AuthService : IAuthService
 {
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
+    private readonly IFirebaseService _firebaseService;
     private readonly IConfiguration _configuration;
     private readonly IMapper _mapper;
     private readonly MailSettings _mailSettings;
 
-    public AuthService(IRepositoryBase<User> userRepository, IConfiguration configuration, IMapper mapper, IOptions<MailSettings> mailSettings, IRepositoryBase<CompanyMember> companyMemberRepository)
+    public AuthService(IRepositoryBase<User> userRepository, IConfiguration configuration, IFirebaseService firebaseService, IMapper mapper, IOptions<MailSettings> mailSettings, IRepositoryBase<CompanyMember> companyMemberRepository)
     {
         _userRepository = userRepository;
         _configuration = configuration;
+        _firebaseService = firebaseService;
         _mapper = mapper;
         _mailSettings = mailSettings.Value;
         _companyMemberRepository = companyMemberRepository;
@@ -108,8 +110,8 @@ public class AuthService : IAuthService
             throw new BadRequestException("Password and Confirm Password does not match.");
         }
         user.Password = passwordHasher.HashPassword(user, model.NewPassword);
-
         await _userRepository.UpdateAsync(user);
+        await _firebaseService.UpdateFirebaseUser(user.Email, user.Email, model.NewPassword);
     }
 
     public async Task ResetPassword(string email)
@@ -124,6 +126,7 @@ public class AuthService : IAuthService
         string newPassword = CreateRandomPassword(8);
         user.Password = passwordHasher.HashPassword(user, newPassword);
         await _userRepository.UpdateAsync(user);
+        await _firebaseService.UpdateFirebaseUser(user.Email, user.Email, newPassword);
         BackgroundJob.Enqueue(() => SendNewPassword(user, newPassword));
     }
 

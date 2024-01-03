@@ -6,8 +6,8 @@ namespace API.Services.Interfaces
     {
         Task<string> UploadFirebaseAsync(MemoryStream stream, string fileName);
         Task<bool> CreateFirebaseUser(string email, string password);
-        Task<bool> UpdateFirebaseUser(string email, string? newPassword);
-        Task<bool> RemoveFirebaseAccount(User user);
+        Task<bool> UpdateFirebaseUser(string oldMail, string newMail, string? newPassword);
+        Task<bool> RemoveFirebaseAccount(int userId);
         Task CreateUserDocument(User user);
         Task UpdateUserDocument(User user);
     }

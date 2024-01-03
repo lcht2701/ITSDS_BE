@@ -5,15 +5,22 @@ using Firebase.Storage;
 using FirebaseAdmin.Auth;
 using Google.Cloud.Firestore;
 using Persistence.Helpers;
+using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
 
 public class FirebaseService : IFirebaseService
 {
+    private readonly IRepositoryBase<User> _userRepository;
     private static string Apikey = "AIzaSyDSp2BGBcsS282cPTJSxUzFoW2PKWzAZ0A";
     private static string Bucket = "itsds-v1.appspot.com";
     private static string AuthEmail = "itsds@gmail.com";
     private static string AuthPassword = "itsds@123";
+
+    public FirebaseService(IRepositoryBase<User> userRepository)
+    {
+        _userRepository = userRepository;
+    }
 
     public async Task<string> UploadFirebaseAsync(MemoryStream stream, string fileName)
     {
@@ -57,15 +64,15 @@ public class FirebaseService : IFirebaseService
         return userRecord is not null;
     }
 
-    public async Task<bool> UpdateFirebaseUser(string email, string? newPassword)
+    public async Task<bool> UpdateFirebaseUser(string oldMail, string newMail, string? newPassword)
     {
-        UserRecord userRecord = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(email);
+        UserRecord userRecord = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(oldMail);
         UserRecordArgs args = new UserRecordArgs()
         {
             Uid = userRecord.Uid,
-            Email = email,
+            Email = newMail,
             EmailVerified = true,
-            Disabled = true,
+            Disabled = false,
         };
 
         if (newPassword != null)
@@ -77,9 +84,11 @@ public class FirebaseService : IFirebaseService
         return userUpdated is not null;
     }
 
-    public async Task<bool> RemoveFirebaseAccount(User user)
+    public async Task<bool> RemoveFirebaseAccount(int userId)
     {
         bool check = false;
+        var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
+
         UserRecord userRecord = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(user.Email);
         #region Remove Firebase Auth Account
         await FirebaseAuth.DefaultInstance.DeleteUserAsync(userRecord.Uid);
@@ -133,7 +142,7 @@ public class FirebaseService : IFirebaseService
 
             // Update only the fields that need to be changed
             existingData["name"] = newFullname ?? existingData["name"];
-            existingData["email"] = user.Username ?? existingData["email"];
+            existingData["email"] = user.Email ?? existingData["email"];
             existingData["image"] = user.AvatarUrl ?? existingData["image"];
             existingData["about"] = newAbout ?? existingData["about"];
 
