@@ -20,7 +20,5 @@ namespace API.Services.Interfaces
         Task<User> UpdateProfile(int id, UpdateProfileRequest model);
         Task<string> UploadImageFirebase(int userId, IFormFile file);
         Task<User> UploadAvatarByUrl(int userId, UpdateAvatarUrlRequest model);
-        Task CreateUserDocument(User user);
-        Task UpdateUserDocument(User user);
     }
 }

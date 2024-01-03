@@ -174,9 +174,9 @@ public class UserController : BaseController
         try
         {
             var user = await _userService.Create(model);
-            if (user != null && await _firebaseService.SignUp(model.UserModel.Email, model.UserModel.Password) == true)
+            if (user != null && await _firebaseService.CreateFirebaseUser(model.UserModel.Email, model.UserModel.Password) == true)
             {
-                await _userService.CreateUserDocument(user!);
+                await _firebaseService.CreateUserDocument(user!);
             }
             return Ok("Created Successfully");
         }
@@ -194,7 +194,11 @@ public class UserController : BaseController
         try
         {
             var user = await _userService.Update(id, model);
-            await _userService.UpdateUserDocument(user);
+            if (user != null && await _firebaseService.UpdateFirebaseUser(model.Email, null) == true)
+            {
+                await _firebaseService.CreateUserDocument(user!);
+            }
+            await _firebaseService.UpdateUserDocument(user);
             return Ok("Updated Successfully");
         }
         catch (KeyNotFoundException ex)
@@ -252,7 +256,7 @@ public class UserController : BaseController
         try
         {
             var user = await _userService.UpdateProfile(CurrentUserID, model);
-            await _userService.UpdateUserDocument(user);
+            await _firebaseService.UpdateUserDocument(user);
             return Ok("Updated Successfully");
         }
         catch (KeyNotFoundException ex)
@@ -291,7 +295,7 @@ public class UserController : BaseController
         try
         {
             var user = await _userService.UploadAvatarByUrl(CurrentUserID, model);
-            await _userService.UpdateUserDocument(user);
+            await _firebaseService.UpdateUserDocument(user);
             return Ok("Avatar URL updated successfully");
         }
         catch (KeyNotFoundException ex)

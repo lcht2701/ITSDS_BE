@@ -10,7 +10,6 @@ using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
-using Google.Cloud.Firestore;
 using Hangfire;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -103,7 +102,8 @@ public class UserService : IUserService
             {
                 MemberId = result.Id,
                 CompanyId = (int)model.CompanyId,
-                IsCompanyAdmin = model.isCompanyAdmin
+                IsCompanyAdmin = model.IsCompanyAdmin,
+                DepartmentId = model.DepartmentId
             });
         }
         BackgroundJob.Enqueue(() => SendUserCreatedNotification(model.UserModel));
@@ -168,7 +168,7 @@ public class UserService : IUserService
         var linkImage = await _firebaseService.UploadFirebaseAsync(stream, file.FileName);
         user.AvatarUrl = linkImage;
         await _userRepository.UpdateAsync(user);
-        await UpdateUserDocument(user);
+        await _firebaseService.UpdateUserDocument(user);
         return linkImage;
     }
 
@@ -199,61 +199,6 @@ public class UserService : IUserService
             {
                 entity.Company = _mapper.Map(company, new GetCompanyResponse());
             }
-        }
-    }
-
-    public async Task CreateUserDocument(User user)
-    {
-        string createdAtTime = new DateTimeOffset((DateTime)user.CreatedAt!).ToUnixTimeMilliseconds().ToString();
-        string lastActiveTime = new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds().ToString();
-        string about = $"I am {DataResponse.GetEnumDescription(user.Role)}";
-        string fullname = $"{user.FirstName} {user.LastName}";
-        FirestoreDb db = FirestoreDb.Create("itsds-v1");
-        DocumentReference docRef = db.Collection("users").Document(user.Id.ToString());
-
-        // Create a data object for the document
-        Dictionary<string, object> data = new()
-        {
-            { "id", user.Id.ToString() ?? "" },
-            { "name", fullname ?? "" },
-            { "email", user.Email! ?? "" },
-            { "image", user.AvatarUrl! ?? "" },
-            { "created_at", createdAtTime ?? "" },
-            { "last_active", lastActiveTime ?? "" },
-            { "about", about ?? "" },
-            { "is_active", true },
-            { "push_token", "" },
-        };
-        await docRef.SetAsync(data);
-    }
-
-    public async Task UpdateUserDocument(User user)
-    {
-        FirestoreDb db = FirestoreDb.Create("itsds-v1");
-        DocumentReference docRef = db.Collection("users").Document(user.Id.ToString());
-        string newFullname = $"{user.FirstName} {user.LastName}";
-        string newAbout = $"I am {DataResponse.GetEnumDescription(user.Role)}";
-
-        // Get the existing user document data
-        DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
-        if (snapshot.Exists)
-        {
-            // Extract existing data
-            Dictionary<string, object> existingData = snapshot.ToDictionary();
-
-            // Update only the fields that need to be changed
-            existingData["name"] = newFullname ?? existingData["name"];
-            existingData["email"] = user.Username ?? existingData["email"];
-            existingData["image"] = user.AvatarUrl ?? existingData["image"];
-            existingData["about"] = newAbout ?? existingData["about"];
-
-            // Update the Firestore document with the modified data
-            await docRef.UpdateAsync(existingData);
-        }
-        else
-        {
-            // Handle the case where the user document doesn't exist
-            // You can choose to create a new document or handle the error as needed.
         }
     }
 

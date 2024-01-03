@@ -1,15 +1,14 @@
 ﻿using API.DTOs.Requests.CompanyMembers;
-using API.DTOs.Requests.Users;
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Application.AppConfig;
 using Domain.Constants.Enums;
-using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Hangfire;
 using MailKit.Net.Smtp;
 using MailKit.Security;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using Persistence.Helpers;
@@ -32,33 +31,49 @@ public class CompanyMemberService : ICompanyMemberService
         _mailSettings = mailSettings.Value;
     }
 
-    public async Task<List<CompanyMember>> Get()
+    public async Task<List<CompanyMember>> Get(int userId)
     {
-        var companyMembers = await _companyMemberRepository.ToListAsync();
-        return companyMembers;
+        List<CompanyMember> result = new();
+        var currentUser = await _userRepository.FirstOrDefaultAsync(x => x.Id == userId);
+        var memberInfo = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId == userId);
+        switch (currentUser.Role)
+        {
+
+            case Role.Customer:
+                {
+                    result = (await _companyMemberRepository.WhereAsync(x => x.CompanyId.Equals(memberInfo.CompanyId), new string[] { "Member", "Company" })).ToList();
+                    break;
+                }
+            default:
+                {
+                    result = (await _companyMemberRepository.GetAsync(navigationProperties: new string[] { "Member", "Company" })).ToList();
+                    break;
+                }
+        }
+        return result;
     }
 
     public async Task<List<CompanyMember>> GetCompanyAdmins(int companyId)
     {
-        var result = (await _companyMemberRepository.WhereAsync(x => x.CompanyId.Equals(companyId) && x.IsCompanyAdmin)).ToList() 
+        var result = (await _companyMemberRepository.WhereAsync(x => x.CompanyId.Equals(companyId) && x.IsCompanyAdmin, new string[] { "Member", "Company" })).ToList()
             ?? throw new KeyNotFoundException("Company is not exist");
         return result;
     }
 
     public async Task<List<User>> GetMemberNotInCompany(int companyId)
     {
-        var companyMemberIds = (await _companyMemberRepository.WhereAsync(x => x.CompanyId == companyId)).Select(x => x.MemberId).ToList() 
+        var companyMemberIds = (await _companyMemberRepository.WhereAsync(x => x.CompanyId == companyId)).Select(x => x.MemberId).ToList()
             ?? throw new KeyNotFoundException("Company is not exist");
-        var users = (await _userRepository.WhereAsync(x => 
-                    !companyMemberIds.Contains(x.Id) && 
-                    x.Role == Role.Customer))
+        var users = (await _userRepository.WhereAsync(x =>
+                    !companyMemberIds.Contains(x.Id) &&
+                    x.Role == Role.Customer, new string[] { "Member", "Company" }))
                     .ToList();
         return users;
     }
 
     public async Task<CompanyMember> GetById(int id)
     {
-        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Member is not exist");
+        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Member", "Company" }) ?? throw new KeyNotFoundException("Member is not exist");
         return companyMember;
     }
 
@@ -66,14 +81,21 @@ public class CompanyMemberService : ICompanyMemberService
     {
         CompanyMember currentUserMember = await IsCompanyAdmin(currentUserId);
         var userAccount = _mapper.Map(model.User, new User());
+
+        //Default when create new account
         userAccount.Role = Role.Customer;
+        var passwordHasher = new PasswordHasher<User>();
+        userAccount.Password = passwordHasher.HashPassword(userAccount, userAccount.Password);
+        userAccount.IsActive = true;
+
         var userResult = await _userRepository.CreateAsync(userAccount);
         var member = new CompanyMember()
         {
             MemberId = userResult.Id,
             CompanyId = currentUserMember.CompanyId,
             IsCompanyAdmin = model.IsCompanyAdmin,
-            MemberPosition = model.MemberPosition
+            MemberPosition = model.MemberPosition != null ? model.MemberPosition : "",
+            DepartmentId = model.DepartmentId
         };
         await _companyMemberRepository.CreateAsync(member);
         BackgroundJob.Enqueue(() => SendUserCreatedNotification(model.User!));
