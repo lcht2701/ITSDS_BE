@@ -20,6 +20,7 @@ using System.Text;
 using MailKit.Net.Smtp;
 using Domain.Models.Contracts;
 using Hangfire;
+using Domain.Models.Tickets;
 
 namespace API.Services.Implements;
 
@@ -27,12 +28,13 @@ public class AuthService : IAuthService
 {
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
+    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IFirebaseService _firebaseService;
     private readonly IConfiguration _configuration;
     private readonly IMapper _mapper;
     private readonly MailSettings _mailSettings;
 
-    public AuthService(IRepositoryBase<User> userRepository, IConfiguration configuration, IFirebaseService firebaseService, IMapper mapper, IOptions<MailSettings> mailSettings, IRepositoryBase<CompanyMember> companyMemberRepository)
+    public AuthService(IRepositoryBase<User> userRepository, IConfiguration configuration, IFirebaseService firebaseService, IMapper mapper, IOptions<MailSettings> mailSettings, IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<TeamMember> teamMemberRepository)
     {
         _userRepository = userRepository;
         _configuration = configuration;
@@ -40,6 +42,7 @@ public class AuthService : IAuthService
         _mapper = mapper;
         _mailSettings = mailSettings.Value;
         _companyMemberRepository = companyMemberRepository;
+        _teamMemberRepository = teamMemberRepository;
     }
 
     public async Task<LoginResponse> Login(LoginRequest model)
@@ -58,7 +61,10 @@ public class AuthService : IAuthService
 
         var entity = _mapper.Map(user, new LoginResponse());
         var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
+        var teamMember = await _teamMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
         entity.IsCompanyAdmin = companyMember != null && companyMember.IsCompanyAdmin;
+        entity.CompanyId = companyMember?.CompanyId;
+        entity.TeamId = teamMember?.TeamId;
         entity.AccessToken = GenerateToken(user);
         return entity;
     }
@@ -86,7 +92,10 @@ public class AuthService : IAuthService
 
         var entity = _mapper.Map(user, new LoginResponse());
         var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
+        var teamMember = await _teamMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
         entity.IsCompanyAdmin = companyMember != null && companyMember.IsCompanyAdmin;
+        entity.CompanyId = companyMember?.CompanyId;
+        entity.TeamId = teamMember?.TeamId;
         entity.AccessToken = GenerateToken(user);
         return entity;
     }

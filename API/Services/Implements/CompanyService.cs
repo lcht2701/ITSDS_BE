@@ -25,8 +25,7 @@ public class CompanyService : ICompanyService
         var cacheData = _cacheService.GetData<List<Company>>("companies");
         if (cacheData == null || !cacheData.Any())
         {
-            cacheData = (await _companyRepository
-            .GetAsync(navigationProperties: new string[] { "CustomerAdmin" })).ToList();
+            cacheData = await _companyRepository.ToListAsync();
             var expiryTime = DateTimeOffset.Now.AddSeconds(30);
             _cacheService.SetData("companies", cacheData, expiryTime);
         }
