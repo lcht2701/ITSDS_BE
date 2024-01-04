@@ -1,5 +1,4 @@
 using API.DTOs.Requests.Users;
-using API.DTOs.Responses.TicketTasks;
 using API.DTOs.Responses.Users;
 using API.Services.Interfaces;
 using Domain.Constants;
@@ -8,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 

@@ -5,11 +5,12 @@ using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Exceptions;
 using Domain.Models;
+using Domain.Models.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
