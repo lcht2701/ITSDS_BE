@@ -103,7 +103,8 @@ public class UserService : IUserService
                 MemberId = result.Id,
                 CompanyId = (int)model.CompanyId,
                 IsCompanyAdmin = model.IsCompanyAdmin,
-                DepartmentId = model.DepartmentId
+                DepartmentId = model.DepartmentId,
+                MemberPosition = model.IsCompanyAdmin == true ? "Company Admin" : "Nhân viên"
             });
         }
         BackgroundJob.Enqueue(() => SendUserCreatedNotification(model.UserModel));
