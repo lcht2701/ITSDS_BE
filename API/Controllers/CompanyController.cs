@@ -4,6 +4,7 @@ using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
@@ -34,6 +35,7 @@ public class CompanyController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpGet]
+    [SwaggerResponse(200, "Get List Company", typeof(List<Domain.Models.Contracts.Company>))]
     public async Task<IActionResult> Get(
     [FromQuery] string? filter,
     [FromQuery] string? sort,
@@ -54,6 +56,7 @@ public class CompanyController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpGet("{id}")]
+    [SwaggerResponse(200, "Get Company By Id", typeof(List<Domain.Models.Contracts.Company>))]
     public async Task<IActionResult> GetById(int id)
     {
         try
