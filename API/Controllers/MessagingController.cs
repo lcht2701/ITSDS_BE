@@ -1,7 +1,10 @@
 ﻿using API.DTOs.Requests.Messagings;
+using API.DTOs.Responses.Dashboards.Accountants;
 using API.Services.Interfaces;
+using FirebaseAdmin.Messaging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
@@ -17,6 +20,7 @@ public class MessagingController : BaseController
 
     [Authorize]
     [HttpGet]
+    [SwaggerResponse(200, "Get Notification", typeof(List<Domain.Models.Messaging>))]
     public async Task<IActionResult> GetNotifications()
     {
         try

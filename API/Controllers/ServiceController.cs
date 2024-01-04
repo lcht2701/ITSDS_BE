@@ -5,6 +5,7 @@ using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
@@ -29,6 +30,7 @@ public class ServiceController : BaseController
 
     [Authorize]
     [HttpGet]
+    [SwaggerResponse(200, "Get Service", typeof(List<Domain.Models.Contracts.Service>))]
     public async Task<IActionResult> GetServices(
     [FromQuery] string? filter,
     [FromQuery] string? sort,
@@ -42,6 +44,7 @@ public class ServiceController : BaseController
 
     [Authorize]
     [HttpGet("category")]
+    [SwaggerResponse(200, "Get Service By Category", typeof(List<Domain.Models.Contracts.Service>))]
     public async Task<IActionResult> GetByCategory(int categoryId)
     {
         try
@@ -61,6 +64,7 @@ public class ServiceController : BaseController
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpGet("{id}")]
+    [SwaggerResponse(200, "Get Service By Id", typeof(Domain.Models.Contracts.Service))]
     public async Task<IActionResult> GetServiceById(int id)
     {
         try

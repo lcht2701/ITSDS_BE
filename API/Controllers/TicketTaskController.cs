@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Requests.TicketTasks;
+using API.DTOs.Responses.TicketTasks;
 using API.Services.Interfaces;
 using Domain.Constants;
 using Domain.Constants.Enums;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
@@ -46,6 +48,7 @@ public class TicketTaskController : BaseController
 
     [Authorize(Roles = Roles.TECHNICIAN)]
     [HttpGet("active")]
+    [SwaggerResponse(200, "Get Active Tasks", typeof(List<GetTicketTaskResponse>))]
     public async Task<IActionResult> GetActiveTasks([FromQuery] int? ticketId)
     {
         try
@@ -61,6 +64,7 @@ public class TicketTaskController : BaseController
 
     [Authorize(Roles = Roles.TECHNICIAN)]
     [HttpGet("inactive")]
+    [SwaggerResponse(200, "Get Inactive Tasks", typeof(List<GetTicketTaskResponse>))]
     public async Task<IActionResult> GetInActiveTasks([FromQuery] int? ticketId)
     {
         try
@@ -76,6 +80,7 @@ public class TicketTaskController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpGet("{id}")]
+    [SwaggerResponse(200, "Get Ticket Task by Id", typeof(GetTicketTaskResponse))]
     public async Task<IActionResult> GetById(int id)
     {
         try

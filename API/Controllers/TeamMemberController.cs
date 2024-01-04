@@ -5,6 +5,7 @@ using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers;
 
@@ -40,6 +41,7 @@ public class TeamMemberController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpGet("{teamId}")]
+    [SwaggerResponse(200, "Get Member In Team", typeof(List<Domain.Models.User>))]
     public async Task<IActionResult> GetMembersInTeam(int teamId)
     {
         try
@@ -59,6 +61,7 @@ public class TeamMemberController : BaseController
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpGet("select-list")]
+    [SwaggerResponse(200, "Get Member Not In Team", typeof(List<Domain.Models.User>))]
     public async Task<IActionResult> GetMembersNotInTeam(int teamId)
     {
         try
@@ -78,6 +81,7 @@ public class TeamMemberController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpGet("get/{id}")]
+    [SwaggerResponse(200, "Get Member By Id", typeof(Domain.Models.Tickets.TeamMember))]
     public async Task<IActionResult> GetById(int id)
     {
         try
