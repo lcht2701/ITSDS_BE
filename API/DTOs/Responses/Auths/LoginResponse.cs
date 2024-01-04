@@ -18,6 +18,8 @@ public class LoginResponse : IMapFrom<User>
     public DateTime? DateOfBirth { get; set; }
     public Gender? Gender { get; set; }
     public bool IsCompanyAdmin { get; set; }
+    public int? CompanyId { get; set; }
+    public int? TeamId { get; set; }
 
     public string AccessToken { get; set; }
 }
