@@ -44,6 +44,7 @@ builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<IModeService, ModeService>();
 builder.Services.AddScoped<IServiceService, ServiceService>();
@@ -143,6 +144,7 @@ builder.Services.AddCors(options =>
 FirebaseApp.Create(new AppOptions()
 {
     Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "admin_sdk.json")),
+    ProjectId = "itsds-v1"
 });
 
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS",

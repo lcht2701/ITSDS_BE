@@ -10,7 +10,7 @@ using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
-using Google.Cloud.Firestore;
+using Hangfire;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Identity;
@@ -25,8 +25,8 @@ public class UserService : IUserService
 {
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IRepositoryBase<Team> _teamRepository;
-    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IRepositoryBase<Company> _companyRepository;
+    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IFirebaseService _firebaseService;
     private readonly IMapper _mapper;
@@ -88,14 +88,25 @@ public class UserService : IUserService
         return entity;
     }
 
-    public async Task<User> Create(CreateUserRequest model)
+    public async Task<User> Create(CreateUserOrCustomerAdmin model)
     {
-        User entity = _mapper.Map(model, new User());
+        User entity = _mapper.Map(model.UserModel, new User());
         var passwordHasher = new PasswordHasher<User>();
-        entity.Password = passwordHasher.HashPassword(entity, model.Password);
+        entity.Password = passwordHasher.HashPassword(entity, model.UserModel.Password);
+        //Default when create new account
         entity.IsActive = true;
-        await _userRepository.CreateAsync(entity);
-        await SendUserCreatedNotification(model);
+        var result = await _userRepository.CreateAsync(entity);
+        if (model.UserModel.Role == Role.Customer && model.CompanyId != null)
+        {
+            await _companyMemberRepository.CreateAsync(new CompanyMember()
+            {
+                MemberId = result.Id,
+                CompanyId = (int)model.CompanyId,
+                IsCompanyAdmin = model.IsCompanyAdmin,
+                DepartmentId = model.DepartmentId
+            });
+        }
+        BackgroundJob.Enqueue(() => SendUserCreatedNotification(model.UserModel));
         return entity;
     }
 
@@ -113,6 +124,14 @@ public class UserService : IUserService
         var target =
             await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("User is not exist"));
         await _userRepository.SoftDeleteAsync(target);
+        #region Remove in Company Member
+        var companyMember = await _companyMemberRepository.WhereAsync(x => x.MemberId == target.Id);
+        foreach (var member in companyMember) await _companyMemberRepository.DeleteAsync(member);
+        #endregion
+        #region Remove In Team Member
+        var teamMember = await _teamMemberRepository.WhereAsync(x => x.MemberId == target.Id);
+        foreach (var member in teamMember) await _teamMemberRepository.DeleteAsync(member);
+        #endregion
     }
 
     public async Task<User> UpdateProfile(int id, UpdateProfileRequest model)
@@ -149,7 +168,7 @@ public class UserService : IUserService
         var linkImage = await _firebaseService.UploadFirebaseAsync(stream, file.FileName);
         user.AvatarUrl = linkImage;
         await _userRepository.UpdateAsync(user);
-        await UpdateUserDocument(user);
+        await _firebaseService.UpdateUserDocument(user);
         return linkImage;
     }
 
@@ -183,62 +202,7 @@ public class UserService : IUserService
         }
     }
 
-    public async Task CreateUserDocument(User user)
-    {
-        string createdAtTime = new DateTimeOffset((DateTime)user.CreatedAt!).ToUnixTimeMilliseconds().ToString();
-        string lastActiveTime = new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds().ToString();
-        string about = $"I am {DataResponse.GetEnumDescription(user.Role)}";
-        string fullname = $"{user.FirstName} {user.LastName}";
-        FirestoreDb db = FirestoreDb.Create("itsds-v1");
-        DocumentReference docRef = db.Collection("users").Document(user.Id.ToString());
-
-        // Create a data object for the document
-        Dictionary<string, object> data = new()
-        {
-            { "id", user.Id.ToString() ?? "" },
-            { "name", fullname ?? "" },
-            { "email", user.Email! ?? "" },
-            { "image", user.AvatarUrl! ?? "" },
-            { "created_at", createdAtTime ?? "" },
-            { "last_active", lastActiveTime ?? "" },
-            { "about", about ?? "" },
-            { "is_active", true },
-            { "push_token", "" },
-        };
-        await docRef.SetAsync(data);
-    }
-
-    public async Task UpdateUserDocument(User user)
-    {
-        FirestoreDb db = FirestoreDb.Create("itsds-v1");
-        DocumentReference docRef = db.Collection("users").Document(user.Id.ToString());
-        string newFullname = $"{user.FirstName} {user.LastName}";
-        string newAbout = $"I am {DataResponse.GetEnumDescription(user.Role)}";
-
-        // Get the existing user document data
-        DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
-        if (snapshot.Exists)
-        {
-            // Extract existing data
-            Dictionary<string, object> existingData = snapshot.ToDictionary();
-
-            // Update only the fields that need to be changed
-            existingData["name"] = newFullname ?? existingData["name"];
-            existingData["email"] = user.Username ?? existingData["email"];
-            existingData["image"] = user.AvatarUrl ?? existingData["image"];
-            existingData["about"] = newAbout ?? existingData["about"];
-
-            // Update the Firestore document with the modified data
-            await docRef.UpdateAsync(existingData);
-        }
-        else
-        {
-            // Handle the case where the user document doesn't exist
-            // You can choose to create a new document or handle the error as needed.
-        }
-    }
-
-    private async Task SendUserCreatedNotification(CreateUserRequest dto)
+    public async Task SendUserCreatedNotification(CreateUserRequest dto)
     {
         using (MimeMessage emailMessage = new MimeMessage())
         {

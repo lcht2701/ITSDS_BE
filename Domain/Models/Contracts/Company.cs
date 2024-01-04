@@ -7,6 +7,7 @@ namespace Domain.Models.Contracts
         public Company()
         {
             Contracts = new HashSet<Contract>();
+            Departments = new HashSet<Department>();
         }
         public string? CompanyName { get; set; }
 
@@ -26,12 +27,9 @@ namespace Domain.Models.Contracts
 
         public bool? IsActive { get; set; }
 
-        public int? CustomerAdminId { get; set; }
-
-        public virtual User? CustomerAdmin { get; set; }
-
         [JsonIgnore]
         public virtual ICollection<Contract>? Contracts { get; set; }
+        public virtual ICollection<Department>? Departments { get; set; }
 
     }
 }

@@ -3,23 +3,43 @@ using API.DTOs.Responses.TicketTasks;
 using API.DTOs.Responses.Users;
 using API.Services.Interfaces;
 using Domain.Constants;
+using Domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
-using Swashbuckle.AspNetCore.Annotations;
+using Persistence.Repositories.Interfaces;
 
 namespace API.Controllers;
 
 [Route("/v1/itsds/user")]
 public class UserController : BaseController
 {
+    private readonly IRepositoryBase<User> _userRepository;
     private readonly IUserService _userService;
+    private readonly IServiceContractService _serviceContractService;
     private readonly IFirebaseService _firebaseService;
 
-    public UserController(IUserService userService, IFirebaseService firebaseService)
+    public UserController(IRepositoryBase<User> userRepository, IUserService userService, IServiceContractService serviceContractService, IFirebaseService firebaseService)
     {
+        _userRepository = userRepository;
         _userService = userService;
+        _serviceContractService = serviceContractService;
         _firebaseService = firebaseService;
+    }
+
+    [Authorize]
+    [HttpGet("active-services")]
+
+    public async Task<IActionResult> GetActiveServices()
+    {
+        try
+        {
+            return Ok(await _serviceContractService.GetActiveServicesOfMemberCompany(CurrentUserID));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     #region Selection List By Roles
@@ -157,14 +177,14 @@ public class UserController : BaseController
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpPost]
-    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest model)
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserOrCustomerAdmin model)
     {
         try
         {
             var user = await _userService.Create(model);
-            if (user != null && await _firebaseService.SignUp(model.Email, model.Password) == true)
+            if (user != null && await _firebaseService.CreateFirebaseUser(model.UserModel.Email, model.UserModel.Password) == true)
             {
-                await _userService.CreateUserDocument(user!);
+                await _firebaseService.CreateUserDocument(user!);
             }
             return Ok("Created Successfully");
         }
@@ -181,8 +201,11 @@ public class UserController : BaseController
     {
         try
         {
-            var user = await _userService.Update(id, model);
-            await _userService.UpdateUserDocument(user);
+            var user = await _userRepository.FirstOrDefaultAsync(x => x.Id == CurrentUserID);
+            await _firebaseService.UpdateFirebaseUser(user.Email, model.Email, null);
+            var result = await _userService.Update(id, model);
+            await _firebaseService.UpdateUserDocument(result);
+
             return Ok("Updated Successfully");
         }
         catch (KeyNotFoundException ex)
@@ -201,6 +224,7 @@ public class UserController : BaseController
     {
         try
         {
+            await _firebaseService.RemoveFirebaseAccount(id);
             await _userService.Remove(id);
             return Ok("Deleted Successfully");
         }
@@ -239,8 +263,10 @@ public class UserController : BaseController
     {
         try
         {
-            var user = await _userService.UpdateProfile(CurrentUserID, model);
-            await _userService.UpdateUserDocument(user);
+            var user = await _userRepository.FirstOrDefaultAsync(x => x.Id == CurrentUserID);
+            await _firebaseService.UpdateFirebaseUser(user.Email, model.Email!, null);
+            var result = await _userService.UpdateProfile(CurrentUserID, model);
+            await _firebaseService.UpdateUserDocument(result);
             return Ok("Updated Successfully");
         }
         catch (KeyNotFoundException ex)
@@ -279,7 +305,7 @@ public class UserController : BaseController
         try
         {
             var user = await _userService.UploadAvatarByUrl(CurrentUserID, model);
-            await _userService.UpdateUserDocument(user);
+            await _firebaseService.UpdateUserDocument(user);
             return Ok("Avatar URL updated successfully");
         }
         catch (KeyNotFoundException ex)

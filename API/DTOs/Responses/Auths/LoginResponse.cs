@@ -1,7 +1,6 @@
 ﻿using API.Mappings;
 using Domain.Constants.Enums;
 using Domain.Models;
-using Domain.Models.Tickets;
 
 namespace API.DTOs.Responses.Auths;
 
@@ -18,6 +17,7 @@ public class LoginResponse : IMapFrom<User>
     public string? PhoneNumber { get; set; }
     public DateTime? DateOfBirth { get; set; }
     public Gender? Gender { get; set; }
+    public bool IsCompanyAdmin { get; set; }
 
     public string AccessToken { get; set; }
 }

@@ -26,21 +26,16 @@ public class User : BaseEntity
 
     public Role Role { get; set; }
 
-    public string? AvatarUrl { get; set; }
+    public bool IsActive { get; set; }
 
-    public string? Address { get; set; }
+    public Gender Gender { get; set; }
+
+    public string? AvatarUrl { get; set; }
 
     public string? PhoneNumber { get; set; }
 
-    public bool? IsActive { get; set; }
-
     public DateTime? DateOfBirth { get; set; }
 
-    public Gender? Gender { get; set; }
-
-    public string? PasswordResetToken { get; set; }
-
-    public DateTime? ResetTokenExpires { get; set; }
 
     [JsonIgnore] public virtual ICollection<Ticket>? Tickets { get; set; }
     [JsonIgnore] public virtual ICollection<TeamMember>? TeamMembers { get; set; }

@@ -18,23 +18,28 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using MailKit.Net.Smtp;
-
+using Domain.Models.Contracts;
+using Hangfire;
 
 namespace API.Services.Implements;
 
 public class AuthService : IAuthService
 {
     private readonly IRepositoryBase<User> _userRepository;
+    private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
+    private readonly IFirebaseService _firebaseService;
     private readonly IConfiguration _configuration;
     private readonly IMapper _mapper;
     private readonly MailSettings _mailSettings;
 
-    public AuthService(IRepositoryBase<User> userRepository, IConfiguration configuration, IMapper mapper, IOptions<MailSettings> mailSettings)
+    public AuthService(IRepositoryBase<User> userRepository, IConfiguration configuration, IFirebaseService firebaseService, IMapper mapper, IOptions<MailSettings> mailSettings, IRepositoryBase<CompanyMember> companyMemberRepository)
     {
         _userRepository = userRepository;
         _configuration = configuration;
+        _firebaseService = firebaseService;
         _mapper = mapper;
         _mailSettings = mailSettings.Value;
+        _companyMemberRepository = companyMemberRepository;
     }
 
     public async Task<LoginResponse> Login(LoginRequest model)
@@ -52,6 +57,8 @@ public class AuthService : IAuthService
         }
 
         var entity = _mapper.Map(user, new LoginResponse());
+        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
+        entity.IsCompanyAdmin = companyMember != null && companyMember.IsCompanyAdmin;
         entity.AccessToken = GenerateToken(user);
         return entity;
     }
@@ -78,6 +85,8 @@ public class AuthService : IAuthService
         }
 
         var entity = _mapper.Map(user, new LoginResponse());
+        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
+        entity.IsCompanyAdmin = companyMember != null && companyMember.IsCompanyAdmin;
         entity.AccessToken = GenerateToken(user);
         return entity;
     }
@@ -101,41 +110,35 @@ public class AuthService : IAuthService
             throw new BadRequestException("Password and Confirm Password does not match.");
         }
         user.Password = passwordHasher.HashPassword(user, model.NewPassword);
-
         await _userRepository.UpdateAsync(user);
+        await _firebaseService.UpdateFirebaseUser(user.Email, user.Email, model.NewPassword);
     }
 
-    public async Task ForgotPassword(string email)
+    public async Task ResetPassword(string email)
     {
-        var user = await _userRepository.FirstOrDefaultAsync(x => x.Email!.Equals(email));
+        var user = await _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email));
         if (user == null)
         {
-            throw new BadRequestException("Invalid Token");
-        }
-
-        user.PasswordResetToken = CreateRandomToken();
-        user.ResetTokenExpires = DateTime.Now.AddHours(1);
-        await _userRepository.UpdateAsync(user);
-        await SendResetLink(user);
-    }
-
-    public async Task ResetPassword(int uid, string token, ResetPasswordRequest model)
-    {
-        var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(uid) && x.PasswordResetToken!.Equals(token));
-        if (user == null)
-        {
-            throw new BadRequestException("User is not found.");
-        }
-        if (user.ResetTokenExpires < DateTime.Now)
-        {
-            throw new BadRequestException("Token has been expired. Please initiate a new password reset request if you still need to reset your password.");
+            throw new BadRequestException("User is not found");
         }
 
         var passwordHasher = new PasswordHasher<User>();
-        user.Password = passwordHasher.HashPassword(user, model.NewPassword);
-        user.PasswordResetToken = null;
-        user.ResetTokenExpires = null;
+        string newPassword = CreateRandomPassword(8);
+        user.Password = passwordHasher.HashPassword(user, newPassword);
         await _userRepository.UpdateAsync(user);
+        await _firebaseService.UpdateFirebaseUser(user.Email, user.Email, newPassword);
+        BackgroundJob.Enqueue(() => SendNewPassword(user, newPassword));
+    }
+
+    private string CreateRandomPassword(int length)
+    {
+        string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        Random random = new Random();
+        string randomPassword = new string(Enumerable.Repeat(chars, length)
+            .Select(s => s[random.Next(s.Length)])
+            .ToArray());
+        return randomPassword;
+
     }
 
     #region Generate JWT Token
@@ -166,17 +169,11 @@ public class AuthService : IAuthService
     }
     #endregion
 
-    private string CreateRandomToken()
-    {
-        return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
-    }
-
-    private async Task SendResetLink(User user)
+    public async Task SendNewPassword(User user, string newPassword)
     {
         using (MimeMessage emailMessage = new MimeMessage())
         {
             var fullName = $"{user.FirstName} {user.LastName}";
-            string resetPasswordLink = $"{_configuration["AppBaseUrl"]}/reset-password?uid={user.Id}&token={WebUtility.UrlEncode(user.PasswordResetToken)}";
             MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
             emailMessage.From.Add(emailFrom);
             MailboxAddress emailTo = new MailboxAddress(fullName,
@@ -188,22 +185,35 @@ public class AuthService : IAuthService
 <!DOCTYPE html>
 <html lang=""en"">
 <head>
-    <meta charset=""UTF-8"">
-    <meta http-equiv=""X-UA-Compatible"" content=""IE=edge"">
-    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>Password Reset</title>
+  <meta charset=""UTF-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>Password Reset Notification!</title>
 </head>
-<body>
-    <p>Hello {0},</p>
-    <p>We received a request to reset your password. Please click on the link below to reset your password:</p>
-    <p><a href=""{1}"" target=""_blank"">Reset Password</a></p>
-    <p>If you did not initiate this request, you can safely ignore this email.</p>
-    <p>Thank you,<br>
-    ITSDS</p>
+<body style=""font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f8f9fa;"">
+
+  <div style=""max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);"">
+    <div style=""background-color: #007bff; color: #fff; padding: 20px; text-align: center; border-top-left-radius: 5px; border-top-right-radius: 5px;"">
+      <h1>Password Reset Notification!</h1>
+    </div>
+    <div style=""padding: 20px;"">
+      <p>Dear {0},</p>
+      <p>You have request a password reset. Here's your new password:</p>
+      <ul style=""list-style-type: none; padding: 0;"">
+        <li style=""margin-bottom: 10px;""><strong>Username:</strong> {1}</li>
+        <li style=""margin-bottom: 10px;""><strong>Password:</strong> {2}</li>
+      </ul>
+      <p>Please keep this information secure, and do not share your password with anyone. If you have any questions or concerns regarding your account, feel free to contact our support team at <a href=""mailto:itsdskns@gmail.com"">itsdskns@gmail.com</a>.</p>
+      <p>We recommend logging in at <a href=""https://dichvuit.hisoft.vn/"">https://dichvuit.hisoft.vn/</a> to update your password for added security.</p>
+    </div>
+    <div style=""background-color: #f1f1f1; padding: 10px; text-align: center; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;"">
+      <p>Best regards, ITSDS</p>
+    </div>
+  </div>
+
 </body>
 </html>
 ";
-            emailTemplateText = string.Format(emailTemplateText, fullName, resetPasswordLink);
+            emailTemplateText = string.Format(emailTemplateText, fullName, user.Username, newPassword);
 
             BodyBuilder emailBodyBuilder = new BodyBuilder();
             emailBodyBuilder.HtmlBody = emailTemplateText;

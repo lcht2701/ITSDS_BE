@@ -2,7 +2,6 @@
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Models.Contracts;
-using Domain.Models.Tickets;
 using Persistence.Helpers.Caching;
 using Persistence.Repositories.Interfaces;
 
@@ -86,6 +85,5 @@ public class CompanyService : ICompanyService
             .GetAsync(navigationProperties: new string[] { "CustomerAdmin" })).ToList();
         _cacheService.SetData("companies", cacheList, expiryTime);
         #endregion
-    }
-
+    }   
 }

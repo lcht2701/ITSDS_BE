@@ -22,6 +22,4 @@ public class UpdateCompanyRequest : IMapTo<Company>
     public string? FieldOfBusiness { get; set; }
 
     public bool? IsActive { get; set; }
-
-    public int? CustomerAdminId { get; set; }
 }

@@ -8,7 +8,6 @@ namespace API.Services.Interfaces
         Task<LoginResponse> Login(LoginRequest model);
         Task<LoginResponse> LoginAdmin(LoginRequest model);
         Task ChangePassword(ChangePasswordRequest model, int userId);
-        Task ForgotPassword(string email);
-        Task ResetPassword(int uid, string token, ResetPasswordRequest model);
+        Task ResetPassword(string email);
     }
 }

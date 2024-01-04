@@ -1,15 +1,16 @@
-﻿using API.Mappings;
-using Domain.Models.Contracts;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
 
 namespace API.DTOs.Requests.CompanyMembers
 {
-    public class AddCompanyMemberRequest : IMapTo<CompanyMember>
+    public class AddCompanyMemberRequest
     {
-        public int? MemberId { get; set; }
+        public AddAccountInformationRequest User { get; set; }
 
-        public int? CompanyId { get; set; }
+        [DefaultValue(false)]
+        public bool IsCompanyAdmin { get; set; }
 
         public string? MemberPosition { get; set; }
+
+        public int DepartmentId { get; set; }
     }
 }

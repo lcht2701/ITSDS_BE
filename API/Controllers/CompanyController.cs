@@ -76,7 +76,7 @@ public class CompanyController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpPost]
-    public async Task<IActionResult> CreateTeam([FromBody] CreateCompanyRequest model)
+    public async Task<IActionResult> Create([FromBody] CreateCompanyRequest model)
     {
         try
         {
@@ -92,7 +92,7 @@ public class CompanyController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateTeam(int id, [FromBody] UpdateCompanyRequest model)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateCompanyRequest model)
     {
         try
         {
@@ -111,7 +111,7 @@ public class CompanyController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER}")]
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTeam(int id)
+    public async Task<IActionResult> Delete(int id)
     {
         try
         {

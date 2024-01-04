@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231231134800_UpdateCompanyCompanyMemberTable")]
+    partial class UpdateCompanyCompanyMemberTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -158,9 +160,6 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("DepartmentId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsCompanyAdmin")
                         .HasColumnType("bit");
 
@@ -178,8 +177,6 @@ namespace Persistence.Migrations
                     b.HasIndex("CompanyId");
 
                     b.HasIndex("DeletedAt");
-
-                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("MemberId");
 
@@ -242,42 +239,6 @@ namespace Persistence.Migrations
                     b.HasIndex("DeletedAt");
 
                     b.ToTable("Contracts");
-                });
-
-            modelBuilder.Entity("Domain.Models.Contracts.Department", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.ToTable("Departments");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Payment", b =>
@@ -442,6 +403,9 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<double?>("Amount")
+                        .HasColumnType("float");
 
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int");
@@ -1099,6 +1063,9 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -1119,10 +1086,10 @@ namespace Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Gender")
+                    b.Property<int?>("Gender")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool?>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")
@@ -1136,8 +1103,14 @@ namespace Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ResetTokenExpires")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("Role")
                         .HasColumnType("int");
@@ -1173,11 +1146,6 @@ namespace Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Models.Contracts.Department", "Department")
-                        .WithMany("CompanyMembers")
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Domain.Models.User", "Member")
                         .WithMany()
                         .HasForeignKey("MemberId")
@@ -1185,8 +1153,6 @@ namespace Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Company");
-
-                    b.Navigation("Department");
 
                     b.Navigation("Member");
                 });
@@ -1202,17 +1168,6 @@ namespace Persistence.Migrations
                         .HasForeignKey("CompanyId");
 
                     b.Navigation("Accountant");
-
-                    b.Navigation("Company");
-                });
-
-            modelBuilder.Entity("Domain.Models.Contracts.Department", b =>
-                {
-                    b.HasOne("Domain.Models.Contracts.Company", "Company")
-                        .WithMany("Departments")
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("Company");
                 });
@@ -1477,8 +1432,6 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Models.Contracts.Company", b =>
                 {
                     b.Navigation("Contracts");
-
-                    b.Navigation("Departments");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Contract", b =>
@@ -1488,11 +1441,6 @@ namespace Persistence.Migrations
                     b.Navigation("Renewals");
 
                     b.Navigation("ServiceContracts");
-                });
-
-            modelBuilder.Entity("Domain.Models.Contracts.Department", b =>
-                {
-                    b.Navigation("CompanyMembers");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Payment", b =>
