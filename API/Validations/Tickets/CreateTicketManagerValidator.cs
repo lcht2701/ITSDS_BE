@@ -27,21 +27,25 @@ namespace API.Validations.Tickets
             RuleFor(x => x.CategoryId)
                 .GreaterThan(0).WithMessage("Category ID should be greater than 0.");
 
+            RuleFor(x => x.TicketStatus)
+                .IsInEnum();
+            
+            RuleFor(x => x.Priority)
+                .IsInEnum();
+
+            RuleFor(x => x.Impact)
+                .IsInEnum();
+
             RuleFor(x => x.ImpactDetail)
                 .MaximumLength(100).WithMessage("Impact detail should not exceed 100 characters.");
 
-            RuleFor(x => x.Street)
-                .NotNull().WithMessage("Street is required")
-                .MaximumLength(200).WithMessage("Street should not exceed 200 characters.");
+            RuleFor(x => x.ScheduledStartTime)
+                .GreaterThanOrEqualTo(DateTime.Now)
+                .WithMessage("Scheduled Start Time cannot be in the past");
 
-            RuleFor(x => x.Ward)
-                .NotEmpty().WithMessage("Ward is required");
-
-            RuleFor(x => x.District)
-                .NotEmpty().WithMessage("District is required");
-
-            RuleFor(x => x.City)
-                .NotEmpty().WithMessage("City is required");
+            RuleFor(x => x.ScheduledEndTime)
+                .GreaterThanOrEqualTo(x => x.ScheduledStartTime)
+                .WithMessage("Scheduled End Time should be greater than or equal to Scheduled Start Time");
         }
     }
 }

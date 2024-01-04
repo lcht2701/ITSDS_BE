@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using API.DTOs.Responses.Assignments;
+﻿using API.DTOs.Responses.Assignments;
 using API.Mappings;
 using Domain.Constants.Enums;
 using Domain.Models;
@@ -16,10 +15,7 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public string? Title { get; set; }
     public string? Description { get; set; }
     public string? Type { get; set; }
-    public string? Street { get; set; }
-    public int? Ward { get; set; }
-    public int? District { get; set; }
-    public int? City { get; set; }
+    public string? Address { get; set; }
     public int? ModeId { get; set; }
     public int? ServiceId { get; set; }
     public int? CategoryId { get; set; }
@@ -27,11 +23,9 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public Priority? Priority { get; set; }
     public Impact? Impact { get; set; }
     public string? ImpactDetail { get; set; }
-    public Urgency? Urgency { get; set; }
     public List<string>? AttachmentUrls { get; set; }
     public DateTime? ScheduledStartTime { get; set; }
     public DateTime? ScheduledEndTime { get; set; }
-    public DateTime? DueTime { get; set; }
     public DateTime? CompletedTime { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? ModifiedAt { get; set; }

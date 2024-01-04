@@ -24,18 +24,12 @@ public partial class Ticket : BaseEntity
 
     public string Type { get; set; }
 
-    public string? Street { get; set; }
+    public string? Address { get; set; }
 
-    public int? Ward { get; set; }
-
-    public int? District { get; set; }
-
-    public int? City { get; set; }
+    public int CategoryId { get; set; }
 
     public int ServiceId { get; set; }
 
-    public int CategoryId { get; set; }
-    
     public int? ModeId { get; set; }
 
     public TicketStatus TicketStatus { get; set; }
@@ -46,16 +40,12 @@ public partial class Ticket : BaseEntity
 
     public DateTime? ScheduledEndTime { get; set; }
 
-    public DateTime? DueTime { get; set; }
-
     public DateTime? CompletedTime { get; set; }
 
     public Impact? Impact { get; set; }
     
     public string? ImpactDetail { get; set; }
     
-    public Urgency? Urgency { get; set; }
-
     public virtual User? Requester { get; set; }
 
     public virtual User? CreatedBy { get; set; }
