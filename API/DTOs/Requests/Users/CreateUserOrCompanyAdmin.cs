@@ -1,9 +1,9 @@
 ﻿namespace API.DTOs.Requests.Users;
 
-public class CreateUserOrCustomerAdmin
+public class CreateUserOrCompanyAdmin
 {
-    public CreateUserRequest UserModel{ get; set; }
-    
+    public CreateUserRequest UserModel { get; set; }
+
     public int? CompanyId { get; set; }
 
     public int? DepartmentId { get; set; }

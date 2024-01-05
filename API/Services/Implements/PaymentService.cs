@@ -178,21 +178,21 @@ public class PaymentService : IPaymentService
         var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id.Equals(contract.CompanyId))
                       ?? throw new KeyNotFoundException($"Company with ID {contract.CompanyId} is not exist");
 
-        var customerAdminIds = (await _companyMemberRepository.WhereAsync(x => x.CompanyId == company.Id && x.IsCompanyAdmin == true)).Select(x => x.MemberId);
+        var companyAdminIds = (await _companyMemberRepository.WhereAsync(x => x.CompanyId == company.Id && x.IsCompanyAdmin == true)).Select(x => x.MemberId);
 
-        var customerAdmins = await _userRepository.WhereAsync(x => customerAdminIds.Contains(x.Id))
+        var companyAdmins = await _userRepository.WhereAsync(x => companyAdminIds.Contains(x.Id))
                             ?? throw new KeyNotFoundException(
                                 $"Customer Admin not found for the given termId: {termId}");
 
         #endregion
-        foreach (var customerAdmin in customerAdmins)
+        foreach (var companyAdmin in companyAdmins)
         {
             using (MimeMessage emailMessage = new MimeMessage())
             {
                 MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
                 emailMessage.From.Add(emailFrom);
-                MailboxAddress emailTo = new MailboxAddress($"{customerAdmin.FirstName} {customerAdmin.LastName}",
-                    customerAdmin.Email);
+                MailboxAddress emailTo = new MailboxAddress($"{companyAdmin.FirstName} {companyAdmin.LastName}",
+                    companyAdmin.Email);
                 emailMessage.To.Add(emailTo);
 
                 emailMessage.Subject = "Payment Term Notification";

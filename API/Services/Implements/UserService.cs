@@ -88,7 +88,7 @@ public class UserService : IUserService
         return entity;
     }
 
-    public async Task<User> Create(CreateUserOrCustomerAdmin model)
+    public async Task<User> Create(CreateUserOrCompanyAdmin model)
     {
         User entity = _mapper.Map(model.UserModel, new User());
         var passwordHasher = new PasswordHasher<User>();

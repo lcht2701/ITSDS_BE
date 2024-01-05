@@ -6,13 +6,13 @@ namespace API.Services.Interfaces
     public interface ITicketSolutionService
     {
         Task<List<GetTicketSolutionResponse>> Get(int userId);
-        Task<object> GetById(int id, int userId);
+        Task<GetTicketSolutionResponse> GetById(int id, int userId);
         Task Create(CreateTicketSolutionRequest model, int createdById);
-        Task Update(int solutionId, UpdateTicketSolutionRequest model);
-        Task Remove(int solutionId);
+        Task Update(int solutionId, UpdateTicketSolutionRequest model, int userId);
+        Task Remove(int solutionId, int userId);
         Task Approve(int solutionId);
         Task Reject(int solutionId);
-        Task SubmitForApproval(int solutionId);
-        Task ChangePublic(int solutionId);
+        Task SubmitForApproval(int solutionId, int userId, int managerId);
+        Task ChangePublic(int solutionId, int userId);
     }
 }

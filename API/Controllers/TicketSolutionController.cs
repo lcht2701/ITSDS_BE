@@ -1,6 +1,7 @@
 ﻿using API.DTOs.Requests.TicketSolutions;
 using API.Services.Interfaces;
 using Domain.Constants;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
@@ -95,12 +96,16 @@ public class TicketSolutionController : BaseController
     {
         try
         {
-            await _ticketSolutionService.Update(solutionId, req);
+            await _ticketSolutionService.Update(solutionId, req, CurrentUserID);
             return Ok("Updated Successfully");
         }
         catch (KeyNotFoundException)
         {
             return NotFound("Solution is not exist");
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
@@ -115,12 +120,16 @@ public class TicketSolutionController : BaseController
     {
         try
         {
-            await _ticketSolutionService.Remove(solutionId);
+            await _ticketSolutionService.Remove(solutionId, CurrentUserID);
             return Ok("Deleted Successfully");
         }
         catch (KeyNotFoundException)
         {
             return NotFound("Solution is not exist");
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
@@ -134,12 +143,39 @@ public class TicketSolutionController : BaseController
     {
         try
         {
-            await _ticketSolutionService.ChangePublic(solutionId);
+            await _ticketSolutionService.ChangePublic(solutionId, CurrentUserID);
             return Ok("Updated Successfully");
         }
         catch (KeyNotFoundException)
         {
             return NotFound("Solution is not exist");
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.TECHNICIAN)]
+    [HttpPatch("submit-approval")]
+    public async Task<IActionResult> SubmitForApproval(int solutionId, int managerId)
+    {
+        try
+        {
+            await _ticketSolutionService.SubmitForApproval(solutionId, CurrentUserID, managerId);
+            return Ok("Approval Request Sent Successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Solution is not exist");
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
@@ -212,24 +248,4 @@ public class TicketSolutionController : BaseController
             return BadRequest(ex.Message);
         }
     }
-
-
-    // [Authorize(Roles = Roles.TECHNICIAN)]
-    // [HttpPatch("submit-approval")]
-    // public async Task<IActionResult> SubmitForApproval(int solutionId)
-    // {
-    //     try
-    //     {
-    //         await _ticketSolutionService.SubmitForApproval(solutionId);
-    //         return Ok("Update Successfully");
-    //     }
-    //     catch (KeyNotFoundException)
-    //     {
-    //         return NotFound("Solution is not exist");
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         return BadRequest(ex.Message);
-    //     }
-    // }
 }

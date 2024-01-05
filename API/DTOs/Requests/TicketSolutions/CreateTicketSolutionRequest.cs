@@ -1,6 +1,5 @@
 ﻿using API.Mappings;
 using Domain.Models.Tickets;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs.Requests.TicketSolutions
@@ -18,13 +17,9 @@ namespace API.DTOs.Requests.TicketSolutions
 
         public int? OwnerId { get; set; }
 
-        public DateTime? ReviewDate { get; set; }
-
-        public DateTime? ExpiredDate { get; set; }
+        public DateTime ExpiredDate { get; set; }
 
         public string? Keyword { get; set; }
-
-        public string? InternalComments { get; set; }
 
         public bool? IsPublic { get; set; }
 

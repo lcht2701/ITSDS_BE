@@ -26,8 +26,6 @@ namespace Domain.Models.Tickets
 
         public string? Keyword { get; set; }
 
-        public string? InternalComments { get; set; }
-
         public bool IsApproved { get; set; }
 
         public bool IsPublic { get; set; }

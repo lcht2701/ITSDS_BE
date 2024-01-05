@@ -103,14 +103,14 @@ public class ContractController : BaseController
         }
     }
 
-    [Authorize]
+    [Authorize(Roles = Roles.CUSTOMER)]
     [HttpGet("customer")]
-    [SwaggerResponse(200, "Get Contract By Customer", typeof(List<GetContractResponse>))]
+    [SwaggerResponse(200, "Get Contract By Company Admin", typeof(List<GetContractResponse>))]
     public async Task<IActionResult> GetByCustomer()
     {
         try
         {
-            var result = await _contractService.GetByCustomer(CurrentUserID);
+            var result = await _contractService.GetByCompanyAdmin(CurrentUserID);
             return Ok(result);
         }
         catch (Exception ex)
@@ -119,14 +119,14 @@ public class ContractController : BaseController
         }
     }
 
-    [Authorize]
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT},{Roles.CUSTOMER}")]
     [HttpGet("{id}")]
     [SwaggerResponse(200, "Get Contract By Id", typeof(GetContractResponse))]
     public async Task<IActionResult> GetContractById(int id)
     {
         try
         {
-            var result = await _contractService.GetById(id);
+            var result = await _contractService.GetById(id, CurrentUserID);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)

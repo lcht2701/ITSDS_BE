@@ -108,19 +108,19 @@ public class HangfireJobService : IHangfireJobService
         foreach (var contract in nearExpiredContracts)
         {
             var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id == contract.CompanyId);
-            var customerAdminIds = (await _companyMemberRepository.WhereAsync(x => x.Id == contract.CompanyId && x.IsCompanyAdmin == true)).Select(x => x.MemberId);
-            var customerAdmins = await _userRepository.WhereAsync(x => customerAdminIds.Contains(x.Id));
-            if (customerAdmins == null)
+            var companyAdminIds = (await _companyMemberRepository.WhereAsync(x => x.Id == contract.CompanyId && x.IsCompanyAdmin == true)).Select(x => x.MemberId);
+            var companyAdmins = await _userRepository.WhereAsync(x => companyAdminIds.Contains(x.Id));
+            if (companyAdmins == null)
                 return;
-            foreach (var customerAdmin in customerAdmins)
+            foreach (var companyAdmin in companyAdmins)
             {
                 using (MimeMessage emailMessage = new MimeMessage())
                 {
-                    var customerAdminName = $"{customerAdmin.FirstName} {customerAdmin.LastName}";
+                    var companyAdminName = $"{companyAdmin.FirstName} {companyAdmin.LastName}";
                     MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
                     emailMessage.From.Add(emailFrom);
-                    MailboxAddress emailTo = new MailboxAddress(customerAdminName,
-                        customerAdmin.Email);
+                    MailboxAddress emailTo = new MailboxAddress(companyAdminName,
+                        companyAdmin.Email);
                     emailMessage.To.Add(emailTo);
 
                     emailMessage.Subject = "Contract Expiry Notification";

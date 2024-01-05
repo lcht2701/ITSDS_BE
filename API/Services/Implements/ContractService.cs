@@ -8,12 +8,12 @@ using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Persistence.Repositories.Interfaces;
-using static Grpc.Core.Metadata;
 
 namespace API.Services.Implements;
 
 public class ContractService : IContractService
 {
+    private readonly IRepositoryBase<User> _userRepository;
     private readonly IRepositoryBase<Contract> _contractRepository;
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IRepositoryBase<Renewal> _renewalRepository;
@@ -21,8 +21,9 @@ public class ContractService : IContractService
     private readonly IAttachmentService _attachmentService;
     private readonly IMapper _mapper;
 
-    public ContractService(IRepositoryBase<Contract> contractRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<Renewal> renewalRepository, IRepositoryBase<ServiceContract> serviceContractRepository, IAttachmentService attachmentService, IMapper mapper)
+    public ContractService(IRepositoryBase<User> userRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<Renewal> renewalRepository, IRepositoryBase<ServiceContract> serviceContractRepository, IAttachmentService attachmentService, IMapper mapper)
     {
+        _userRepository = userRepository;
         _contractRepository = contractRepository;
         _companyMemberRepository = companyMemberRepository;
         _renewalRepository = renewalRepository;
@@ -59,20 +60,19 @@ public class ContractService : IContractService
         return response;
     }
 
-    public async Task<List<GetContractResponse>> GetByCustomer(int userId)
+    public async Task<List<GetContractResponse>> GetByCompanyAdmin(int userId)
     {
+        var companyAdmin = await IsCompanyAdmin(userId);
         List<Contract> result = new();
-        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(userId));
-        if (companyMember != null)
-        {
-            result = (await _contractRepository.WhereAsync(x => x.CompanyId.Equals(companyMember.CompanyId), new string[] { "Accountant", "Company" })).ToList();
-        }
+        result = (await _contractRepository.WhereAsync(x => x.CompanyId.Equals(companyAdmin.CompanyId), new string[] { "Accountant", "Company" })).ToList();
         List<GetContractResponse> response = await GetContractResponse(result);
         return response;
     }
 
-    public async Task<GetContractResponse> GetById(int id)
+    public async Task<GetContractResponse> GetById(int id, int currentUserId)
     {
+        var currentUser = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(currentUserId));
+        if (currentUser.Role == Role.Customer) await IsCompanyAdmin(currentUserId);
         Contract result = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Accountant", "Company" }) ?? throw new KeyNotFoundException("Contract is not exist");
         var response = _mapper.Map(result, new GetContractResponse());
         response.AttachmentUrls = (await _attachmentService.Get(Tables.CONTRACT, response.Id)).Select(x => x.Url).ToList();
@@ -210,4 +210,18 @@ public class ContractService : IContractService
         }
         return isValid;
     }
+    private async Task<CompanyMember> IsCompanyAdmin(int currentUserId)
+    {
+        var currentUserMember = await _companyMemberRepository
+                                            .FirstOrDefaultAsync(x =>
+                                                            x.MemberId.Equals(currentUserId) &&
+                                                            x.IsCompanyAdmin == true);
+        if (currentUserMember == null)
+        {
+            throw new UnauthorizedAccessException("User is not authorize for this action");
+        }
+
+        return currentUserMember;
+    }
+
 }
