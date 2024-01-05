@@ -27,8 +27,7 @@ public interface ITicketService
     Task<Ticket> CancelTicket(int ticketId, int userId);
     Task<Ticket> CloseTicket(int ticketId, int userId);
     //Background jobs
-    Task AssignSupportJob(int ticketId);
-    Task<bool> CancelAssignSupportJob(string jobId, int ticketId);
+    Task AssignSupportJob(Ticket ticket);
     Task CloseTicketJob(int ticketId);
     Task CancelCloseTicketJob(string jobId, int ticketId);
     Task SendNotificationAfterCloseTicket(Ticket ticket);

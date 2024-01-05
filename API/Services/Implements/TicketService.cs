@@ -17,6 +17,7 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using System.Linq;
 using DateTime = System.DateTime;
 
 namespace API.Services.Implements;
@@ -167,8 +168,8 @@ public class TicketService : ITicketService
         {
             await _attachmentService.Add(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
-        BackgroundJob.Enqueue(() => AssignSupportJob(entity.Id));
-        return entity;
+        await AssignSupportJob(result);
+        return result;
     }
 
     public async Task<Ticket> CreateByManager(int createdById, CreateTicketManagerRequest model)
@@ -192,22 +193,24 @@ public class TicketService : ITicketService
 
                 var assignment = new Assignment()
                 {
-                    TicketId = entity.Id,
+                    TicketId = result.Id,
                     TechnicianId = model.TechnicianId,
                     TeamId = model.TeamId
                 };
 
                 await _assignmentRepository.CreateAsync(assignment);
-                if (entity.TicketStatus == TicketStatus.Open)
-                    await UpdateTicketStatus(entity.Id, TicketStatus.Assigned);
+                if (result.TicketStatus == TicketStatus.Open)
+                    await UpdateTicketStatus(result.Id, TicketStatus.Assigned);
+                await CreateFirstTask(result);
+                await SendNotificationAfterAssignment(result);
             }
         }
         else
         {
-            BackgroundJob.Enqueue(() => AssignSupportJob(entity.Id));
+            await AssignSupportJob(result);
         }
 
-        return entity;
+        return result;
     }
 
     public async Task<Ticket> UpdateByCustomer(int id, UpdateTicketCustomerRequest model)
@@ -222,7 +225,7 @@ public class TicketService : ITicketService
         {
             await _attachmentService.Update(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
-        return entity;
+        return result;
     }
 
     public async Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model)
@@ -240,7 +243,7 @@ public class TicketService : ITicketService
         {
             await _attachmentService.Update(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
-        return entity;
+        return result;
     }
 
     public async Task<Ticket> UpdateByTechnician(int id, TechnicianAddDetailRequest model)
@@ -248,8 +251,8 @@ public class TicketService : ITicketService
         var target =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ??
             throw new KeyNotFoundException("Ticket is not exist");
-        var result = _mapper.Map(model, target);
-        await _ticketRepository.UpdateAsync(result);
+        var entity = _mapper.Map(model, target);
+        var result = await _ticketRepository.UpdateAsync(entity);
         return result;
     }
 
@@ -472,24 +475,30 @@ public class TicketService : ITicketService
 
     #region Background Services
 
-    public async Task AssignSupportJob(int ticketId)
+    public async Task AssignSupportJob(Ticket ticket)
     {
-        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
-        if (ticket == null) return;
-
-        var teamIds = (await _teamRepository.WhereAsync(team => team.CategoryId == ticket.CategoryId))
+        var teamIds = (await _teamRepository
+            .WhereAsync(team => team.CategoryId == ticket.CategoryId))
             .Select(team => team.Id);
 
         if (!teamIds.Any())
-            teamIds = (await _teamRepository.ToListAsync()).Select(team => team.Id);
+            teamIds = (await _teamRepository
+                .ToListAsync())
+                .Select(team => team.Id);
 
-        var memberIds = (await _teamMemberRepository.WhereAsync(teamMember => teamIds.Contains(teamMember.Id)))
-            .Select(teamMember => teamMember.Id);
+        var memberIds = (await _teamMemberRepository
+            .WhereAsync(teamMember => teamIds.Contains((int)teamMember.TeamId!)))
+            .Select(teamMember => teamMember.MemberId);
 
-        if (!memberIds.Any()) return;
+        if (!memberIds.Any())
+            memberIds = (await _teamMemberRepository.ToListAsync())
+                .Select(teamMember => teamMember.MemberId);
 
         var availableTechnicians = await _userRepository
-            .WhereAsync(user => user.Role == Role.Technician && user.IsActive == true && memberIds.Contains(user.Id));
+            .WhereAsync(user =>
+                memberIds.Contains(user.Id) &&
+                user.Role == Role.Technician &&
+                user.IsActive == true);
 
         if (!availableTechnicians.Any())
         {
@@ -521,25 +530,13 @@ public class TicketService : ITicketService
             await _assignmentRepository.CreateAsync(assignment);
             await UpdateTicketStatus(ticket.Id, TicketStatus.Assigned);
             await CreateFirstTask(ticket);
-            BackgroundJob.Enqueue(() => SendNotificationAfterAssignment(ticket));
+            await SendNotificationAfterAssignment(ticket);
         }
         else
         {
             // Handle the case where no technician is available
             // You might want to log this or take other actions
         }
-    }
-
-    public async Task<bool> CancelAssignSupportJob(string jobId, int ticketId)
-    {
-        var check = false;
-        if (await IsTicketAssigned(ticketId) == true)
-        {
-            BackgroundJob.Delete(jobId);
-            check = true;
-        }
-
-        return check;
     }
 
     public async Task CloseTicketJob(int ticketId)
