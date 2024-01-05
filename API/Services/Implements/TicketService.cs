@@ -520,6 +520,7 @@ public class TicketService : ITicketService
 
             await _assignmentRepository.CreateAsync(assignment);
             await UpdateTicketStatus(ticket.Id, TicketStatus.Assigned);
+            await CreateFirstTask(ticket);
             BackgroundJob.Enqueue(() => SendNotificationAfterAssignment(ticket));
         }
         else
@@ -592,29 +593,24 @@ public class TicketService : ITicketService
 
     #endregion
 
-    private string AutoCloseBackgroundService(Ticket ticket)
+    public async Task CreateFirstTask(Ticket ticket)
     {
-        //Auto Schedule Job to Close Ticket
-        string jobId = BackgroundJob.Schedule(
-            () => CloseTicketJob(ticket.Id),
-            TimeSpan.FromDays(2));
-        BackgroundJob.ContinueJobWith(
-            jobId, () => SendNotificationAfterCloseTicket(ticket));
-        RecurringJob.AddOrUpdate(
-            jobId + "_Cancellation",
-            () => CancelCloseTicketJob(jobId, ticket.Id),
-            "*/5 * * * * *"); //Every 5
-        return jobId;
-    }
-    private async Task<int> GetNumberOfAssignmentsForTechnician(int technicianId)
-    {
-        var result = await _assignmentRepository.WhereAsync(x => x.TechnicianId == technicianId);
-        return result.Count;
-    }
-    private async Task<List<int>> GetManagerIdsList()
-    {
-        var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
-        return managerIds;
+        var assignment = await _assignmentRepository
+            .FirstOrDefaultAsync(x => x.TicketId.Equals(ticket.Id));
+        var firstTask = new TicketTask()
+        {
+            TicketId = ticket.Id,
+            CreateById = (int)assignment.TechnicianId!,
+            Title = "Kiểm tra sơ bộ vấn đề",
+            Description = "Tiến hành kiểm tra sơ bộ để đánh giá & đưa ra quy trình hỗ trợ",
+            Note = "Nhiệm vụ mặc định",
+            Priority = Domain.Constants.Enums.Priority.High,
+            ScheduledStartTime = ticket.CreatedAt.Value,
+            ScheduledEndTime = ticket.CreatedAt.Value.AddHours(1),
+            Progress = 0,
+            TaskStatus = TicketTaskStatus.New
+        };
+        await _taskRepository.CreateAsync(firstTask);
     }
     public async Task SendTicketMailNotification(Ticket ticket)
     {
@@ -729,5 +725,29 @@ public class TicketService : ITicketService
                 await mailClient.DisconnectAsync(true);
             }
         }
+    }
+    private string AutoCloseBackgroundService(Ticket ticket)
+    {
+        //Auto Schedule Job to Close Ticket
+        string jobId = BackgroundJob.Schedule(
+            () => CloseTicketJob(ticket.Id),
+            TimeSpan.FromDays(2));
+        BackgroundJob.ContinueJobWith(
+            jobId, () => SendNotificationAfterCloseTicket(ticket));
+        RecurringJob.AddOrUpdate(
+            jobId + "_Cancellation",
+            () => CancelCloseTicketJob(jobId, ticket.Id),
+            "*/5 * * * * *"); //Every 5
+        return jobId;
+    }
+    private async Task<int> GetNumberOfAssignmentsForTechnician(int technicianId)
+    {
+        var result = await _assignmentRepository.WhereAsync(x => x.TechnicianId == technicianId);
+        return result.Count;
+    }
+    private async Task<List<int>> GetManagerIdsList()
+    {
+        var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
+        return managerIds;
     }
 }

@@ -4,10 +4,8 @@ namespace Domain.Constants.Enums;
 
 public enum TicketTaskStatus
 {
-    [Description("Open")]
-    Open,
-    [Description("Assigned")]
-    Assigned,
+    [Description("New")]
+    New,
     [Description("In Progress")]
     InProgress,
     [Description("Completed")]

@@ -47,7 +47,7 @@ public partial class Ticket : BaseEntity
     public string? ImpactDetail { get; set; }
     
     public virtual User? Requester { get; set; }
-
+    
     public virtual User? CreatedBy { get; set; }
 
     public virtual Service? Service { get; set; }
@@ -55,8 +55,6 @@ public partial class Ticket : BaseEntity
     public virtual Category? Category { get; set; }
 
     public virtual Mode? Mode { get; set; }
-
-    public virtual Assignment? Assignment { get; set; }
 
     [JsonIgnore]
     [ExcludeFromAuditLog]

@@ -6,7 +6,6 @@ using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
-using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;

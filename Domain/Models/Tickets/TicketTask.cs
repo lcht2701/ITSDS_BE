@@ -8,10 +8,6 @@ public partial class TicketTask : BaseEntity
 
     public int CreateById { get; set; }
 
-    public int? TechnicianId { get; set; }
-
-    public int? TeamId { get; set; }
-
     public string Title { get; set; }
 
     public string? Description { get; set; }
@@ -32,11 +28,7 @@ public partial class TicketTask : BaseEntity
 
     public TicketTaskStatus? TaskStatus { get; set; }
 
-    public virtual User? Technician { get; set; }
-
     public virtual User? CreateBy { get; set; }
-
-    public virtual Team? Team { get; set; }
 
     public virtual Ticket? Ticket { get; set; }
 }

@@ -11,8 +11,6 @@ namespace API.DTOs.Requests.TicketTasks
         public string? Title { get; set; }
         public string? Description { get; set; }
         public TicketTaskStatus? TaskStatus { get; set; }
-        public int? TechnicianId { get; set; }
-        public int? TeamId { get; set; }
         public Priority? Priority { get; set; }
         public DateTime? ScheduledStartTime { get; set; }
         public DateTime? ScheduledEndTime { get; set; }
