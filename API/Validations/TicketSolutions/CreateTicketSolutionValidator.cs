@@ -21,15 +21,8 @@ namespace API.Validations.TicketSolutions
             RuleFor(x => x.OwnerId)
                 .GreaterThan(0).WithMessage("Owner ID should be greater than 0.");
 
-            RuleFor(x => x.ExpiredDate)
-                .Must((dto, expiredDate) => dto.ReviewDate == null || expiredDate == null || expiredDate > dto.ReviewDate)
-                .WithMessage("Expired date should be null or later than the review date.");
-
             RuleFor(x => x.Keyword)
                 .MaximumLength(255).WithMessage("Keyword should not exceed 255 characters.");
-
-            RuleFor(x => x.InternalComments)
-                .MaximumLength(500).WithMessage("Internal comments should not exceed 500 characters.");
         }
     }
 }

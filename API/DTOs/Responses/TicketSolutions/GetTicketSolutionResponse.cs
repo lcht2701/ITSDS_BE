@@ -24,8 +24,6 @@ public class GetTicketSolutionResponse : IMapFrom<TicketSolution>
 
     public string? Keyword { get; set; }
 
-    public string? InternalComments { get; set; }
-
     public List<string>? AttachmentUrls { get; set; }
 
     public bool? IsApproved { get; set; }

@@ -177,7 +177,7 @@ public class UserController : BaseController
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpPost]
-    public async Task<IActionResult> CreateUser([FromBody] CreateUserOrCustomerAdmin model)
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserOrCompanyAdmin model)
     {
         try
         {

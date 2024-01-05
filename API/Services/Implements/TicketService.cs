@@ -163,7 +163,7 @@ public class TicketService : ITicketService
         entity.CreatedById = createdById;
         entity.TicketStatus = TicketStatus.Open;
         entity.IsPeriodic = false;
-        entity.Address = GetDepartmentAddress(createdById, entity).Result;
+        entity.Address = GetDepartmentAddress((int)entity.RequesterId, entity).Result;
         var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
         if (categoryId != null) entity.CategoryId = (int)categoryId;
         var result = await _ticketRepository.CreateAsync(entity);
@@ -179,7 +179,7 @@ public class TicketService : ITicketService
     {
         Ticket entity = _mapper.Map(model, new Ticket());
         entity.CreatedById = createdById;
-        entity.Address = GetDepartmentAddress(createdById, entity).Result;
+        entity.Address = GetDepartmentAddress((int)entity.RequesterId!, entity).Result;
         var result = await _ticketRepository.CreateAsync(entity);
         if (model.AttachmentUrls != null)
         {

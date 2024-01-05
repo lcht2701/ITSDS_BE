@@ -118,18 +118,6 @@ public class CompanyMemberService : ICompanyMemberService
         await _companyMemberRepository.DeleteAsync(companyMember);
     }
 
-    private async Task<CompanyMember> IsCompanyAdmin(int currentUserId)
-    {
-        var currentUser = await _userRepository.FoundOrThrow(x => x.Id.Equals(currentUserId), new KeyNotFoundException("User is not found"));
-        var currentUserMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(currentUser.Id));
-        if (currentUserMember == null || currentUserMember.IsCompanyAdmin == false)
-        {
-            throw new UnauthorizedAccessException("User is not authorize for this action");
-        }
-
-        return currentUserMember;
-    }
-
     public async Task SendUserCreatedNotification(AddAccountInformationRequest dto)
     {
         using (MimeMessage emailMessage = new MimeMessage())
@@ -193,5 +181,19 @@ public class CompanyMemberService : ICompanyMemberService
                 await mailClient.DisconnectAsync(true);
             }
         }
+    }
+
+    private async Task<CompanyMember> IsCompanyAdmin(int currentUserId)
+    {
+        var currentUserMember = await _companyMemberRepository
+                                            .FirstOrDefaultAsync(x =>
+                                                            x.MemberId.Equals(currentUserId) &&
+                                                            x.IsCompanyAdmin == true);
+        if (currentUserMember == null)
+        {
+            throw new UnauthorizedAccessException("User is not authorize for this action");
+        }
+
+        return currentUserMember;
     }
 }

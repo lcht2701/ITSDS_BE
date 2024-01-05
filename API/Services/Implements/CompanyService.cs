@@ -51,8 +51,7 @@ public class CompanyService : ICompanyService
         #region Cache
         var expiryTime = DateTimeOffset.Now.AddSeconds(30);
         _cacheService.SetData($"company-{result.Id}", result, expiryTime);
-        var cacheList = (await _companyRepository
-            .GetAsync(navigationProperties: new string[] { "CustomerAdmin" })).ToList();
+        var cacheList = await _companyRepository.ToListAsync();
         _cacheService.SetData("companies", cacheList, expiryTime);
         #endregion
         return result;
@@ -66,8 +65,7 @@ public class CompanyService : ICompanyService
         #region Cache
         var expiryTime = DateTimeOffset.Now.AddSeconds(30);
         _cacheService.SetData($"company-{result.Id}", result, expiryTime);
-        var cacheList = (await _companyRepository
-            .GetAsync(navigationProperties: new string[] { "CustomerAdmin" })).ToList();
+        var cacheList = await _companyRepository.ToListAsync();
         _cacheService.SetData("companies", cacheList, expiryTime);
         #endregion
         return target;
@@ -80,8 +78,7 @@ public class CompanyService : ICompanyService
         #region Cache
         var expiryTime = DateTimeOffset.Now.AddSeconds(30);
         _cacheService.RemoveData($"company-{target.Id}");
-        var cacheList = (await _companyRepository
-            .GetAsync(navigationProperties: new string[] { "CustomerAdmin" })).ToList();
+        var cacheList = await _companyRepository.ToListAsync();
         _cacheService.SetData("companies", cacheList, expiryTime);
         #endregion
     }   

@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace API.Validations.Users
 {
-    public class CreateUserOrCustomerAdminValidator : AbstractValidator<CreateUserOrCustomerAdmin>
+    public class CreateUserOrCompanyAdminValidator : AbstractValidator<CreateUserOrCompanyAdmin>
     {
-        public CreateUserOrCustomerAdminValidator()
+        public CreateUserOrCompanyAdminValidator()
         {
             RuleFor(x => x.IsCompanyAdmin)
                 .NotNull();
