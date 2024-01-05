@@ -2,7 +2,6 @@
 using Domain.Constants.Enums;
 using Domain.Models.Tickets;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs.Requests.TicketTasks
 {
@@ -11,13 +10,10 @@ namespace API.DTOs.Requests.TicketTasks
         public int? TicketId { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
-        [DefaultValue(TicketTaskStatus.Open)]
-        public TicketTaskStatus? TaskStatus { get; set; }
-        public int? TechnicianId { get; set; }
-        public int? TeamId { get; set; }
         public Priority? Priority { get; set; }
         public DateTime? ScheduledStartTime { get; set; }
         public DateTime? ScheduledEndTime { get; set; }
+        [DefaultValue(0)]
         public int? Progress { get; set; }
         public List<string>? AttachmentUrls { get; set; }
     }

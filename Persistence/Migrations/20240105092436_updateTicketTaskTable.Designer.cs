@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240105092436_updateTicketTaskTable")]
+    partial class updateTicketTaskTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -617,7 +619,8 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TechnicianId");
 
-                    b.HasIndex("TicketId");
+                    b.HasIndex("TicketId")
+                        .IsUnique();
 
                     b.ToTable("Assignments");
                 });
@@ -916,6 +919,7 @@ namespace Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Type")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -1276,8 +1280,8 @@ namespace Persistence.Migrations
                         .HasForeignKey("TechnicianId");
 
                     b.HasOne("Domain.Models.Tickets.Ticket", "Ticket")
-                        .WithMany()
-                        .HasForeignKey("TicketId")
+                        .WithOne("Assignment")
+                        .HasForeignKey("Domain.Models.Tickets.Assignment", "TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1491,6 +1495,8 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Tickets.Ticket", b =>
                 {
+                    b.Navigation("Assignment");
+
                     b.Navigation("TicketTasks");
                 });
 

@@ -17,6 +17,7 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using System.Linq;
 using DateTime = System.DateTime;
 
 namespace API.Services.Implements;
@@ -33,6 +34,7 @@ public class TicketService : ITicketService
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IRepositoryBase<Team> _teamRepository;
+    private readonly IRepositoryBase<Department> _departmentRepository;
     private readonly IAttachmentService _attachmentService;
     private readonly IMapper _mapper;
     private readonly MailSettings _mailSettings;
@@ -42,7 +44,7 @@ public class TicketService : ITicketService
         IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService,
         IMessagingService messagingService, IRepositoryBase<TeamMember> teamMemberRepository, IMapper mapper,
         IOptions<MailSettings> mailSettings, IRepositoryBase<Team> teamRepository, IAttachmentService attachmentService,
-        IRepositoryBase<CompanyMember> companyMemberRepository)
+        IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<Department> departmentRepository)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -57,6 +59,7 @@ public class TicketService : ITicketService
         _mailSettings = mailSettings.Value;
         _attachmentService = attachmentService;
         _companyMemberRepository = companyMemberRepository;
+        _departmentRepository = departmentRepository;
     }
 
     public async Task<List<GetTicketResponse>> Get()
@@ -160,6 +163,7 @@ public class TicketService : ITicketService
         entity.CreatedById = createdById;
         entity.TicketStatus = TicketStatus.Open;
         entity.IsPeriodic = false;
+        entity.Address = GetDepartmentAddress(createdById, entity).Result;
         var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
         if (categoryId != null) entity.CategoryId = (int)categoryId;
         var result = await _ticketRepository.CreateAsync(entity);
@@ -167,14 +171,15 @@ public class TicketService : ITicketService
         {
             await _attachmentService.Add(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
-        BackgroundJob.Enqueue(() => AssignSupportJob(entity.Id));
-        return entity;
+        await AssignSupportJob(result);
+        return result;
     }
 
     public async Task<Ticket> CreateByManager(int createdById, CreateTicketManagerRequest model)
     {
         Ticket entity = _mapper.Map(model, new Ticket());
         entity.CreatedById = createdById;
+        entity.Address = GetDepartmentAddress(createdById, entity).Result;
         var result = await _ticketRepository.CreateAsync(entity);
         if (model.AttachmentUrls != null)
         {
@@ -192,22 +197,24 @@ public class TicketService : ITicketService
 
                 var assignment = new Assignment()
                 {
-                    TicketId = entity.Id,
+                    TicketId = result.Id,
                     TechnicianId = model.TechnicianId,
                     TeamId = model.TeamId
                 };
 
                 await _assignmentRepository.CreateAsync(assignment);
-                if (entity.TicketStatus == TicketStatus.Open)
-                    await UpdateTicketStatus(entity.Id, TicketStatus.Assigned);
+                if (result.TicketStatus == TicketStatus.Open)
+                    await UpdateTicketStatus(result.Id, TicketStatus.Assigned);
+                await CreateFirstTask(result);
+                await SendNotificationAfterAssignment(result);
             }
         }
         else
         {
-            BackgroundJob.Enqueue(() => AssignSupportJob(entity.Id));
+            await AssignSupportJob(result);
         }
 
-        return entity;
+        return result;
     }
 
     public async Task<Ticket> UpdateByCustomer(int id, UpdateTicketCustomerRequest model)
@@ -222,7 +229,7 @@ public class TicketService : ITicketService
         {
             await _attachmentService.Update(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
-        return entity;
+        return result;
     }
 
     public async Task<Ticket> UpdateByManager(int id, UpdateTicketManagerRequest model)
@@ -240,7 +247,7 @@ public class TicketService : ITicketService
         {
             await _attachmentService.Update(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
-        return entity;
+        return result;
     }
 
     public async Task<Ticket> UpdateByTechnician(int id, TechnicianAddDetailRequest model)
@@ -248,8 +255,8 @@ public class TicketService : ITicketService
         var target =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ??
             throw new KeyNotFoundException("Ticket is not exist");
-        var result = _mapper.Map(model, target);
-        await _ticketRepository.UpdateAsync(result);
+        var entity = _mapper.Map(model, target);
+        var result = await _ticketRepository.UpdateAsync(entity);
         return result;
     }
 
@@ -472,24 +479,30 @@ public class TicketService : ITicketService
 
     #region Background Services
 
-    public async Task AssignSupportJob(int ticketId)
+    public async Task AssignSupportJob(Ticket ticket)
     {
-        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(ticketId));
-        if (ticket == null) return;
-
-        var teamIds = (await _teamRepository.WhereAsync(team => team.CategoryId == ticket.CategoryId))
+        var teamIds = (await _teamRepository
+            .WhereAsync(team => team.CategoryId == ticket.CategoryId))
             .Select(team => team.Id);
 
         if (!teamIds.Any())
-            teamIds = (await _teamRepository.ToListAsync()).Select(team => team.Id);
+            teamIds = (await _teamRepository
+                .ToListAsync())
+                .Select(team => team.Id);
 
-        var memberIds = (await _teamMemberRepository.WhereAsync(teamMember => teamIds.Contains(teamMember.Id)))
-            .Select(teamMember => teamMember.Id);
+        var memberIds = (await _teamMemberRepository
+            .WhereAsync(teamMember => teamIds.Contains((int)teamMember.TeamId!)))
+            .Select(teamMember => teamMember.MemberId);
 
-        if (!memberIds.Any()) return;
+        if (!memberIds.Any())
+            memberIds = (await _teamMemberRepository.ToListAsync())
+                .Select(teamMember => teamMember.MemberId);
 
         var availableTechnicians = await _userRepository
-            .WhereAsync(user => user.Role == Role.Technician && user.IsActive == true && memberIds.Contains(user.Id));
+            .WhereAsync(user =>
+                memberIds.Contains(user.Id) &&
+                user.Role == Role.Technician &&
+                user.IsActive == true);
 
         if (!availableTechnicians.Any())
         {
@@ -520,25 +533,14 @@ public class TicketService : ITicketService
 
             await _assignmentRepository.CreateAsync(assignment);
             await UpdateTicketStatus(ticket.Id, TicketStatus.Assigned);
-            BackgroundJob.Enqueue(() => SendNotificationAfterAssignment(ticket));
+            await CreateFirstTask(ticket);
+            await SendNotificationAfterAssignment(ticket);
         }
         else
         {
             // Handle the case where no technician is available
             // You might want to log this or take other actions
         }
-    }
-
-    public async Task<bool> CancelAssignSupportJob(string jobId, int ticketId)
-    {
-        var check = false;
-        if (await IsTicketAssigned(ticketId) == true)
-        {
-            BackgroundJob.Delete(jobId);
-            check = true;
-        }
-
-        return check;
     }
 
     public async Task CloseTicketJob(int ticketId)
@@ -592,29 +594,24 @@ public class TicketService : ITicketService
 
     #endregion
 
-    private string AutoCloseBackgroundService(Ticket ticket)
+    public async Task CreateFirstTask(Ticket ticket)
     {
-        //Auto Schedule Job to Close Ticket
-        string jobId = BackgroundJob.Schedule(
-            () => CloseTicketJob(ticket.Id),
-            TimeSpan.FromDays(2));
-        BackgroundJob.ContinueJobWith(
-            jobId, () => SendNotificationAfterCloseTicket(ticket));
-        RecurringJob.AddOrUpdate(
-            jobId + "_Cancellation",
-            () => CancelCloseTicketJob(jobId, ticket.Id),
-            "*/5 * * * * *"); //Every 5
-        return jobId;
-    }
-    private async Task<int> GetNumberOfAssignmentsForTechnician(int technicianId)
-    {
-        var result = await _assignmentRepository.WhereAsync(x => x.TechnicianId == technicianId);
-        return result.Count;
-    }
-    private async Task<List<int>> GetManagerIdsList()
-    {
-        var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
-        return managerIds;
+        var assignment = await _assignmentRepository
+            .FirstOrDefaultAsync(x => x.TicketId.Equals(ticket.Id));
+        var firstTask = new TicketTask()
+        {
+            TicketId = ticket.Id,
+            CreateById = (int)assignment.TechnicianId!,
+            Title = "Kiểm tra sơ bộ vấn đề",
+            Description = "Tiến hành kiểm tra sơ bộ để đánh giá & đưa ra quy trình hỗ trợ",
+            Note = "Nhiệm vụ mặc định",
+            Priority = Domain.Constants.Enums.Priority.High,
+            ScheduledStartTime = ticket.CreatedAt.Value,
+            ScheduledEndTime = ticket.CreatedAt.Value.AddHours(1),
+            Progress = 0,
+            TaskStatus = TicketTaskStatus.New
+        };
+        await _taskRepository.CreateAsync(firstTask);
     }
     public async Task SendTicketMailNotification(Ticket ticket)
     {
@@ -729,5 +726,35 @@ public class TicketService : ITicketService
                 await mailClient.DisconnectAsync(true);
             }
         }
+    }
+    private string AutoCloseBackgroundService(Ticket ticket)
+    {
+        //Auto Schedule Job to Close Ticket
+        string jobId = BackgroundJob.Schedule(
+            () => CloseTicketJob(ticket.Id),
+            TimeSpan.FromDays(2));
+        BackgroundJob.ContinueJobWith(
+            jobId, () => SendNotificationAfterCloseTicket(ticket));
+        RecurringJob.AddOrUpdate(
+            jobId + "_Cancellation",
+            () => CancelCloseTicketJob(jobId, ticket.Id),
+            "*/5 * * * * *"); //Every 5
+        return jobId;
+    }
+    private async Task<int> GetNumberOfAssignmentsForTechnician(int technicianId)
+    {
+        var result = await _assignmentRepository.WhereAsync(x => x.TechnicianId == technicianId);
+        return result.Count;
+    }
+    private async Task<List<int>> GetManagerIdsList()
+    {
+        var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
+        return managerIds;
+    }
+    private async Task<string> GetDepartmentAddress(int createdById, Ticket entity)
+    {
+        var member = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId == createdById);
+        var department = await _departmentRepository.FirstOrDefaultAsync(x => x.CompanyId == member.CompanyId);
+        return department.Address;
     }
 }
