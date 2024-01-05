@@ -30,18 +30,16 @@ namespace API.Validations.Tickets
             RuleFor(x => x.ImpactDetail)
                 .MaximumLength(100).WithMessage("Impact detail should not exceed 100 characters.");
 
-            RuleFor(x => x.Street)
-                .NotNull().WithMessage("Street is required")
-                .MaximumLength(200).WithMessage("Street should not exceed 200 characters.");
+            RuleFor(x => x.TicketStatus)
+                .IsInEnum();
 
-            RuleFor(x => x.Ward)
-                 .NotEmpty().WithMessage("Ward is required");
+            RuleFor(x => x.Priority)
+                .IsInEnum();
 
-            RuleFor(x => x.District)
-                .NotEmpty().WithMessage("District is required");
+            RuleFor(x => x.Impact)
+                .IsInEnum();
 
-            RuleFor(x => x.City)
-                .NotEmpty().WithMessage("City is required");
+
         }
     }
 }

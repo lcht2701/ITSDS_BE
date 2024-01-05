@@ -12,18 +12,6 @@ namespace API.DTOs.Requests.Tickets
 
         public int? ServiceId { get; set; }
 
-        public string? Type { get; set; }
-
-        public string? Street { get; set; }
-
-        public int? Ward { get; set; }
-
-        public int? District { get; set; }
-
-        public int? City { get; set; }
-
-        public Priority? Priority { get; set; }
-
         public List<string>? AttachmentUrls { get; set; }
     }
 }

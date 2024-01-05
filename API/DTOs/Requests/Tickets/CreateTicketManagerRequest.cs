@@ -24,14 +24,6 @@ namespace API.DTOs.Requests.Tickets
 
         public string? Type { get; set; }
 
-        public string? Street { get; set; }
-
-        public int? Ward { get; set; }
-
-        public int? District { get; set; }
-
-        public int? City { get; set; }
-
         public TicketStatus? TicketStatus { get; set; }
 
         public Priority? Priority { get; set; }
@@ -40,9 +32,11 @@ namespace API.DTOs.Requests.Tickets
 
         public string? ImpactDetail { get; set; }
 
-        public Urgency? Urgency { get; set; }
-
         public List<string>? AttachmentUrls { get; set; }
+
+        public DateTime? ScheduledStartTime { get; set; }
+
+        public DateTime? ScheduledEndTime { get; set; }
 
         [DefaultValue(null)]
         public int? TechnicianId { get; set; }

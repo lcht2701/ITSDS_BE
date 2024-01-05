@@ -184,12 +184,9 @@ public class ServiceContractService : IServiceContractService
                 ServiceId = service.Id,
                 CategoryId = (await _categoryRepo.FirstOrDefaultAsync(x => x.Id.Equals(service.CategoryId))).Id,
                 TicketStatus = Domain.Constants.Enums.TicketStatus.Open,
-                Priority = Domain.Constants.Enums.Priority.High,
+                Priority = Domain.Constants.Enums.Priority.Medium,
                 ScheduledStartTime = startDate,
                 ScheduledEndTime = startDate.Value.AddDays((double)serviceContract.Frequency),
-                DueTime = startDate.Value.AddDays((double)serviceContract.Frequency),
-                Impact = Domain.Constants.Enums.Impact.Medium,
-                Urgency = Domain.Constants.Enums.Urgency.Medium,
                 IsPeriodic = true,
             };
             list.Add(newTicket);
