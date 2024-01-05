@@ -24,12 +24,5 @@ namespace API.DTOs.Responses.Companies
         public string? FieldOfBusiness { get; set; }
 
         public bool? isActive { get; set; }
-
-        public int? CustomerAdminId { get; set; }
-
-        public string? CustomerAdminName => $"{CustomerAdmin?.FirstName} {CustomerAdmin?.LastName}";
-
-        [JsonIgnore]
-        public virtual User? CustomerAdmin { get; set; }
     }
 }

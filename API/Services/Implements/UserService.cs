@@ -194,8 +194,7 @@ public class UserService : IUserService
 
         if (companyMember != null)
         {
-            var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id == companyMember.CompanyId,
-                new string[] { "CustomerAdmin" });
+            var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id == companyMember.CompanyId);
             if (company != null)
             {
                 entity.Company = _mapper.Map(company, new GetCompanyResponse());
