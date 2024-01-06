@@ -1,4 +1,4 @@
-﻿using API.DTOs.Requests.Departments;
+﻿using API.DTOs.Requests.CompanyAddresss;
 using API.Services.Interfaces;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
@@ -7,21 +7,21 @@ using Persistence.Helpers;
 
 namespace API.Controllers;
 
-[Route("/v1/itsds/company/department")]
-public class DepartmentController : BaseController
+[Route("/v1/itsds/company/companyAddress")]
+public class CompanyAddressController : BaseController
 {
-    private readonly IDepartmentService _departmentService;
+    private readonly ICompanyAddressService _CompanyAddressService;
 
-    public DepartmentController(IDepartmentService departmentService)
+    public CompanyAddressController(ICompanyAddressService CompanyAddressService)
     {
-        _departmentService = departmentService;
+        _CompanyAddressService = CompanyAddressService;
     }
 
     [Authorize]
     [HttpGet("{companyId}/select-list")]
     public async Task<IActionResult> GetAll(int companyId)
     {
-        var result = await _departmentService.Get(companyId);
+        var result = await _CompanyAddressService.Get(companyId);
         return Ok(result);
     }
 
@@ -34,7 +34,7 @@ public class DepartmentController : BaseController
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 5)
     {
-        var result = await _departmentService.Get(companyId);
+        var result = await _CompanyAddressService.Get(companyId);
         var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
         return Ok(pagedResponse);
     }
@@ -45,7 +45,7 @@ public class DepartmentController : BaseController
     {
         try
         {
-            var result = await _departmentService.GetById(id);
+            var result = await _CompanyAddressService.GetById(id);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -60,14 +60,14 @@ public class DepartmentController : BaseController
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpPost]
-    public async Task<IActionResult> Create(int companyId, [FromBody] CreateDepartmentRequest model)
+    public async Task<IActionResult> Create(int companyId, [FromBody] CreateCompanyAddressRequest model)
     {
         try
         {
-            var entity = await _departmentService.Create(companyId, model);
+            var entity = await _CompanyAddressService.Create(companyId, model);
             return Ok(new
             {
-                Message = "Department Created Successfully",
+                Message = "CompanyAddress Created Successfully",
                 Data = entity
             });
         }
@@ -79,14 +79,14 @@ public class DepartmentController : BaseController
 
     [Authorize(Roles = Roles.ADMIN)]
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateDepartmentRequest model)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateCompanyAddressRequest model)
     {
         try
         {
-            var entity = await _departmentService.Update(id, model);
+            var entity = await _CompanyAddressService.Update(id, model);
             return Ok(new
             {
-                Message = "Department Updated Successfully",
+                Message = "CompanyAddress Updated Successfully",
                 Data = entity
             });
         }
@@ -106,8 +106,8 @@ public class DepartmentController : BaseController
     {
         try
         {
-            await _departmentService.Remove(id);
-            return Ok("Department Removed Successfully");
+            await _CompanyAddressService.Remove(id);
+            return Ok("CompanyAddress Removed Successfully");
         }
         catch (KeyNotFoundException ex)
         {

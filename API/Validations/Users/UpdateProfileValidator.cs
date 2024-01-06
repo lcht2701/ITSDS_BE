@@ -24,10 +24,6 @@ namespace API.Validations.Users
                 .MaximumLength(15).When(x => x.PhoneNumber != null)
                 .WithMessage("Phone number should not exceed 15 characters.")
                 .Matches(@"^\+?[0-9-]*$").WithMessage("Invalid phone number format.");
-
-            RuleFor(x => x.DateOfBirth)
-                .LessThan(DateTime.Today).When(x => x.DateOfBirth != null)
-                .WithMessage("Date of birth should be in the past.");
         }
     }
 }

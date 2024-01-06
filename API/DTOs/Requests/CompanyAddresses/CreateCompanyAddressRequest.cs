@@ -1,9 +1,9 @@
 ﻿using API.Mappings;
 using Domain.Models.Contracts;
 
-namespace API.DTOs.Requests.Departments
+namespace API.DTOs.Requests.CompanyAddresss
 {
-    public class CreateDepartmentRequest : IMapTo<Department>
+    public class CreateCompanyAddressRequest : IMapTo<CompanyAddress>
     {
         public string Address { get; set; }
 

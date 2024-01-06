@@ -29,7 +29,7 @@ namespace Persistence.Context
         public virtual DbSet<Feedback>? Feedbacks { get; set; }
         //Contract
         public virtual DbSet<Company>? Companies { get; set; }
-        public virtual DbSet<Department>? Departments { get; set; }
+        public virtual DbSet<CompanyAddress>? CompanyAddresses { get; set; }
         public virtual DbSet<CompanyMember>? CompanyMembers { get; set; }
         public virtual DbSet<Renewal>? Renewals { get; set; }
         public virtual DbSet<Contract>? Contracts { get; set; }
@@ -41,9 +41,9 @@ namespace Persistence.Context
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<CompanyMember>()
-                .HasOne(cm => cm.Department)
+                .HasOne(cm => cm.CompanyAddress)
                 .WithMany(d => d.CompanyMembers)
-                .HasForeignKey(cm => cm.DepartmentId)
+                .HasForeignKey(cm => cm.CompanyAddressId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<TicketSolution>()

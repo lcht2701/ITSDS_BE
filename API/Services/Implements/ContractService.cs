@@ -7,6 +7,7 @@ using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
+using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 
 namespace API.Services.Implements;
@@ -82,7 +83,7 @@ public class ContractService : IContractService
     public async Task<Contract> Create(CreateContractRequest model)
     {
         var entity = _mapper.Map(model, new Contract());
-        SetContractStatus(entity);
+        CommonService.SetContractStatus(entity);
         entity.IsRenewed = false;
         if (model.ParentContractId.HasValue)
         {
@@ -91,7 +92,7 @@ public class ContractService : IContractService
             {
                 throw new BadRequestException("Child Contract cannot have more child contracts");
             }
-            bool isValid = ValidateChildContract(entity, parent);
+            bool isValid = CommonService.ValidateChildContract(entity, parent);
             if (!isValid) throw new BadRequestException($"Date must be within parent contract: From [{parent.StartDate}] to [{parent.EndDate}]");
         }
         var contract = await _contractRepository.CreateAsync(entity);
@@ -106,11 +107,11 @@ public class ContractService : IContractService
     {
         var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Contract is not exist"));
         Contract entity = _mapper.Map(model, target);
-        SetContractStatus(entity);
+        CommonService.SetContractStatus(entity);
         if (model.ParentContractId.HasValue)
         {
             var parent = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ParentContractId));
-            bool isValid = ValidateChildContract(entity, parent);
+            bool isValid = CommonService.ValidateChildContract(entity, parent);
             if (isValid == false) throw new BadRequestException($"Date must be within parent contract: From [{parent.StartDate}] to [{parent.EndDate}]");
         }
         await _contractRepository.UpdateAsync(entity);
@@ -159,7 +160,7 @@ public class ContractService : IContractService
             await _renewalRepository.CreateAsync(firstRenewal);
         }
         Contract entity = _mapper.Map(model, target);
-        SetContractStatus(entity);
+        CommonService.SetContractStatus(entity);
         entity.IsRenewed = entity.IsRenewed == false ? true : entity.IsRenewed;
         await _contractRepository.UpdateAsync(entity);
         Renewal newRenewal = new()
@@ -185,30 +186,6 @@ public class ContractService : IContractService
         }
 
         return response;
-    }
-    private static void SetContractStatus(Contract entity)
-    {
-        if (entity.StartDate < DateTime.Now)
-        {
-            entity.Status = ContractStatus.Pending;
-        }
-        else if (entity.EndDate >= DateTime.Now)
-        {
-            entity.Status = ContractStatus.Active;
-        }
-        else
-        {
-            entity.Status = ContractStatus.Expired;
-        }
-    }
-    private static bool ValidateChildContract(Contract child, Contract parent)
-    {
-        bool isValid = true;
-        if (child.StartDate < parent.StartDate || child.EndDate > parent.EndDate)
-        {
-            isValid = false;
-        }
-        return isValid;
     }
     private async Task<CompanyMember> IsCompanyAdmin(int currentUserId)
     {

@@ -24,13 +24,9 @@ public class CreateUserValidator : AbstractValidator<CreateUserRequest>
         RuleFor(u => u.Username)
             .NotEmpty().WithMessage("Username is required");
 
-        RuleFor(u => u.Password)
-            .NotEmpty().WithMessage("Password is required")
-            .MinimumLength(6).WithMessage("Password must be at least 6 characters long");
-
         RuleFor(u => u.Email)
             .EmailAddress().WithMessage("Email Address is invalid")
-            .UniqueEmail(email => _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result != null).WithMessage("Email Address is already in use.")
+            .Must(email => IsUniqueEmail(email)).WithMessage("Email Address is already in use.")
             .NotEmpty().WithMessage("Email Address is required.");
 
         RuleFor(u => u.Role)
@@ -43,13 +39,20 @@ public class CreateUserValidator : AbstractValidator<CreateUserRequest>
             .Must(gender => gender >= Gender.Male && gender <= Gender.PreferNotToSay)
             .WithMessage("Role must be valid and is required.");
 
-        RuleFor(x => x.DateOfBirth)
-            .LessThan(DateTime.Today).When(x => x.DateOfBirth != null)
-            .WithMessage("Date of birth should be in the past.");
-
         RuleFor(x => x.PhoneNumber)
-            .MaximumLength(15).When(x => x.DateOfBirth != null)
+            .MaximumLength(15)
             .WithMessage("Phone number should not exceed 15 characters.")
             .Matches(@"^\+?[0-9-]*$").WithMessage("Invalid phone number format.");
+    }
+
+    private bool IsUniqueEmail(string email)
+    {
+        if (string.IsNullOrEmpty(email))
+        {
+            return false; // or true, depending on your business logic
+        }
+
+        var user = _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result;
+        return user == null;
     }
 }

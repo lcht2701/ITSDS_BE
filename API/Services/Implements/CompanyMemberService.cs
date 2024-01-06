@@ -20,17 +20,17 @@ public class CompanyMemberService : ICompanyMemberService
 {
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IRepositoryBase<User> _userRepository;
-    private readonly MailSettings _mailSettings;
-    private readonly IMapper _mapper;
     private readonly IFirebaseService _firebaseService;
+    private readonly IMailService _mailService;
+    private readonly IMapper _mapper;
 
-    public CompanyMemberService(IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<User> userRepository, IMapper mapper, IOptions<MailSettings> mailSettings, IFirebaseService firebaseService)
+    public CompanyMemberService(IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<User> userRepository, IFirebaseService firebaseService, IMailService mailService, IMapper mapper)
     {
         _companyMemberRepository = companyMemberRepository;
         _userRepository = userRepository;
-        _mapper = mapper;
-        _mailSettings = mailSettings.Value;
         _firebaseService = firebaseService;
+        _mailService = mailService;
+        _mapper = mapper;
     }
 
     public async Task<List<CompanyMember>> Get(int userId)
@@ -86,8 +86,9 @@ public class CompanyMemberService : ICompanyMemberService
 
         //Default when create new account
         userAccount.Role = Role.Customer;
+        var generatedPassword = CommonService.CreateRandomPassword();
         var passwordHasher = new PasswordHasher<User>();
-        userAccount.Password = passwordHasher.HashPassword(userAccount, userAccount.Password);
+        userAccount.Password = passwordHasher.HashPassword(userAccount, generatedPassword);
         userAccount.IsActive = true;
 
         var userResult = await _userRepository.CreateAsync(userAccount);
@@ -96,11 +97,13 @@ public class CompanyMemberService : ICompanyMemberService
             MemberId = userResult.Id,
             CompanyId = currentUserMember.CompanyId,
             IsCompanyAdmin = model.IsCompanyAdmin,
-            MemberPosition = model.MemberPosition != null ? model.MemberPosition : "",
-            DepartmentId = model.DepartmentId
+            MemberPosition = model.MemberPosition != null ? model.MemberPosition : "Nhân viên",
+            CompanyAddressId = model.CompanyAddressId
         };
         await _companyMemberRepository.CreateAsync(member);
-        BackgroundJob.Enqueue(() => SendUserCreatedNotification(model.User!));
+        string fullname = $"{model.User.FirstName} {model.User.LastName}";
+        string roleName = model.IsCompanyAdmin == true ? "Company Admin" : "Customer";
+        BackgroundJob.Enqueue(() => _mailService.SendUserCreatedNotification(fullname, model.User.Username, model.User.Email, generatedPassword, roleName));
         return member;
     }
 
@@ -123,7 +126,7 @@ public class CompanyMemberService : ICompanyMemberService
         await _companyMemberRepository.DeleteAsync(companyMember);
     }
 
-    public async Task SendUserCreatedNotification(AddAccountInformationRequest dto)
+    public async Task SendUserCreatedNotification(string fullname, string username, string email, string password, string roleName)
     {
         using (MimeMessage emailMessage = new MimeMessage())
         {

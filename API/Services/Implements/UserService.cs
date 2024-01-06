@@ -4,18 +4,13 @@ using API.DTOs.Responses.Teams;
 using API.DTOs.Responses.Users;
 using API.Services.Interfaces;
 using AutoMapper;
-using Domain.Application.AppConfig;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;
 using Hangfire;
-using MailKit.Net.Smtp;
-using MailKit.Security;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
-using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 
@@ -29,22 +24,19 @@ public class UserService : IUserService
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IFirebaseService _firebaseService;
+    private readonly IMailService _mailService;
     private readonly IMapper _mapper;
-    private readonly MailSettings _mailSettings;
 
-    public UserService(IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository,
-        IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<Company> companyRepository,
-        IRepositoryBase<CompanyMember> companyMemberRepository, IFirebaseService firebaseService, IMapper mapper,
-        IOptions<MailSettings> mailSettings)
+    public UserService(IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IFirebaseService firebaseService, IMailService mailService, IMapper mapper)
     {
         _userRepository = userRepository;
         _teamRepository = teamRepository;
-        _teamMemberRepository = teamMemberRepository;
         _companyRepository = companyRepository;
+        _teamMemberRepository = teamMemberRepository;
         _companyMemberRepository = companyMemberRepository;
         _firebaseService = firebaseService;
+        _mailService = mailService;
         _mapper = mapper;
-        _mailSettings = mailSettings.Value;
     }
 
     public async Task<List<GetUserResponse>> Get()
@@ -88,35 +80,43 @@ public class UserService : IUserService
         return entity;
     }
 
-    public async Task<User> Create(CreateUserOrCompanyAdmin model)
+    public async Task<User> Create(CreateUserRequest model)
     {
-        User entity = _mapper.Map(model.UserModel, new User());
+        User entity = _mapper.Map(model, new User());
         var passwordHasher = new PasswordHasher<User>();
-        entity.Password = passwordHasher.HashPassword(entity, model.UserModel.Password);
+        var generatedPassword = CommonService.CreateRandomPassword();
+        entity.Password = passwordHasher.HashPassword(entity, generatedPassword);
         //Default when create new account
         entity.IsActive = true;
         var result = await _userRepository.CreateAsync(entity);
-        if (model.UserModel.Role == Role.Customer && model.CompanyId != null)
+        await _firebaseService.CreateFirebaseUser(model.Email, generatedPassword);
+        await _firebaseService.CreateUserDocument(result);
+        if (entity.Role == Role.Customer)
         {
             await _companyMemberRepository.CreateAsync(new CompanyMember()
             {
                 MemberId = result.Id,
-                CompanyId = (int)model.CompanyId,
-                IsCompanyAdmin = model.IsCompanyAdmin,
-                DepartmentId = model.DepartmentId,
-                MemberPosition = model.IsCompanyAdmin == true ? "Company Admin" : "Nhân viên"
+                CompanyId = model.CompanyDetail.CompanyId,
+                IsCompanyAdmin = model.CompanyDetail.IsCompanyAdmin,
+                CompanyAddressId = model.CompanyDetail.CompanyAddressId,
+                MemberPosition = model.CompanyDetail.IsCompanyAdmin == true ? "Company Admin" : "Nhân viên"
             });
         }
-        BackgroundJob.Enqueue(() => SendUserCreatedNotification(model.UserModel));
-        return entity;
+        string fullname = $"{model.FirstName} {model.LastName}";
+        string roleName = model.CompanyDetail.IsCompanyAdmin == true ? "Company Admin" : "Customer";
+        BackgroundJob.Enqueue(() => _mailService.SendUserCreatedNotification(fullname, model.Username, model.Email, generatedPassword, roleName));
+        return result;
     }
 
     public async Task<User> Update(int id, UpdateUserRequest model)
     {
         var target =
-            await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("User is not exist"));
+            await _userRepository.FoundOrThrow(c => c.Id.Equals(id),
+            new KeyNotFoundException("User is not exist"));
+        await _firebaseService.UpdateFirebaseUser(target.Email, model.Email, null);
         User user = _mapper.Map(model, target);
-        await _userRepository.UpdateAsync(user);
+        var result = await _userRepository.UpdateAsync(user);
+        await _firebaseService.UpdateUserDocument(result);
         return user;
     }
 
@@ -124,6 +124,7 @@ public class UserService : IUserService
     {
         var target =
             await _userRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("User is not exist"));
+        await _firebaseService.RemoveFirebaseAccount(id);
         await _userRepository.SoftDeleteAsync(target);
         #region Remove in Company Member
         var companyMember = await _companyMemberRepository.WhereAsync(x => x.MemberId == target.Id);
@@ -137,10 +138,13 @@ public class UserService : IUserService
 
     public async Task<User> UpdateProfile(int id, UpdateProfileRequest model)
     {
-        var target = await _userRepository.FoundOrThrow(c => c.Id.Equals(id),
-            new NotFoundException("User is not found"));
+        var target =
+            await _userRepository.FoundOrThrow(c => c.Id.Equals(id),
+            new KeyNotFoundException("User is not exist"));
+        await _firebaseService.UpdateFirebaseUser(target.Email, model.Email, null);
         User user = _mapper.Map(model, target);
-        await _userRepository.UpdateAsync(user);
+        var result = await _userRepository.UpdateAsync(user);
+        await _firebaseService.UpdateUserDocument(result);
         return user;
     }
 
@@ -149,7 +153,8 @@ public class UserService : IUserService
         var user = await _userRepository.FoundOrThrow(c => c.Id.Equals(userId),
             new KeyNotFoundException("User is not found"));
         user.AvatarUrl = model.AvatarUrl;
-        await _userRepository.UpdateAsync(user);
+        var result = await _userRepository.UpdateAsync(user);
+        await _firebaseService.UpdateUserDocument(user);
         return user;
     }
 
@@ -202,72 +207,6 @@ public class UserService : IUserService
         }
     }
 
-    public async Task SendUserCreatedNotification(CreateUserRequest dto)
-    {
-        using (MimeMessage emailMessage = new MimeMessage())
-        {
-            string fullname = $"{dto.FirstName} {dto.LastName}";
-            string roleName = DataResponse.GetEnumDescription(dto.Role);
-            MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
-            emailMessage.From.Add(emailFrom);
-            MailboxAddress emailTo = new MailboxAddress(fullname,
-                dto.Email);
-            emailMessage.To.Add(emailTo);
-
-            emailMessage.Subject = "Welcome to ITSDS - Your New Account Details";
-            string emailTemplateText = @"<!DOCTYPE html>
-<html lang=""en"">
-<head>
-  <meta charset=""UTF-8"">
-  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-  <title>Welcome to ITSDS System!</title>
-</head>
-<body style=""font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f8f9fa;"">
-
-  <div style=""max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);"">
-    <div style=""background-color: #007bff; color: #fff; padding: 20px; text-align: center; border-top-left-radius: 5px; border-top-right-radius: 5px;"">
-      <h1>Welcome to ITSDS System!</h1>
-    </div>
-    <div style=""padding: 20px;"">
-      <p>Dear {0},</p>
-      <p>We are delighted to welcome you to ITSDS! Your new account has been successfully created, and we're excited to have you on board. Below are your account details:</p>
-      <ul style=""list-style-type: none; padding: 0;"">
-        <li style=""margin-bottom: 10px;""><strong>Username:</strong> {1}</li>
-        <li style=""margin-bottom: 10px;""><strong>Password:</strong> {2}</li>
-        <li style=""margin-bottom: 10px;""><strong>Email:</strong> {3}</li>
-        <li style=""margin-bottom: 10px;""><strong>Role:</strong> {4}</li>
-      </ul>
-      <p>Please keep this information secure, and do not share your password with anyone. If you have any questions or concerns regarding your account, feel free to contact our support team at <a href=""mailto:itsdskns@gmail.com"">itsdskns@gmail.com</a>.</p>
-      <p>We recommend logging in at <a href=""https://dichvuit.hisoft.vn/"">https://dichvuit.hisoft.vn/</a> to update your password for added security.</p>
-    </div>
-    <div style=""background-color: #f1f1f1; padding: 10px; text-align: center; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;"">
-      <p>Best regards, ITSDS</p>
-    </div>
-  </div>
-
-</body>
-</html>
-";
-            emailTemplateText = string.Format(emailTemplateText, fullname, dto.Username, dto.Password, dto.Email,
-                roleName);
-
-            BodyBuilder emailBodyBuilder = new BodyBuilder();
-            emailBodyBuilder.HtmlBody = emailTemplateText;
-            emailBodyBuilder.TextBody = "Plain Text goes here to avoid marked as spam for some email servers.";
-
-            emailMessage.Body = emailBodyBuilder.ToMessageBody();
-
-            using (SmtpClient mailClient = new SmtpClient())
-            {
-                await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port,
-                    SecureSocketOptions.StartTls);
-                await mailClient.AuthenticateAsync(_mailSettings.SenderEmail, _mailSettings.Password);
-                await mailClient.SendAsync(emailMessage);
-                await mailClient.DisconnectAsync(true);
-            }
-        }
-    }
-
     #region Selection List By Roles
 
     public async Task<List<User>> GetManagers()
@@ -294,6 +233,5 @@ public class UserService : IUserService
     {
         return (await _userRepository.WhereAsync(x => x.Role.Equals(Role.Accountant))).ToList();
     }
-
     #endregion
 }

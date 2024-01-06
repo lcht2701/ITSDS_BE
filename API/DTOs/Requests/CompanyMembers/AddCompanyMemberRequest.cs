@@ -11,6 +11,6 @@ namespace API.DTOs.Requests.CompanyMembers
 
         public string? MemberPosition { get; set; }
 
-        public int DepartmentId { get; set; }
+        public int CompanyAddressId { get; set; }
     }
 }

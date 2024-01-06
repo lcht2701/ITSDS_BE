@@ -18,7 +18,6 @@ public class GetUserProfileResponse : IMapFrom<User>
     public string? Address { get; set; }
     public Gender? Gender { get; set; }
     public Role? Role { get; set; }
-    public DateTime? DateOfBirth { get; set; }
     public string? AvatarUrl { get; set; }
 
     public GetTeamResponse? Team { get; set; }

@@ -7,7 +7,7 @@ namespace API.DTOs.Requests.CompanyMembers
     {
         public bool? IsCompanyAdmin { get; set; }
 
-        public int? DepartmentId { get; set; }
+        public int? CompanyAddressId { get; set; }
 
         public string? MemberPosition { get; set; }
     }

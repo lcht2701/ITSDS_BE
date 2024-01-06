@@ -15,7 +15,6 @@ public class LoginResponse : IMapFrom<User>
     public string? AvatarUrl { get; set; }
     public Role Role { get; set; }
     public string? PhoneNumber { get; set; }
-    public DateTime? DateOfBirth { get; set; }
     public Gender? Gender { get; set; }
     public bool IsCompanyAdmin { get; set; }
     public int? CompanyId { get; set; }

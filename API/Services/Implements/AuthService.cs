@@ -21,6 +21,7 @@ using MailKit.Net.Smtp;
 using Domain.Models.Contracts;
 using Hangfire;
 using Domain.Models.Tickets;
+using Persistence.Helpers;
 
 namespace API.Services.Implements;
 
@@ -132,22 +133,11 @@ public class AuthService : IAuthService
         }
 
         var passwordHasher = new PasswordHasher<User>();
-        string newPassword = CreateRandomPassword(8);
+        string newPassword = CommonService.CreateRandomPassword();
         user.Password = passwordHasher.HashPassword(user, newPassword);
         await _userRepository.UpdateAsync(user);
         await _firebaseService.UpdateFirebaseUser(user.Email, user.Email, newPassword);
         BackgroundJob.Enqueue(() => SendNewPassword(user, newPassword));
-    }
-
-    private string CreateRandomPassword(int length)
-    {
-        string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        Random random = new Random();
-        string randomPassword = new string(Enumerable.Repeat(chars, length)
-            .Select(s => s[random.Next(s.Length)])
-            .ToArray());
-        return randomPassword;
-
     }
 
     #region Generate JWT Token

@@ -39,12 +39,8 @@ namespace API.Validations.CompanyMembers
                 .Must(gender => gender >= Gender.Male && gender <= Gender.PreferNotToSay)
                 .WithMessage("Role must be valid and is required.");
 
-            RuleFor(x => x.DateOfBirth)
-                .LessThan(DateTime.Today).When(x => x.DateOfBirth != null)
-                .WithMessage("Date of birth should be in the past.");
-
             RuleFor(x => x.PhoneNumber)
-                .MaximumLength(15).When(x => x.DateOfBirth != null)
+                .MaximumLength(15)
                 .WithMessage("Phone number should not exceed 15 characters.")
                 .Matches(@"^\+?[0-9-]*$").WithMessage("Invalid phone number format.");
         }

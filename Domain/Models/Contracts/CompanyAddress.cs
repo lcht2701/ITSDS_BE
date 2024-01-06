@@ -2,9 +2,9 @@
 
 namespace Domain.Models.Contracts
 {
-    public partial class Department : BaseEntity
+    public partial class CompanyAddress : BaseEntity
     {
-        public Department()
+        public CompanyAddress()
         {
             CompanyMembers = new HashSet<CompanyMember>();
         }

@@ -10,13 +10,13 @@
 
         public bool IsCompanyAdmin { get; set; }
 
-        public int? DepartmentId { get; set; }
+        public int? CompanyAddressId { get; set; }
 
         public virtual User? Member { get; set; }
 
         public virtual Company? Company { get; set; }
 
-        public virtual Department? Department { get; set; }
+        public virtual CompanyAddress? CompanyAddress { get; set; }
 
     }
 }
