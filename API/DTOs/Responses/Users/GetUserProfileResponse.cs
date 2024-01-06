@@ -3,8 +3,6 @@ using API.DTOs.Responses.Teams;
 using API.Mappings;
 using Domain.Constants.Enums;
 using Domain.Models;
-using Domain.Models.Contracts;
-using Domain.Models.Tickets;
 
 namespace API.DTOs.Responses.Users;
 

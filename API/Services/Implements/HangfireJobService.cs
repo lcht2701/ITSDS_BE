@@ -33,7 +33,7 @@ public class HangfireJobService : IHangfireJobService
         _mailSettings = mailSettings.Value;
     }
 
-    public async Task PeriodTicketSummaryNotificationJob()
+    public async Task TicketSummaryNotificationJob()
     {
         if (DateTime.Today.DayOfWeek != DayOfWeek.Monday)
         {
@@ -46,7 +46,6 @@ public class HangfireJobService : IHangfireJobService
         {
             var availableTicketsCount = (await _ticketRepository
                 .WhereAsync(x => (x.TicketStatus != TicketStatus.Closed && x.TicketStatus != TicketStatus.Cancelled) &&
-                                 x.IsPeriodic &&
                                  x.ScheduledStartTime >= DateTime.Today &&
                                  x.ScheduledStartTime <= DateTime.Today.AddDays(7)))
                 .Count;
@@ -55,7 +54,7 @@ public class HangfireJobService : IHangfireJobService
             {
                 await _messagingService.SendNotification(
                     "Ticket Summary",
-                    $"There are {availableTicketsCount} periodic tickets that need to be handled this week.",
+                    $"There are still {availableTicketsCount} available tickets that need to be handled this week.",
                     manager.Id
                 );
             }

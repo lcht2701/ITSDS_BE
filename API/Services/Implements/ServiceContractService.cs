@@ -154,45 +154,4 @@ public class ServiceContractService : IServiceContractService
         var target = await _repo.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Service is not exist in the contract");
         await _repo.DeleteAsync(target);
     }
-
-    public async Task<List<Ticket>> CreatePeriodicTickets(int id, int currentUserId)
-    {
-        List<Ticket> list = new();
-        var serviceContract = await _repo.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Service is not exist in the contract");
-
-        if (!serviceContract.StartDate.HasValue || !serviceContract.EndDate.HasValue || !serviceContract.Frequency.HasValue)
-        {
-            return list;
-        }
-
-        #region Data For Create Contract
-        var service = await _serviceRepo.FirstOrDefaultAsync(x => x.Id.Equals(serviceContract.ServiceId));
-        var contract = await _contractRepo.FirstOrDefaultAsync(x => x.Id.Equals(serviceContract.ContractId));
-        var company = await _companyRepo.FirstOrDefaultAsync(x => x.Id.Equals(contract.CompanyId));
-        #endregion
-
-        TimeSpan? totalDate = serviceContract.EndDate - serviceContract.StartDate;
-        int numOfTickets = (int)Math.Ceiling((decimal)(totalDate.Value.Days / serviceContract.Frequency));
-        DateTime? startDate = serviceContract.StartDate;
-        for (int i = 1; i <= numOfTickets; i++)
-        {
-            Ticket newTicket = new()
-            {
-                CreatedById = currentUserId,
-                Title = $"Periodic Ticket #{i} - {service.Description}",
-                Description = $"Periodic Service Support #{i} for {company.CompanyName} - {service.Description}",
-                ServiceId = service.Id,
-                CategoryId = (await _categoryRepo.FirstOrDefaultAsync(x => x.Id.Equals(service.CategoryId))).Id,
-                TicketStatus = Domain.Constants.Enums.TicketStatus.Open,
-                Priority = Domain.Constants.Enums.Priority.Medium,
-                ScheduledStartTime = startDate,
-                ScheduledEndTime = startDate.Value.AddDays((double)serviceContract.Frequency),
-                IsPeriodic = true,
-            };
-            list.Add(newTicket);
-            startDate = startDate.Value.AddDays((double)serviceContract.Frequency + 1);
-        }
-        await _ticketRepo.CreateAsync(list);
-        return list;
-    }
 }

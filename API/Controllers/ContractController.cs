@@ -263,21 +263,6 @@ public class ContractController : BaseController
             return BadRequest(ex.Message);
         }
     }
-    
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpPost("periodic-service")]
-    public async Task<IActionResult> AddPeriodicService(int contractId, [FromBody] AddPeriodicService model)
-    {
-        try
-        {
-            var result = await _serviceContractService.AddPeriodicService(contractId, model);
-            return Ok(new { Message = "Periodic Service Added To Contract Successfully", Data = result });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
     [HttpDelete("services/{id}")]
@@ -287,25 +272,6 @@ public class ContractController : BaseController
         {
             await _serviceContractService.Remove(id);
             return Ok("Services Removed Successfully");
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpPost("generate-periodic-tickets")]
-    public async Task<IActionResult> CreatePeriodicTickets(int id)
-    {
-        try
-        {
-            var result = await _serviceContractService.CreatePeriodicTickets(id, CurrentUserID);
-            return Ok(new { Message = "Periodic Tickets Created Successfully", Data = result });
         }
         catch (KeyNotFoundException ex)
         {

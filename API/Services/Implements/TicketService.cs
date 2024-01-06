@@ -71,29 +71,6 @@ public class TicketService : ITicketService
         return response;
     }
 
-    public async Task<List<GetTicketResponse>> GetPeriodicTickets(int? numOfDays)
-    {
-        var result = await _ticketRepository
-            .GetAsync(navigationProperties: new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" })
-            .ConfigureAwait(false);
-
-        if (numOfDays.HasValue)
-        {
-            result = result
-                .Where(x => x.IsPeriodic && x.ScheduledStartTime!.Value.Date >= DateTime.Today &&
-                            x.ScheduledStartTime!.Value.Date <= DateTime.Today.AddDays((int)numOfDays));
-        }
-        else
-        {
-            result = result
-                .Where(x => x.IsPeriodic && x.ScheduledStartTime!.Value.Date >= DateTime.Today);
-        }
-
-        List<GetTicketResponse> response = await ModifyTicketListResponse(result);
-
-        return response;
-    }
-
     public async Task<GetTicketResponse> GetById(int id)
     {
         var result =
@@ -162,7 +139,6 @@ public class TicketService : ITicketService
         entity.RequesterId = createdById;
         entity.CreatedById = createdById;
         entity.TicketStatus = TicketStatus.Open;
-        entity.IsPeriodic = false;
         entity.Address = GetCompanyAddressAddress((int)entity.RequesterId, entity).Result;
         var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
         if (categoryId != null) entity.CategoryId = (int)categoryId;
@@ -172,6 +148,8 @@ public class TicketService : ITicketService
             await _attachmentService.Add(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
         await AssignSupportJob(result);
+        await CreateFirstTask(result);
+        await SendNotificationAfterAssignment(result);
         return result;
     }
 
@@ -186,34 +164,30 @@ public class TicketService : ITicketService
             await _attachmentService.Add(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
 
-        if (model?.TechnicianId != null || model?.TeamId != null)
+        if (model.TechnicianId != null)
         {
-            if (model != null && model.TechnicianId != null && model.TeamId != null)
+            if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
             {
-                if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
-                {
-                    throw new BadRequestException("This technician is not a member of the specified team.");
-                }
-
-                var assignment = new Assignment()
-                {
-                    TicketId = result.Id,
-                    TechnicianId = model.TechnicianId,
-                    TeamId = model.TeamId
-                };
-
-                await _assignmentRepository.CreateAsync(assignment);
-                if (result.TicketStatus == TicketStatus.Open)
-                    await UpdateTicketStatus(result.Id, TicketStatus.Assigned);
-                await CreateFirstTask(result);
-                await SendNotificationAfterAssignment(result);
+                throw new BadRequestException("This technician is not a member of the specified team.");
             }
+
+            var assignment = new Assignment()
+            {
+                TicketId = result.Id,
+                TechnicianId = model.TechnicianId,
+                TeamId = model.TeamId
+            };
+
+            await _assignmentRepository.CreateAsync(assignment);
+            if (result.TicketStatus == TicketStatus.Open)
+                await UpdateTicketStatus(result.Id, TicketStatus.Assigned);
         }
         else
         {
             await AssignSupportJob(result);
         }
-
+        await CreateFirstTask(result);
+        await SendNotificationAfterAssignment(result);
         return result;
     }
 
@@ -533,8 +507,6 @@ public class TicketService : ITicketService
 
             await _assignmentRepository.CreateAsync(assignment);
             await UpdateTicketStatus(ticket.Id, TicketStatus.Assigned);
-            await CreateFirstTask(ticket);
-            await SendNotificationAfterAssignment(ticket);
         }
         else
         {

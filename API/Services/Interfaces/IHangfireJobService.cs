@@ -2,7 +2,7 @@
 
 public interface IHangfireJobService
 {
-    Task PeriodTicketSummaryNotificationJob();
+    Task TicketSummaryNotificationJob();
     Task UpdateStatusOfContract();
     Task NotifyNearExpiredContract();
 }
