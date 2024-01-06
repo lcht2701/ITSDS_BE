@@ -104,6 +104,8 @@ public class CompanyMemberService : ICompanyMemberService
         string fullname = $"{model.User.FirstName} {model.User.LastName}";
         string roleName = model.IsCompanyAdmin == true ? "Company Admin" : "Customer";
         BackgroundJob.Enqueue(() => _mailService.SendUserCreatedNotification(fullname, model.User.Username, model.User.Email, generatedPassword, roleName));
+        await _firebaseService.CreateFirebaseUser(model.User.Email, generatedPassword);
+        await _firebaseService.CreateUserDocument(userResult);
         return member;
     }
 

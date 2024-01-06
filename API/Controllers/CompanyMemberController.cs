@@ -114,11 +114,6 @@ public class CompanyMemberController : BaseController
         try
         {
             var result = await _companyMemberService.Add(model, CurrentUserID);
-            if (result != null && await _firebaseService.CreateFirebaseUser(model.User.Email, model.User.Password) == true)
-            {
-                var userModel = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(result.MemberId));
-                await _firebaseService.CreateUserDocument(userModel);
-            }
             return Ok(new { Message = "Member Added Successfully", Data = result });
         }
         catch (UnauthorizedException ex)

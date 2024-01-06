@@ -25,10 +25,6 @@ namespace API.Validations.CompanyMembers
             RuleFor(u => u.Username)
                 .NotEmpty().WithMessage("Username is required");
 
-            RuleFor(u => u.Password)
-                .NotEmpty().WithMessage("Password is required")
-                .MinimumLength(6).WithMessage("Password must be at least 6 characters long");
-
             RuleFor(u => u.Email)
                 .EmailAddress().WithMessage("Email Address is invalid")
                 .UniqueEmail(email => _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result != null).WithMessage("Email Address is already in use.")
