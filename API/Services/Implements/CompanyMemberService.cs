@@ -22,13 +22,15 @@ public class CompanyMemberService : ICompanyMemberService
     private readonly IRepositoryBase<User> _userRepository;
     private readonly MailSettings _mailSettings;
     private readonly IMapper _mapper;
+    private readonly IFirebaseService _firebaseService;
 
-    public CompanyMemberService(IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<User> userRepository, IMapper mapper, IOptions<MailSettings> mailSettings)
+    public CompanyMemberService(IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<User> userRepository, IMapper mapper, IOptions<MailSettings> mailSettings, IFirebaseService firebaseService)
     {
         _companyMemberRepository = companyMemberRepository;
         _userRepository = userRepository;
         _mapper = mapper;
         _mailSettings = mailSettings.Value;
+        _firebaseService = firebaseService;
     }
 
     public async Task<List<CompanyMember>> Get(int userId)
@@ -115,6 +117,9 @@ public class CompanyMemberService : ICompanyMemberService
     {
         CompanyMember currentUserMember = await IsCompanyAdmin(currentUserId);
         var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Member is not exist");
+        var userAccount = await _userRepository.FirstOrDefaultAsync(x => x.Id == currentUserId);
+        await _userRepository.DeleteAsync(userAccount);
+        await _firebaseService.RemoveFirebaseAccount(userAccount.Id);
         await _companyMemberRepository.DeleteAsync(companyMember);
     }
 
