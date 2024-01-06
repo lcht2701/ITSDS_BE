@@ -29,6 +29,7 @@ namespace Domain.Models.Contracts
 
         [JsonIgnore]
         public virtual ICollection<Contract>? Contracts { get; set; }
+        [JsonIgnore]
         public virtual ICollection<CompanyAddress>? CompanyAddresses { get; set; }
 
     }

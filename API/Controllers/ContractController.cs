@@ -1,6 +1,5 @@
 ﻿
 using API.DTOs.Requests.Contracts;
-using API.DTOs.Requests.ServiceContracts;
 using API.DTOs.Responses.Contracts;
 using API.Services.Interfaces;
 using Domain.Constants;
@@ -43,64 +42,6 @@ public class ContractController : BaseController
         var result = await _contractService.Get();
         var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
         return Ok(pagedResponse);
-    }
-
-    [Authorize]
-    [HttpGet("parent-contracts")]
-    [SwaggerResponse(200, "Get Parent Contracts", typeof(List<GetContractResponse>))]
-
-    public async Task<IActionResult> GetParentContracts()
-    {
-        var result = await _contractService.GetParentContracts();
-        return Ok(result);
-    }
-
-    [Authorize]
-    [HttpGet("child")]
-    [SwaggerResponse(200, "Get Child Contracts", typeof(List<GetContractResponse>))]
-    public async Task<IActionResult> GetChildContracts(int contractId)
-    {
-        try
-        {
-            var result = await _contractService.GetChildContracts(contractId);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize]
-    [HttpGet("renew")]
-    [SwaggerResponse(200, "Get Renewal Contracts", typeof(List<Domain.Models.Contracts.Renewal>))]
-    public async Task<IActionResult> GetRenewals(int contractId)
-    {
-        try
-        {
-            var result = await _contractService.GetContractRenewals(contractId);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize(Roles = $"{Roles.ACCOUNTANT}")]
-    [HttpGet("accountant")]
-    [SwaggerResponse(200, "Get Contract By Accountant", typeof(List<GetContractResponse>))]
-    public async Task<IActionResult> GetByAccountant()
-    {
-        try
-        {
-            var result = await _contractService.GetByAccountant(CurrentUserID);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
     }
 
     [Authorize(Roles = Roles.CUSTOMER)]
@@ -181,25 +122,6 @@ public class ContractController : BaseController
         {
             await _contractService.Remove(id);
             return Ok("Contract Removed Successfully");
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpPut("{contractId}/renew")]
-    public async Task<IActionResult> RenewContract(int contractId, [FromBody] RenewContractRequest model)
-    {
-        try
-        {
-            var result = await _contractService.RenewContract(contractId, model, CurrentUserID);
-            return Ok(new { Message = "Contract Renewed Successfully", Data = result });
         }
         catch (KeyNotFoundException ex)
         {

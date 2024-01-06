@@ -14,45 +14,44 @@ public class ServiceContractService : IServiceContractService
 {
     private readonly IRepositoryBase<ServiceContract> _repo;
     private readonly IRepositoryBase<Service> _serviceRepo;
-    private readonly IRepositoryBase<Ticket> _ticketRepo;
     private readonly IRepositoryBase<Contract> _contractRepo;
-    private readonly IRepositoryBase<Company> _companyRepo;
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepo;
-    private readonly IRepositoryBase<Category> _categoryRepo;
-    private readonly IRepositoryBase<User> _userRepo;
     private readonly IMapper _mapper;
 
-    public ServiceContractService(IRepositoryBase<ServiceContract> repo, IRepositoryBase<Service> serviceRepo, IRepositoryBase<Ticket> ticketRepo, IRepositoryBase<Contract> contractRepo, IRepositoryBase<Company> companyRepo, IRepositoryBase<CompanyMember> companyMemberRepo, IRepositoryBase<Category> categoryRepo, IRepositoryBase<User> userRepo, IMapper mapper)
+    public ServiceContractService(IRepositoryBase<ServiceContract> repo, IRepositoryBase<Service> serviceRepo, IRepositoryBase<Contract> contractRepo, IRepositoryBase<CompanyMember> companyMemberRepo, IMapper mapper)
     {
         _repo = repo;
         _serviceRepo = serviceRepo;
-        _ticketRepo = ticketRepo;
         _contractRepo = contractRepo;
-        _companyRepo = companyRepo;
         _companyMemberRepo = companyMemberRepo;
-        _categoryRepo = categoryRepo;
-        _userRepo = userRepo;
         _mapper = mapper;
     }
 
     public async Task<List<ServiceContract>> Get(int contractId)
     {
-        return (await _repo.WhereAsync(x => x.ContractId.Equals(contractId), new string[] { "Contract", "Service" })).ToList();
+        return (await _repo.WhereAsync(x => x.ContractId.Equals(contractId), new string[] {  "Service" })).ToList();
+    }
+
+    public async Task<List<Service>> GetServicesList(int contractId)
+    {
+        var currentServiceIds = (await _repo.WhereAsync(x => x.ContractId.Equals(contractId))).Select(x => x.ServiceId);
+        var result = (await _serviceRepo.WhereAsync(x => !currentServiceIds.Contains(x.Id))).ToList();
+        return result;
     }
 
     public async Task<List<Service>> GetActiveServicesOfMemberCompany(int userId)
     {
         var companyMember = await _companyMemberRepo.FirstOrDefaultAsync(x => x.MemberId.Equals(userId)) ?? throw new KeyNotFoundException("Member is not found or not belong to any company");
 
-        var company = await _companyRepo.FirstOrDefaultAsync(x => x.Id.Equals(companyMember.CompanyId)) ?? throw new KeyNotFoundException("Company is not found");
-
         //Get Active Contracts Of Company
         var contractIds = (await _contractRepo
             .WhereAsync(x => 
                 x.CompanyId.Equals(companyMember.CompanyId) && 
                 x.Status == ContractStatus.Active))
-            .Select(x => x.Id);
-        if (contractIds == null || !contractIds.Any())
+            .Select(x => x.Id)
+            .ToList();
+
+        if (!contractIds.Any())
         {
             return new List<Service>();
         }
@@ -60,8 +59,10 @@ public class ServiceContractService : IServiceContractService
         //Get Services Of Company
         var serviceIds = (await _repo
             .WhereAsync(x => contractIds.Contains((int)x.ContractId!)))
-            .Select(x => x.ServiceId);
-        if (serviceIds == null || !serviceIds.Any())
+            .Select(x => x.ServiceId)
+            .ToList();
+
+        if (!serviceIds.Any())
         {
             return new List<Service>();
         }
@@ -75,7 +76,22 @@ public class ServiceContractService : IServiceContractService
 
     public async Task<ServiceContract> GetById(int id)
     {
-        var result = await _repo.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Contract", "Service" }) ?? throw new KeyNotFoundException("Service is not exist in the contract");
+        var result = await _repo.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] {  "Service" }) ?? throw new KeyNotFoundException("Service is not exist in the contract");
+        return result;
+    }
+
+    public async Task<List<ServiceContract>> Add(int contractId, List<int> serviceIds)
+    {
+        List<ServiceContract> result = new();
+        foreach (var serviceId in serviceIds)
+        {
+            result.Add(new ServiceContract()
+            {
+                ContractId = contractId,
+                ServiceId = serviceId
+            });
+        }
+        await _repo.CreateAsync(result);
         return result;
     }
 
@@ -117,36 +133,6 @@ public class ServiceContractService : IServiceContractService
         }
         await _repo.CreateAsync(result);
         return result;
-    }
-
-    public async Task<List<Service>> GetServicesList(int contractId)
-    {
-        var currentServiceIds = (await _repo.WhereAsync(x => x.ContractId.Equals(contractId))).Select(x => x.ServiceId);
-        var result = (await _serviceRepo.WhereAsync(x => !currentServiceIds.Contains(x.Id))).ToList();
-        return result;
-    }
-
-    public async Task<List<ServiceContract>> Add(int contractId, List<int> serviceIds)
-    {
-        List<ServiceContract> result = new();
-        foreach (var serviceId in serviceIds)
-        {
-            result.Add(new ServiceContract()
-            {
-                ContractId = contractId,
-                ServiceId = serviceId
-            });
-        }
-        await _repo.CreateAsync(result);
-        return result;
-    }
-
-    public async Task<ServiceContract> AddPeriodicService(int contractId, AddPeriodicService model)
-    {
-        var entity = _mapper.Map(model, new ServiceContract());
-        entity.ContractId = contractId;
-        await _repo.CreateAsync(entity);
-        return entity;
     }
 
     public async Task Remove(int id)

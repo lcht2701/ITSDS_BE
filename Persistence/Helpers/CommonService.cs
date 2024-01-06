@@ -16,11 +16,11 @@ namespace Persistence.Helpers
         }
         public static void SetContractStatus(Contract entity)
         {
-            if (entity.StartDate < DateTime.Now)
+            if (DateTime.Today < entity.StartDate)
             {
                 entity.Status = ContractStatus.Pending;
             }
-            else if (entity.EndDate >= DateTime.Now)
+            else if (DateTime.Today >= entity.StartDate && DateTime.Today <= entity.EndDate)
             {
                 entity.Status = ContractStatus.Active;
             }
@@ -28,15 +28,6 @@ namespace Persistence.Helpers
             {
                 entity.Status = ContractStatus.Expired;
             }
-        }
-        public static bool ValidateChildContract(Contract child, Contract parent)
-        {
-            bool isValid = true;
-            if (child.StartDate < parent.StartDate || child.EndDate > parent.EndDate)
-            {
-                isValid = false;
-            }
-            return isValid;
         }
     }
 }

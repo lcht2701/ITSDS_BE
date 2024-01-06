@@ -439,7 +439,7 @@ public class DashboardService : IDashboardService
     #region Contract Dashboard
     public async Task<AccountantDashboard> GetAccountantDashboard(int userId)
     {
-        var contracts = await _contractRepository.WhereAsync(x => x.AccountantId == userId);
+        var contracts = await _contractRepository.ToListAsync();
         var payments = await _paymentRepository.WhereAsync(x => contracts.Select(x => x.Id).Contains((int)x.ContractId!));
         var terms = await _termRepository.WhereAsync(x => payments.Select(x => x.Id).Contains((int)x.PaymentId!));
         AccountantDashboard dashboard = new()
@@ -455,7 +455,7 @@ public class DashboardService : IDashboardService
 
     public async Task<AccountantContractDashboard> GetAccountantContractDashboard(int userId)
     {
-        var contracts = await _contractRepository.WhereAsync(x => x.AccountantId == userId);
+        var contracts = await _contractRepository.ToListAsync();
         AccountantContractDashboard dashboard = new()
         {
             PendingContractCount = contracts.Where(x => x.Status == ContractStatus.Pending).Count(),
