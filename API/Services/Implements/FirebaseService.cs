@@ -14,8 +14,8 @@ public class FirebaseService : IFirebaseService
     private readonly IRepositoryBase<User> _userRepository;
     private static string Apikey = "AIzaSyDSp2BGBcsS282cPTJSxUzFoW2PKWzAZ0A";
     private static string Bucket = "itsds-v1.appspot.com";
-    private static string AuthEmail = "itsds@gmail.com";
-    private static string AuthPassword = "itsds@123";
+    private static string AuthEmail = "admin@admin.com";
+    private static string AuthPassword = "admin123";
 
     public FirebaseService(IRepositoryBase<User> userRepository)
     {
