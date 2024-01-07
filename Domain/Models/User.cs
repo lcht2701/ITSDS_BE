@@ -34,9 +34,6 @@ public class User : BaseEntity
 
     public string? PhoneNumber { get; set; }
 
-    public DateTime? DateOfBirth { get; set; }
-
-
     [JsonIgnore] public virtual ICollection<Ticket>? Tickets { get; set; }
     [JsonIgnore] public virtual ICollection<TeamMember>? TeamMembers { get; set; }
     [JsonIgnore] public virtual ICollection<Assignment>? Assignments { get; set; }

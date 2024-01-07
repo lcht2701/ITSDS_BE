@@ -7,6 +7,9 @@ namespace API.Validations.Contracts
     {
         public CreateContractValidator()
         {
+            RuleFor(x => x.ContractNumber)
+                .NotEmpty().WithMessage("Name is required.");
+
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Name is required.");
 
@@ -19,20 +22,22 @@ namespace API.Validations.Contracts
             RuleFor(x => x.StartDate)
                 .NotEmpty().WithMessage("StartDate is required.");
 
-            RuleFor(x => x.EndDate)
-                .NotEmpty().WithMessage("EndDate is required.")
-                .GreaterThanOrEqualTo(x => x.StartDate).WithMessage("EndDate should be greater than or equal to StartDate.");
-
-            RuleFor(x => x.ParentContractId)
-                .GreaterThanOrEqualTo(0).WithMessage("ParentContractId should be greater than or equal to 0.");
-
-            RuleFor(x => x.AccountantId)
-                .NotEmpty().WithMessage("An employee is required to manage the contract.")
-                .GreaterThan(0).WithMessage("AccountantId should be greater than 0.");
+            RuleFor(x => x.Duration)
+                .GreaterThan(0).WithMessage("Duration should be greater than 0.");
 
             RuleFor(x => x.CompanyId)
                 .NotEmpty().WithMessage("Company is required.")
-                .GreaterThan(0).WithMessage("CompanyId should be greater than 0.");
+                .GreaterThan(0).WithMessage("Invalid Company");
+
+            RuleFor(x => x.AttachmentUrls)
+                .NotNull().WithMessage("AttachmentUrls cannot be null.");
+
+            RuleFor(x => x.ServiceIds)
+                .NotNull().WithMessage("ServiceIds cannot be null.")
+                .Must(x => x.Count > 0).WithMessage("At least one ServiceId is required.");
+
+            RuleFor(x => x.Note)
+                .MaximumLength(1000).WithMessage("Note should not exceed 1000 characters.");
         }
     }
 }

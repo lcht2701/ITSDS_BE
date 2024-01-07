@@ -9,8 +9,6 @@
         public int? ServiceId { get; set; }
 
         public int? ContractId { get; set; }
-
-        public int? Frequency {  get; set; } 
         
         public DateTime? StartDate { get; set; }
 

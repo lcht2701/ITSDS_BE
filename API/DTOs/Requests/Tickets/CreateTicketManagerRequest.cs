@@ -19,9 +19,6 @@ namespace API.DTOs.Requests.Tickets
         
         public int? ServiceId { get; set; }
 
-        [DefaultValue(false)]
-        public bool IsPeriodic { get; set; }
-
         public string? Type { get; set; }
 
         public TicketStatus? TicketStatus { get; set; }

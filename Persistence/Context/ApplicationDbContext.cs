@@ -29,9 +29,8 @@ namespace Persistence.Context
         public virtual DbSet<Feedback>? Feedbacks { get; set; }
         //Contract
         public virtual DbSet<Company>? Companies { get; set; }
-        public virtual DbSet<Department>? Departments { get; set; }
+        public virtual DbSet<CompanyAddress>? CompanyAddresses { get; set; }
         public virtual DbSet<CompanyMember>? CompanyMembers { get; set; }
-        public virtual DbSet<Renewal>? Renewals { get; set; }
         public virtual DbSet<Contract>? Contracts { get; set; }
         public virtual DbSet<ServiceContract>? ServiceContracts { get; set; }
         public virtual DbSet<Payment>? Payments { get; set; }
@@ -41,9 +40,9 @@ namespace Persistence.Context
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<CompanyMember>()
-                .HasOne(cm => cm.Department)
+                .HasOne(cm => cm.CompanyAddress)
                 .WithMany(d => d.CompanyMembers)
-                .HasForeignKey(cm => cm.DepartmentId)
+                .HasForeignKey(cm => cm.CompanyAddressId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<TicketSolution>()
@@ -59,7 +58,11 @@ namespace Persistence.Context
             builder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
-            
+
+            builder.Entity<Payment>()
+                .HasIndex(u => u.ContractId)
+                .IsUnique();
+
             base.OnModelCreating(builder);
 
             foreach (var entityType in builder.Model.GetEntityTypes())

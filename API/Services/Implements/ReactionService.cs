@@ -1,5 +1,4 @@
-﻿
-using API.Services.Interfaces;
+﻿using API.Services.Interfaces;
 using Domain.Models.Tickets;
 using Persistence.Repositories.Interfaces;
 

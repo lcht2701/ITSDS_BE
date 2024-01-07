@@ -20,8 +20,6 @@ public partial class Ticket : BaseEntity
 
     public string? Description { get; set; }
 
-    public bool IsPeriodic { get; set; }
-
     public string? Type { get; set; }
 
     public string? Address { get; set; }

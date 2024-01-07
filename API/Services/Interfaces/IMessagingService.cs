@@ -10,5 +10,4 @@ public interface IMessagingService
     Task MarkAsReadAll(int userId);
     Task GetToken(int userId, string token);
     Task RemoveToken(int userId, string? token);
-    Task RemoveOldToken();
 }

@@ -14,6 +14,6 @@ namespace API.DTOs.Responses.CompanyMembers
 
         public virtual Company? Company { get; set; }
 
-        public Department? Department { get; set; }
+        public CompanyAddress? CompanyAddress { get; set; }
     }
 }

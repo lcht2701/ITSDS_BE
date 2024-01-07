@@ -22,7 +22,5 @@ namespace API.DTOs.Requests.Users
         public string? AvatarUrl { get; set; }
 
         public string? PhoneNumber { get; set; }
-
-        public DateTime? DateOfBirth { get; set; }
     }
 }

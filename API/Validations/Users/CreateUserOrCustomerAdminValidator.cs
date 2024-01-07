@@ -3,11 +3,15 @@ using FluentValidation;
 
 namespace API.Validations.Users
 {
-    public class CreateUserOrCompanyAdminValidator : AbstractValidator<CreateUserOrCompanyAdmin>
+    public class AddCompanyDetailRequestValidator : AbstractValidator<AddCompanyDetailRequest>
     {
-        public CreateUserOrCompanyAdminValidator()
+        public AddCompanyDetailRequestValidator()
         {
             RuleFor(x => x.IsCompanyAdmin)
+                .NotNull();
+            RuleFor(x => x.CompanyAddressId)
+                .NotNull();
+            RuleFor(x => x.CompanyId)
                 .NotNull();
         }
     }

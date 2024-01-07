@@ -39,7 +39,7 @@ public class AttachmentService : IAttachmentService
     public async Task<List<Attachment>> Update(string table, int rowId, List<string> attachments)
     {
         var target = await _repo.WhereAsync(x => x.Table.Equals(table) && x.RowId == rowId);
-        foreach(var entity in target)
+        foreach (var entity in target)
         {
             await _repo.DeleteAsync(entity);
         }

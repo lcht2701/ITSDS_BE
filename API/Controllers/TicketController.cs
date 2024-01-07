@@ -71,16 +71,6 @@ public class TicketController : BaseController
     }
 
     [Authorize]
-    [HttpGet("period")]
-    [SwaggerResponse(200, "Get Period Ticket", typeof(List<GetTicketResponse>))]
-    public async Task<IActionResult> GetPeriodicTickets(int numOfDays)
-    {
-        var response = await _ticketService.GetPeriodicTickets(numOfDays);
-        return Ok(response);
-    }
-
-
-    [Authorize]
     [HttpGet("user/{userId}")]
     [SwaggerResponse(200, "Get Ticket Of User", typeof(List<GetTicketResponse>))]
     public async Task<IActionResult> GetTicketsOfUser(int userId,

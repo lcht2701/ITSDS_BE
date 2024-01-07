@@ -141,110 +141,7 @@ namespace Persistence.Migrations
                     b.ToTable("Companies");
                 });
 
-            modelBuilder.Entity("Domain.Models.Contracts.CompanyMember", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DepartmentId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsCompanyAdmin")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("MemberId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("MemberPosition")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.HasIndex("DepartmentId");
-
-                    b.HasIndex("MemberId");
-
-                    b.ToTable("CompanyMembers");
-                });
-
-            modelBuilder.Entity("Domain.Models.Contracts.Contract", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int?>("AccountantId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CompanyId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool?>("IsRenewed")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ParentContractId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<double?>("Value")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AccountantId");
-
-                    b.HasIndex("CompanyId");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.ToTable("Contracts");
-                });
-
-            modelBuilder.Entity("Domain.Models.Contracts.Department", b =>
+            modelBuilder.Entity("Domain.Models.Contracts.CompanyAddress", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -277,7 +174,107 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedAt");
 
-                    b.ToTable("Departments");
+                    b.ToTable("CompanyAddresses");
+                });
+
+            modelBuilder.Entity("Domain.Models.Contracts.CompanyMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int?>("CompanyAddressId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCompanyAdmin")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MemberPosition")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyAddressId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("MemberId");
+
+                    b.ToTable("CompanyMembers");
+                });
+
+            modelBuilder.Entity("Domain.Models.Contracts.Contract", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ContractNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Value")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.ToTable("Contracts");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Payment", b =>
@@ -288,7 +285,7 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int?>("ContractId")
+                    b.Property<int>("ContractId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -309,7 +306,7 @@ namespace Persistence.Migrations
                     b.Property<double>("InitialPaymentAmount")
                         .HasColumnType("float");
 
-                    b.Property<bool?>("IsFullyPaid")
+                    b.Property<bool>("IsFullyPaid")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("ModifiedAt")
@@ -326,7 +323,8 @@ namespace Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ContractId");
+                    b.HasIndex("ContractId")
+                        .IsUnique();
 
                     b.HasIndex("DeletedAt");
 
@@ -341,19 +339,13 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("AttachmentUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool?>("IsPaid")
+                    b.Property<bool>("IsPaid")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("ModifiedAt")
@@ -362,19 +354,19 @@ namespace Persistence.Migrations
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PaymentId")
+                    b.Property<int>("PaymentId")
                         .HasColumnType("int");
 
-                    b.Property<double?>("TermAmount")
+                    b.Property<double>("TermAmount")
                         .HasColumnType("float");
 
-                    b.Property<DateTime?>("TermEnd")
+                    b.Property<DateTime>("TermEnd")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("TermFinishTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("TermStart")
+                    b.Property<DateTime>("TermStart")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
@@ -384,55 +376,6 @@ namespace Persistence.Migrations
                     b.HasIndex("PaymentId");
 
                     b.ToTable("PaymentTerms");
-                });
-
-            modelBuilder.Entity("Domain.Models.Contracts.Renewal", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int?>("ContractId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("FromDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("RenewedById")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("RenewedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ToDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double?>("Value")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ContractId");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.HasIndex("RenewedById");
-
-                    b.ToTable("Renewals");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Service", b =>
@@ -457,9 +400,6 @@ namespace Persistence.Migrations
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Type")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -489,9 +429,6 @@ namespace Persistence.Migrations
 
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<int?>("Frequency")
-                        .HasColumnType("int");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
@@ -884,9 +821,6 @@ namespace Persistence.Migrations
                     b.Property<string>("ImpactDetail")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsPeriodic")
-                        .HasColumnType("bit");
-
                     b.Property<int?>("ModeId")
                         .HasColumnType("int");
 
@@ -1075,9 +1009,6 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
@@ -1135,18 +1066,29 @@ namespace Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Domain.Models.Contracts.CompanyAddress", b =>
+                {
+                    b.HasOne("Domain.Models.Contracts.Company", "Company")
+                        .WithMany("CompanyAddresses")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("Domain.Models.Contracts.CompanyMember", b =>
                 {
+                    b.HasOne("Domain.Models.Contracts.CompanyAddress", "CompanyAddress")
+                        .WithMany("CompanyMembers")
+                        .HasForeignKey("CompanyAddressId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Domain.Models.Contracts.Company", "Company")
                         .WithMany()
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Domain.Models.Contracts.Department", "Department")
-                        .WithMany("CompanyMembers")
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Models.User", "Member")
                         .WithMany()
@@ -1156,30 +1098,15 @@ namespace Persistence.Migrations
 
                     b.Navigation("Company");
 
-                    b.Navigation("Department");
+                    b.Navigation("CompanyAddress");
 
                     b.Navigation("Member");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Contract", b =>
                 {
-                    b.HasOne("Domain.Models.User", "Accountant")
-                        .WithMany()
-                        .HasForeignKey("AccountantId");
-
                     b.HasOne("Domain.Models.Contracts.Company", "Company")
                         .WithMany("Contracts")
-                        .HasForeignKey("CompanyId");
-
-                    b.Navigation("Accountant");
-
-                    b.Navigation("Company");
-                });
-
-            modelBuilder.Entity("Domain.Models.Contracts.Department", b =>
-                {
-                    b.HasOne("Domain.Models.Contracts.Company", "Company")
-                        .WithMany("Departments")
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1191,7 +1118,9 @@ namespace Persistence.Migrations
                 {
                     b.HasOne("Domain.Models.Contracts.Contract", "Contract")
                         .WithMany("Payments")
-                        .HasForeignKey("ContractId");
+                        .HasForeignKey("ContractId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Contract");
                 });
@@ -1200,24 +1129,11 @@ namespace Persistence.Migrations
                 {
                     b.HasOne("Domain.Models.Contracts.Payment", "Payment")
                         .WithMany("PaymentTerms")
-                        .HasForeignKey("PaymentId");
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Payment");
-                });
-
-            modelBuilder.Entity("Domain.Models.Contracts.Renewal", b =>
-                {
-                    b.HasOne("Domain.Models.Contracts.Contract", "Contract")
-                        .WithMany("Renewals")
-                        .HasForeignKey("ContractId");
-
-                    b.HasOne("Domain.Models.User", "RenewedBy")
-                        .WithMany()
-                        .HasForeignKey("RenewedById");
-
-                    b.Navigation("Contract");
-
-                    b.Navigation("RenewedBy");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Service", b =>
@@ -1434,23 +1350,21 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Models.Contracts.Company", b =>
                 {
-                    b.Navigation("Contracts");
+                    b.Navigation("CompanyAddresses");
 
-                    b.Navigation("Departments");
+                    b.Navigation("Contracts");
+                });
+
+            modelBuilder.Entity("Domain.Models.Contracts.CompanyAddress", b =>
+                {
+                    b.Navigation("CompanyMembers");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Contract", b =>
                 {
                     b.Navigation("Payments");
 
-                    b.Navigation("Renewals");
-
                     b.Navigation("ServiceContracts");
-                });
-
-            modelBuilder.Entity("Domain.Models.Contracts.Department", b =>
-                {
-                    b.Navigation("CompanyMembers");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Payment", b =>

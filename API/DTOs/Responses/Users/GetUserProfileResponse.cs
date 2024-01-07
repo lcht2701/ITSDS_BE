@@ -3,8 +3,6 @@ using API.DTOs.Responses.Teams;
 using API.Mappings;
 using Domain.Constants.Enums;
 using Domain.Models;
-using Domain.Models.Contracts;
-using Domain.Models.Tickets;
 
 namespace API.DTOs.Responses.Users;
 
@@ -18,7 +16,6 @@ public class GetUserProfileResponse : IMapFrom<User>
     public string? Address { get; set; }
     public Gender? Gender { get; set; }
     public Role? Role { get; set; }
-    public DateTime? DateOfBirth { get; set; }
     public string? AvatarUrl { get; set; }
 
     public GetTeamResponse? Team { get; set; }

@@ -34,7 +34,7 @@ public class TicketService : ITicketService
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
     private readonly IRepositoryBase<Team> _teamRepository;
-    private readonly IRepositoryBase<Department> _departmentRepository;
+    private readonly IRepositoryBase<CompanyAddress> _CompanyAddressRepository;
     private readonly IAttachmentService _attachmentService;
     private readonly IMapper _mapper;
     private readonly MailSettings _mailSettings;
@@ -44,7 +44,7 @@ public class TicketService : ITicketService
         IRepositoryBase<Service> serviceRepository, IAuditLogService auditLogService,
         IMessagingService messagingService, IRepositoryBase<TeamMember> teamMemberRepository, IMapper mapper,
         IOptions<MailSettings> mailSettings, IRepositoryBase<Team> teamRepository, IAttachmentService attachmentService,
-        IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<Department> departmentRepository)
+        IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<CompanyAddress> CompanyAddressRepository)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -59,36 +59,13 @@ public class TicketService : ITicketService
         _mailSettings = mailSettings.Value;
         _attachmentService = attachmentService;
         _companyMemberRepository = companyMemberRepository;
-        _departmentRepository = departmentRepository;
+        _CompanyAddressRepository = CompanyAddressRepository;
     }
 
     public async Task<List<GetTicketResponse>> Get()
     {
         var result = await _ticketRepository.GetAsync(navigationProperties: new string[]
             { "Requester", "Service", "Category", "Mode", "CreatedBy" });
-        List<GetTicketResponse> response = await ModifyTicketListResponse(result);
-
-        return response;
-    }
-
-    public async Task<List<GetTicketResponse>> GetPeriodicTickets(int? numOfDays)
-    {
-        var result = await _ticketRepository
-            .GetAsync(navigationProperties: new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" })
-            .ConfigureAwait(false);
-
-        if (numOfDays.HasValue)
-        {
-            result = result
-                .Where(x => x.IsPeriodic && x.ScheduledStartTime!.Value.Date >= DateTime.Today &&
-                            x.ScheduledStartTime!.Value.Date <= DateTime.Today.AddDays((int)numOfDays));
-        }
-        else
-        {
-            result = result
-                .Where(x => x.IsPeriodic && x.ScheduledStartTime!.Value.Date >= DateTime.Today);
-        }
-
         List<GetTicketResponse> response = await ModifyTicketListResponse(result);
 
         return response;
@@ -162,8 +139,7 @@ public class TicketService : ITicketService
         entity.RequesterId = createdById;
         entity.CreatedById = createdById;
         entity.TicketStatus = TicketStatus.Open;
-        entity.IsPeriodic = false;
-        entity.Address = GetDepartmentAddress((int)entity.RequesterId, entity).Result;
+        entity.Address = GetCompanyAddressAddress((int)entity.RequesterId, entity).Result;
         var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
         if (categoryId != null) entity.CategoryId = (int)categoryId;
         var result = await _ticketRepository.CreateAsync(entity);
@@ -172,6 +148,8 @@ public class TicketService : ITicketService
             await _attachmentService.Add(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
         await AssignSupportJob(result);
+        await CreateFirstTask(result);
+        await SendNotificationAfterAssignment(result);
         return result;
     }
 
@@ -179,41 +157,37 @@ public class TicketService : ITicketService
     {
         Ticket entity = _mapper.Map(model, new Ticket());
         entity.CreatedById = createdById;
-        entity.Address = GetDepartmentAddress((int)entity.RequesterId!, entity).Result;
+        entity.Address = GetCompanyAddressAddress((int)entity.RequesterId!, entity).Result;
         var result = await _ticketRepository.CreateAsync(entity);
         if (model.AttachmentUrls != null)
         {
             await _attachmentService.Add(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
 
-        if (model?.TechnicianId != null || model?.TeamId != null)
+        if (model.TechnicianId != null)
         {
-            if (model != null && model.TechnicianId != null && model.TeamId != null)
+            if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
             {
-                if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
-                {
-                    throw new BadRequestException("This technician is not a member of the specified team.");
-                }
-
-                var assignment = new Assignment()
-                {
-                    TicketId = result.Id,
-                    TechnicianId = model.TechnicianId,
-                    TeamId = model.TeamId
-                };
-
-                await _assignmentRepository.CreateAsync(assignment);
-                if (result.TicketStatus == TicketStatus.Open)
-                    await UpdateTicketStatus(result.Id, TicketStatus.Assigned);
-                await CreateFirstTask(result);
-                await SendNotificationAfterAssignment(result);
+                throw new BadRequestException("This technician is not a member of the specified team.");
             }
+
+            var assignment = new Assignment()
+            {
+                TicketId = result.Id,
+                TechnicianId = model.TechnicianId,
+                TeamId = model.TeamId
+            };
+
+            await _assignmentRepository.CreateAsync(assignment);
+            if (result.TicketStatus == TicketStatus.Open)
+                await UpdateTicketStatus(result.Id, TicketStatus.Assigned);
         }
         else
         {
             await AssignSupportJob(result);
         }
-
+        await CreateFirstTask(result);
+        await SendNotificationAfterAssignment(result);
         return result;
     }
 
@@ -533,8 +507,6 @@ public class TicketService : ITicketService
 
             await _assignmentRepository.CreateAsync(assignment);
             await UpdateTicketStatus(ticket.Id, TicketStatus.Assigned);
-            await CreateFirstTask(ticket);
-            await SendNotificationAfterAssignment(ticket);
         }
         else
         {
@@ -751,10 +723,10 @@ public class TicketService : ITicketService
         var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
         return managerIds;
     }
-    private async Task<string> GetDepartmentAddress(int createdById, Ticket entity)
+    private async Task<string> GetCompanyAddressAddress(int createdById, Ticket entity)
     {
         var member = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId == createdById);
-        var department = await _departmentRepository.FirstOrDefaultAsync(x => x.CompanyId == member.CompanyId);
-        return department.Address;
+        var CompanyAddress = await _CompanyAddressRepository.FirstOrDefaultAsync(x => x.CompanyId == member.CompanyId);
+        return CompanyAddress.Address;
     }
 }
