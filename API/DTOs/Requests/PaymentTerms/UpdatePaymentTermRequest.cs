@@ -9,6 +9,6 @@ namespace API.DTOs.Requests.PaymentTerms
 
         public string? Note { get; set; }
 
-        public string? AttachmentUrl { get; set; }
+        public List<string>? AttachmentUrls { get; set; }
     }
 }

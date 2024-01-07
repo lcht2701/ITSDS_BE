@@ -15,8 +15,6 @@ namespace Domain.Models.Contracts
 
         public int? CategoryId { get; set; }
 
-        public string? Type { get; set; }
-
         public virtual Category? Category { get; set; }
 
         [JsonIgnore]

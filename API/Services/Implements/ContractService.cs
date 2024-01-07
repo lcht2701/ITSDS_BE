@@ -60,7 +60,7 @@ public class ContractService : IContractService
     {
         var entity = _mapper.Map(model, new Contract());
         CommonService.SetContractStatus(entity);
-        entity.EndDate = entity.StartDate!.Value.AddMonths(model.Duration);
+        entity.EndDate = entity.StartDate.AddMonths(model.Duration);
         var contract = await _contractRepository.CreateAsync(entity);
         foreach (var serviceId in model.ServiceIds)
         {
@@ -82,7 +82,7 @@ public class ContractService : IContractService
     {
         var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Contract is not exist"));
         Contract entity = _mapper.Map(model, target);
-        entity.EndDate = entity.StartDate!.Value.AddMonths(model.Duration);
+        entity.EndDate = entity.StartDate.AddMonths(model.Duration);
         CommonService.SetContractStatus(entity);
         await _contractRepository.UpdateAsync(entity);
         var contract = await _contractRepository.UpdateAsync(entity);
@@ -115,6 +115,7 @@ public class ContractService : IContractService
 
         return response;
     }
+
     private async Task<CompanyMember> IsCompanyAdmin(int currentUserId)
     {
         var currentUserMember = await _companyMemberRepository

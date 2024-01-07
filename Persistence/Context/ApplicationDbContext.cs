@@ -58,7 +58,11 @@ namespace Persistence.Context
             builder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
-            
+
+            builder.Entity<Payment>()
+                .HasIndex(u => u.ContractId)
+                .IsUnique();
+
             base.OnModelCreating(builder);
 
             foreach (var entityType in builder.Model.GetEntityTypes())

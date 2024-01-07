@@ -14,10 +14,12 @@ namespace API.Controllers;
 public class PaymentController : BaseController
 {
     private readonly IPaymentService _paymentService;
+    private readonly IPaymentTermService _termService;
 
-    public PaymentController(IPaymentService paymentService)
+    public PaymentController(IPaymentService paymentService, IPaymentTermService termService)
     {
         _paymentService = paymentService;
+        _termService = termService;
     }
 
     [Authorize]
@@ -151,20 +153,39 @@ public class PaymentController : BaseController
         }
     }
 
+    //[Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    //[HttpPatch("{id}")]
+    //public async Task<IActionResult> ClosePayment(int id)
+    //{
+    //    try
+    //    {
+    //        await _paymentService.ClosePayment(id);
+    //        return Ok("Payment Closed Successfully");
+    //    }
+    //    catch (KeyNotFoundException ex)
+    //    {
+    //        return NotFound(ex.Message);
+    //    }
+    //    catch (BadRequestException ex)
+    //    {
+    //        return NotFound(ex.Message);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return BadRequest(ex.Message);
+    //    }
+    //}
+
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpPatch("{id}")]
-    public async Task<IActionResult> ClosePayment(int id)
+    [HttpGet("term")]
+    public async Task<IActionResult> GetPaymentTerms(int paymentId)
     {
         try
         {
-            await _paymentService.ClosePayment(id);
-            return Ok("Payment Closed Successfully");
+            var result = await _termService.GetPaymentTerms(paymentId);
+            return Ok(result);
         }
         catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (BadRequestException ex)
         {
             return NotFound(ex.Message);
         }
@@ -175,12 +196,12 @@ public class PaymentController : BaseController
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpGet("term")]
-    public async Task<IActionResult> GetPaymentTerms(int paymentId)
+    [HttpGet("term/{id}")]
+    public async Task<IActionResult> GetPaymentTermById(int id)
     {
         try
         {
-            var result = await _paymentService.GetPaymentTerms(paymentId);
+            var result = await _termService.GetPaymentTermById(id);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -199,7 +220,7 @@ public class PaymentController : BaseController
     {
         try
         {
-            var result = await _paymentService.GeneratePaymentTerms(paymentId);
+            var result = await _termService.GeneratePaymentTerms(paymentId);
             return Ok(new { Message = "Payment Terms Created Successfully", Data = result });
 
         }
@@ -215,7 +236,7 @@ public class PaymentController : BaseController
     {
         try
         {
-            var result = await _paymentService.UpdatePaymentTerm(id, model);
+            var result = await _termService.UpdatePaymentTerm(id, model);
             return Ok(new { Message = "Payment Term Updated Successfully", Data = result });
         }
         catch (KeyNotFoundException ex)
@@ -234,31 +255,12 @@ public class PaymentController : BaseController
     {
         try
         {
-            await _paymentService.RemovePaymentTerm(paymentId);
+            await _termService.RemovePaymentTerm(paymentId);
             return Ok("Payment Terms Removed Successfully");
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpPost("term/send-notification")]
-    public async Task<IActionResult> SendNotification(int id)
-    {
-        try
-        {
-            await _paymentService.SendPaymentNotification(id);
-            return Ok("Payment Term Notification Sent Successfully");
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {

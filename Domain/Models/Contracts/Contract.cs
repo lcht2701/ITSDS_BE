@@ -11,23 +11,23 @@ namespace Domain.Models.Contracts
             Payments = new HashSet<Payment>();
         }
 
-        public string? ContractNumber { get; set; }
+        public string ContractNumber { get; set; }
 
-        public string? Name { get; set; }
+        public string Name { get; set; }
 
         public string? Description { get; set; }
 
         public string? Note { get; set; }
 
-        public double? Value { get; set; }
+        public double Value { get; set; }
 
-        public DateTime? StartDate { get; set; }
+        public DateTime StartDate { get; set; }
 
-        public DateTime? EndDate { get; set; }
+        public DateTime EndDate { get; set; }
 
-        public int? CompanyId { get; set; }
+        public int CompanyId { get; set; }
 
-        public ContractStatus? Status { get; set; }
+        public ContractStatus Status { get; set; }
 
         public virtual Company? Company { get; set; }
 

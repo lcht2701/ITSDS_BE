@@ -121,28 +121,4 @@ public class MessagingService : IMessagingService
             }
         }
     }
-
-    public async Task RemoveOldToken()
-    {
-        var listTokens = await _tokenRepository.ToListAsync();
-
-        foreach (var token in listTokens)
-        {
-            TimeSpan timeDifference;
-            if (token.ModifiedAt != null)
-            {
-                timeDifference = (TimeSpan)(DateTime.UtcNow - token.ModifiedAt);
-            }
-            else
-            {
-                timeDifference = (TimeSpan)(DateTime.UtcNow - token.CreatedAt);
-            }
-
-            // Remove tokens older than 7 days
-            if (timeDifference.TotalDays > 7)
-            {
-                await _tokenRepository.DeleteAsync(token);
-            }
-        }
-    }
 }
