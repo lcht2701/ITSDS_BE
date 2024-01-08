@@ -14,16 +14,13 @@ namespace API.Validations.Payments
             RuleFor(x => x.Description)
                 .MaximumLength(255).WithMessage("Description should not exceed 255 characters.");
 
-            RuleFor(x => x.NumberOfTerms)
-                .NotEmpty().WithMessage("Number Of Terms is required.")
-                .GreaterThan(0).WithMessage("NumberOfTerms should be greater than 0.");
+            RuleFor(x => x.StartDateOfPayment)
+                .NotEmpty().WithMessage("Start Date Of Payment is required.")
+                .GreaterThanOrEqualTo(DateTime.Today).WithMessage("Start Date cannot be in the past");
 
-            RuleFor(x => x.Duration)
+            RuleFor(x => x.DaysAmountForPayment)
                 .NotEmpty().WithMessage("Duration is required.")
                 .GreaterThan(0).WithMessage("Duration should be greater than 0.");
-
-            RuleFor(x => x.InitialPaymentAmount)
-                .GreaterThanOrEqualTo(0).WithMessage("InitialPaymentAmount should be greater than or equal to 0.");
 
             RuleFor(x => x.Note)
                 .MaximumLength(255).WithMessage("Note should not exceed 255 characters.");

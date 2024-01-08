@@ -1,6 +1,5 @@
 ﻿using API.Mappings;
 using Domain.Models.Contracts;
-using System.ComponentModel;
 
 namespace API.DTOs.Requests.Contracts
 {
@@ -20,7 +19,9 @@ namespace API.DTOs.Requests.Contracts
 
         public int CompanyId { get; set; }
 
-        public List<string> AttachmentUrls { get; set; }
+        public List<string>? AttachmentUrls { get; set; }
+
+        public List<int> ServiceIds { get; set; }
 
         public string? Note { get; set; }
     }

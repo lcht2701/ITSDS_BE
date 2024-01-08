@@ -3,6 +3,7 @@ using API.DTOs.Requests.Contracts;
 using API.DTOs.Responses.Contracts;
 using API.Services.Interfaces;
 using Domain.Constants;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
@@ -15,11 +16,15 @@ public class ContractController : BaseController
 {
     private readonly IContractService _contractService;
     private readonly IServiceContractService _serviceContractService;
+    private readonly IAttachmentService _attachmentService;
+    private readonly IPaymentService _paymentService;
 
-    public ContractController(IContractService contractService, IServiceContractService serviceContractService)
+    public ContractController(IContractService contractService, IServiceContractService serviceContractService, IAttachmentService attachmentService, IPaymentService paymentService)
     {
         _contractService = contractService;
         _serviceContractService = serviceContractService;
+        _attachmentService = attachmentService;
+        _paymentService = paymentService;
     }
 
     [Authorize]
@@ -86,8 +91,9 @@ public class ContractController : BaseController
     {
         try
         {
-            var result = await _contractService.Create(model);
-            return Ok(new { Message = "Contract Created Successfully", Data = result });
+            var contract = await _contractService.Create(model);
+            await _serviceContractService.AddAndUpdate(contract.Id, model.ServiceIds);
+            return Ok(new { Message = "Contract Created Successfully", Data = contract });
         }
         catch (Exception ex)
         {
@@ -101,12 +107,17 @@ public class ContractController : BaseController
     {
         try
         {
-            var result = await _contractService.Update(id, model);
-            return Ok(new { Message = "Contract Updated Successfully", Data = result });
+            var contract = await _contractService.Update(id, model);
+            await _serviceContractService.AddAndUpdate(contract.Id, model.ServiceIds);
+            return Ok(new { Message = "Contract Updated Successfully", Data = contract });
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(ex.Message);
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
@@ -120,6 +131,12 @@ public class ContractController : BaseController
     {
         try
         {
+            var payment = await _paymentService.GetByContract(id);
+            //Remove Payment of Contract
+            await _paymentService.Remove(payment.Id);
+            //Remove Services of Contract
+            await _serviceContractService.Remove(id);
+            //Remove Contract
             await _contractService.Remove(id);
             return Ok("Contract Removed Successfully");
         }
@@ -171,38 +188,38 @@ public class ContractController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpPost("services")]
-    public async Task<IActionResult> AddServicesToContract(int contractId, List<int> serviceIds)
-    {
-        try
-        {
-            var result = await _serviceContractService.Add(contractId, serviceIds);
-            return Ok(new { Message = "Services Added To Contract Successfully", Data = result });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
+    //[Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    //[HttpPost("services")]
+    //public async Task<IActionResult> AddServicesToContract(int contractId, List<int> serviceIds)
+    //{
+    //    try
+    //    {
+    //        var result = await _serviceContractService.Add(contractId, serviceIds);
+    //        return Ok(new { Message = "Services Added To Contract Successfully", Data = result });
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return BadRequest(ex.Message);
+    //    }
+    //}
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpDelete("services/{id}")]
-    public async Task<IActionResult> RemoveServiceOfContract(int id)
-    {
-        try
-        {
-            await _serviceContractService.Remove(id);
-            return Ok("Services Removed Successfully");
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
+    //[Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    //[HttpDelete("services/{id}")]
+    //public async Task<IActionResult> RemoveServiceOfContract(int id)
+    //{
+    //    try
+    //    {
+    //        await _serviceContractService.Remove(id);
+    //        return Ok("Services Removed Successfully");
+    //    }
+    //    catch (KeyNotFoundException ex)
+    //    {
+    //        return NotFound(ex.Message);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return BadRequest(ex.Message);
+    //    }
+    //}
 
 }

@@ -15,8 +15,6 @@ public class UpdateCompanyRequest : IMapTo<Company>
 
     public string? Website { get; set; }
 
-    public string? CompanyAddress { get; set; }
-
     public string? LogoUrl { get; set; }
 
     public string? FieldOfBusiness { get; set; }

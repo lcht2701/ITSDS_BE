@@ -57,7 +57,6 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ICompanyMemberService, CompanyMemberService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IPaymentTermService, PaymentTermService>();
 builder.Services.AddScoped<IServiceContractService, ServiceContractService>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
@@ -178,8 +177,6 @@ RecurringJob.AddOrUpdate<IHangfireJobService>("ticket-summary", x => x.TicketSum
     Cron.Daily(8, 0));
 RecurringJob.AddOrUpdate<IHangfireJobService>("update-contract-status", x => x.UpdateStatusOfContract(), "*/5 * * * *");
 RecurringJob.AddOrUpdate<IHangfireJobService>("notify-near-expired-contracts", x => x.NotifyNearExpiredContract(),
-    Cron.Daily(8, 0));
-RecurringJob.AddOrUpdate<IHangfireJobService>("send-mail-payment-term", x => x.SendPaymentTermNotification(3),
     Cron.Daily(8, 0));
 
 app.Run();

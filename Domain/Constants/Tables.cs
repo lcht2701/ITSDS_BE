@@ -6,6 +6,6 @@
         public static string CONTRACT = "Contract";
         public static string TICKETTASK = "Ticket Task";
         public static string TICKETSOLUTION = "Ticket Solution";
-        public static string PAYMENTTERMS = "Payment Term";
+        public static string PAYMENT = "Payment";
     }
 }

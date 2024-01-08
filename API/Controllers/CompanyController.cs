@@ -12,10 +12,12 @@ namespace API.Controllers;
 public class CompanyController : BaseController
 {
     private readonly ICompanyService _companyService;
+    private readonly ICompanyAddressService _companyAddressService;
 
-    public CompanyController(ICompanyService companyService)
+    public CompanyController(ICompanyService companyService, ICompanyAddressService companyAddressService)
     {
         _companyService = companyService;
+        _companyAddressService = companyAddressService;
     }
 
     [Authorize]
@@ -115,6 +117,7 @@ public class CompanyController : BaseController
     {
         try
         {
+            await _companyAddressService.RemoveByCompany(id);
             await _companyService.Remove(id);
             return Ok("Company Removed Successfully");
         }

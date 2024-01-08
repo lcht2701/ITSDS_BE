@@ -19,20 +19,18 @@ public class HangfireJobService : IHangfireJobService
     private readonly IRepositoryBase<Contract> _contractRepository;
     private readonly IRepositoryBase<Company> _companyRepository;
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
-    private readonly IRepositoryBase<PaymentTerm> _termRepository;
     private readonly IRepositoryBase<Payment> _paymentRepository;
     private readonly IRepositoryBase<DeviceToken> _tokenRepository;
     private readonly IMessagingService _messagingService;
     private readonly MailSettings _mailSettings;
 
-    public HangfireJobService(IRepositoryBase<User> userRepository, IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<PaymentTerm> termRepository, IRepositoryBase<Payment> paymentRepository, IRepositoryBase<DeviceToken> tokenRepository, IMessagingService messagingService, IOptions<MailSettings> mailSettings)
+    public HangfireJobService(IRepositoryBase<User> userRepository, IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IRepositoryBase<Payment> paymentRepository, IRepositoryBase<DeviceToken> tokenRepository, IMessagingService messagingService, IOptions<MailSettings> mailSettings)
     {
         _userRepository = userRepository;
         _ticketRepository = ticketRepository;
         _contractRepository = contractRepository;
         _companyRepository = companyRepository;
         _companyMemberRepository = companyMemberRepository;
-        _termRepository = termRepository;
         _paymentRepository = paymentRepository;
         _tokenRepository = tokenRepository;
         _messagingService = messagingService;
@@ -100,7 +98,7 @@ public class HangfireJobService : IHangfireJobService
             {
                 case ContractStatus.Pending:
                     {
-                        if (contract.StartDate >= DateTime.Today)
+                        if (DateTime.Today.Date >= contract.StartDate.Date && DateTime.Today.Date <= contract.EndDate.Date)
                         {
                             contract.Status = ContractStatus.Active;
                             await _contractRepository.UpdateAsync(contract);
@@ -120,7 +118,7 @@ public class HangfireJobService : IHangfireJobService
                 case ContractStatus.Active:
                 case ContractStatus.Inactive:
                     {
-                        if (contract.EndDate >= DateTime.Now)
+                        if (DateTime.Today.Date > contract.EndDate.Date)
                         {
                             contract.Status = ContractStatus.Expired;
                             await _contractRepository.UpdateAsync(contract);
@@ -147,11 +145,7 @@ public class HangfireJobService : IHangfireJobService
         foreach (var contract in contracts)
         {
             var payment = await _paymentRepository.FirstOrDefaultAsync(x => x.ContractId.Equals(contract.Id));
-            var overduePaymentTerms = await _termRepository
-                .WhereAsync(x =>
-                    x.IsPaid == false &&
-                    x.TermEnd == DateTime.Today.AddDays(-overdueDays));
-            if (overduePaymentTerms.Any())
+            if (payment.EndDateOfPayment == DateTime.Today.AddDays(-overdueDays))
             {
                 contract.Status = ContractStatus.Inactive;
                 #region Notify to CompanyAdmins & Managers & Accountants
@@ -259,112 +253,4 @@ public class HangfireJobService : IHangfireJobService
         }
     }
 
-    public async Task SendPaymentTermNotification(double daysBeforeNotification)
-    {
-
-
-        var terms = await _termRepository.WhereAsync(x => x.TermStart == DateTime.Today.AddDays(daysBeforeNotification));
-
-        foreach (var term in terms)
-        {
-            #region GetDetail
-            var payment = await _paymentRepository.FirstOrDefaultAsync(x => x.Id.Equals(term.PaymentId))
-                                  ?? throw new KeyNotFoundException($"Payment with ID {term.PaymentId} is not exist");
-
-            var contract = await _contractRepository.FirstOrDefaultAsync(x => x.Id.Equals(payment.ContractId))
-                           ?? throw new KeyNotFoundException($"Contract with ID {payment.ContractId} is not exist");
-
-            var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id.Equals(contract.CompanyId))
-                          ?? throw new KeyNotFoundException($"Company with ID {contract.CompanyId} is not exist");
-
-            var companyAdminIds = (await _companyMemberRepository.WhereAsync(x => x.CompanyId == company.Id && x.IsCompanyAdmin == true)).Select(x => x.MemberId);
-
-            var companyAdmins = await _userRepository.WhereAsync(x => companyAdminIds.Contains(x.Id))
-                                ?? throw new KeyNotFoundException(
-                                    $"Customer Admin not found for the given termId: {term.Id}");
-
-            #endregion
-            foreach (var companyAdmin in companyAdmins)
-            {
-                using (MimeMessage emailMessage = new MimeMessage())
-                {
-                    MailboxAddress emailFrom = new MailboxAddress(_mailSettings.SenderName, _mailSettings.SenderEmail);
-                    emailMessage.From.Add(emailFrom);
-                    MailboxAddress emailTo = new MailboxAddress($"{companyAdmin.FirstName} {companyAdmin.LastName}",
-                        companyAdmin.Email);
-                    emailMessage.To.Add(emailTo);
-
-                    emailMessage.Subject = "Payment Term Notification";
-                    string emailTemplateText = @"
-<!DOCTYPE html>
-<html lang=""en"" xmlns=""http://www.w3.org/1999/xhtml"">
-<head>
-    <meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />
-    <title>Payment Reminder</title>
-</head>
-<body style=""margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;"">
-    <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0"" style=""margin: 0; padding: 0;"">
-        <tr>
-            <td align=""center"" bgcolor=""#f4f4f4"" style=""padding: 20px 0;"">
-                <table role=""presentation"" width=""600"" cellspacing=""0"" cellpadding=""0"" style=""margin: 0; padding: 0; border: 1px solid #0099ff; border-radius: 10px; overflow: hidden;"">
-                    <tr>
-                        <td align=""center"" bgcolor=""#0099ff"" style=""padding: 40px 0; color: #ffffff; font-size: 28px; font-weight: bold; font-family: Arial, sans-serif;"">
-                            Payment Reminder
-                        </td>
-                    </tr>
-                    <tr>
-                        <td bgcolor=""#ffffff"" style=""padding: 40px 30px; font-family: Arial, sans-serif; font-size: 16px; color: #333;"">
-                            <p>Dear {0},</p>
-                            <p>We would like to remind you about an upcoming payment term that needs to be made. Below are the details:</p>
-                            <table role=""presentation"" width=""100%"" border=""1"" cellspacing=""0"" cellpadding=""10"" style=""margin: 0; padding: 0;"">
-                                <tr>
-                                    <th>Contract</th>
-                                    <th>Amount Due</th>
-                                    <th>Due Date</th>
-                                </tr>
-                                <tr>
-                                    <td>{1}</td>
-                                    <td>{2}</td>
-                                    <td>{3}</td>
-                                </tr>
-                            </table>
-                            <p>Please ensure that the payment is made by the due date to avoid any disruptions to your service.</p>
-                            <p>Thank you for your prompt attention to this matter.</p>
-                            <p>Sincerely,</p>
-                            <p>ITSDS</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td bgcolor=""#0099ff"" style=""padding: 20px 0; font-family: Arial, sans-serif; font-size: 14px; color: #ffffff; text-align: center;"">
-                            &copy; {4} ITSDS. All rights reserved.
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
-";
-                    emailTemplateText = string.Format(emailTemplateText, company.CompanyName, contract.Name, term.TermEnd,
-                        $"{term.TermAmount:N0} VND", DateTime.Now.Year.ToString());
-
-                    BodyBuilder emailBodyBuilder = new BodyBuilder();
-                    emailBodyBuilder.HtmlBody = emailTemplateText;
-                    emailBodyBuilder.TextBody = "Plain Text goes here to avoid marked as spam for some email servers.";
-
-                    emailMessage.Body = emailBodyBuilder.ToMessageBody();
-
-                    using (SmtpClient mailClient = new SmtpClient())
-                    {
-                        await mailClient.ConnectAsync(_mailSettings.Server, _mailSettings.Port,
-                            MailKit.Security.SecureSocketOptions.StartTls);
-                        await mailClient.AuthenticateAsync(_mailSettings.SenderEmail, _mailSettings.Password);
-                        await mailClient.SendAsync(emailMessage);
-                        await mailClient.DisconnectAsync(true);
-                    }
-                }
-            }
-        }
-    }
 }

@@ -4,6 +4,7 @@ using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Constants;
 using Domain.Constants.Enums;
+using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Persistence.Helpers;
@@ -62,40 +63,37 @@ public class ContractService : IContractService
         CommonService.SetContractStatus(entity);
         entity.EndDate = entity.StartDate.AddMonths(model.Duration);
         var contract = await _contractRepository.CreateAsync(entity);
-        foreach (var serviceId in model.ServiceIds)
-        {
-            var newServiceContract = new ServiceContract()
-            {
-                ServiceId = serviceId,
-                ContractId = entity.Id
-            };
-            await _serviceContractRepository.CreateAsync(newServiceContract);
-        }
-        if (model.AttachmentUrls != null)
-        {
-            await _attachmentService.Add(Tables.CONTRACT, contract.Id, model.AttachmentUrls);
-        }
-        return entity;
+        await _attachmentService.Add(Tables.CONTRACT, contract.Id, model.AttachmentUrls);
+        return contract;
     }
 
     public async Task<Contract> Update(int id, UpdateContractRequest model)
     {
         var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Contract is not exist"));
+        if (target.Status != ContractStatus.Pending)
+        {
+            throw new BadRequestException("Contract can only be edited in pending stage");
+        }
+        if (target.Status != ContractStatus.Expired)
+        {
+            throw new BadRequestException("This contract cannot be edited when expired");
+        }
         Contract entity = _mapper.Map(model, target);
         entity.EndDate = entity.StartDate.AddMonths(model.Duration);
         CommonService.SetContractStatus(entity);
-        await _contractRepository.UpdateAsync(entity);
+        var result = await _contractRepository.UpdateAsync(entity);
+        await _attachmentService.Update(Tables.CONTRACT, result.Id, model.AttachmentUrls);
         var contract = await _contractRepository.UpdateAsync(entity);
-        if (model.AttachmentUrls != null)
-        {
-            await _attachmentService.Update(Tables.CONTRACT, contract.Id, model.AttachmentUrls);
-        }
         return entity;
     }
 
     public async Task Remove(int id)
     {
         var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Contract is not exist"));
+        if (target.Status != ContractStatus.Pending)
+        {
+            throw new BadRequestException("Contract can only be removed in pending stage");
+        }
         await _contractRepository.SoftDeleteAsync(target);
         await _attachmentService.Delete(Tables.CONTRACT, target.Id);
         var relatedServices = await _serviceContractRepository.WhereAsync(x => x.ContractId == target.Id);
@@ -112,7 +110,6 @@ public class ContractService : IContractService
         {
             item.AttachmentUrls = (await _attachmentService.Get(Tables.CONTRACT, item.Id)).Select(x => x.Url).ToList();
         }
-
         return response;
     }
 

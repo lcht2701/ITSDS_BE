@@ -5,8 +5,6 @@
         public int TotalContractCount { get; set; }
         public int ContractPaymentDoneCount { get; set; }
         public int ContractPaymentNotDoneCount { get; set; }
-        public int ContractTermDoneCount { get; set; }
-        public int ContractTermNotDoneCount { get; set; }
     }
 
     public class AccountantContractDashboard

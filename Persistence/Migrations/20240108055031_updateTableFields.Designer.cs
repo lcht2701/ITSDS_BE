@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,10 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240108055031_updateTableFields")]
+    partial class updateTableFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,7 +84,7 @@ namespace Persistence.Migrations
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -299,8 +301,14 @@ namespace Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("EndDateOfPayment")
+                    b.Property<int>("Duration")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FirstDateOfPayment")
                         .HasColumnType("datetime2");
+
+                    b.Property<double>("InitialPaymentAmount")
+                        .HasColumnType("float");
 
                     b.Property<bool>("IsFullyPaid")
                         .HasColumnType("bit");
@@ -308,13 +316,10 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Note")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("NumberOfTerms")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("PaymentFinishTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("StartDateOfPayment")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
@@ -325,6 +330,53 @@ namespace Persistence.Migrations
                     b.HasIndex("DeletedAt");
 
                     b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("Domain.Models.Contracts.PaymentTerm", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PaymentId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("TermAmount")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("TermEnd")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("TermFinishTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("TermStart")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("PaymentId");
+
+                    b.ToTable("PaymentTerms");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Service", b =>
@@ -1005,7 +1057,9 @@ namespace Persistence.Migrations
                 {
                     b.HasOne("Domain.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -1067,6 +1121,17 @@ namespace Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Contract");
+                });
+
+            modelBuilder.Entity("Domain.Models.Contracts.PaymentTerm", b =>
+                {
+                    b.HasOne("Domain.Models.Contracts.Payment", "Payment")
+                        .WithMany("PaymentTerms")
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Service", b =>
@@ -1304,6 +1369,11 @@ namespace Persistence.Migrations
                     b.Navigation("Payments");
 
                     b.Navigation("ServiceContracts");
+                });
+
+            modelBuilder.Entity("Domain.Models.Contracts.Payment", b =>
+                {
+                    b.Navigation("PaymentTerms");
                 });
 
             modelBuilder.Entity("Domain.Models.Contracts.Service", b =>

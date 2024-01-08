@@ -10,5 +10,6 @@ namespace API.Services.Interfaces
         Task<CompanyAddress> Create(int companyId, CreateCompanyAddressRequest model);
         Task<CompanyAddress> Update(int id, UpdateCompanyAddressRequest model);
         Task Remove(int id);
+        Task RemoveByCompany(int companyId);
     }
 }
