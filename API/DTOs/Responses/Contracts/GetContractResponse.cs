@@ -24,8 +24,6 @@ namespace API.DTOs.Responses.Contracts
 
         public List<string>? AttachmentUrls { get; set; }
 
-        public string? Note { get; set; }
-
         public ContractStatus? Status { get; set; }
 
         public virtual Company? Company { get; set; }

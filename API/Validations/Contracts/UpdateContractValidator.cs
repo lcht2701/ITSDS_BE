@@ -28,9 +28,6 @@ namespace API.Validations.Contracts
 
             RuleFor(x => x.CompanyId)
                 .GreaterThan(0).WithMessage("Invalid Company");
-
-            RuleFor(x => x.Note)
-                .MaximumLength(1000).WithMessage("Note should not exceed 1000 characters.");
         }
     }
 }

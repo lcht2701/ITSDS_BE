@@ -17,8 +17,6 @@ namespace Domain.Models.Contracts
 
         public string? Description { get; set; }
 
-        public string? Note { get; set; }
-
         public double Value { get; set; }
 
         public DateTime StartDate { get; set; }
