@@ -41,6 +41,26 @@ public class TicketSolutionController : BaseController
         }
     }
 
+    [Authorize(Roles = Roles.MANAGER)]
+    [HttpGet("unapproved")]
+    public async Task<IActionResult> GetUnapprovedSolutions(
+        [FromQuery] string? filter,
+        [FromQuery] string? sort,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
+    {
+        try
+        {
+            var result = await _ticketSolutionService.GetUnapprovedSolutions(CurrentUserID);
+            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+            return Ok(pagedResponse);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN},{Roles.CUSTOMER}")]
     [HttpGet("all")]
     public async Task<IActionResult> GetAllSolutions()
@@ -122,29 +142,6 @@ public class TicketSolutionController : BaseController
         {
             await _ticketSolutionService.Remove(solutionId, CurrentUserID);
             return Ok("Deleted Successfully");
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound("Solution is not exist");
-        }
-        catch (BadRequestException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
-    [HttpPatch("change-public")]
-    public async Task<IActionResult> ChangePublic(int solutionId)
-    {
-        try
-        {
-            await _ticketSolutionService.ChangePublic(solutionId, CurrentUserID);
-            return Ok("Updated Successfully");
         }
         catch (KeyNotFoundException)
         {

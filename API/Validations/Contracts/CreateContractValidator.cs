@@ -29,9 +29,6 @@ namespace API.Validations.Contracts
                 .NotEmpty().WithMessage("Company is required.")
                 .GreaterThan(0).WithMessage("Invalid Company");
 
-            RuleFor(x => x.AttachmentUrls)
-                .NotNull().WithMessage("AttachmentUrls cannot be null.");
-
             RuleFor(x => x.ServiceIds)
                 .NotNull().WithMessage("ServiceIds cannot be null.")
                 .Must(x => x.Count > 0).WithMessage("At least one ServiceId is required.");

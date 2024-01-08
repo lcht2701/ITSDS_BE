@@ -5,18 +5,17 @@ namespace API.DTOs.Requests.Payments
 {
     public class CreatePaymentRequest : IMapTo<Payment>
     {
-        public int? ContractId { get; set; }
+        public int ContractId { get; set; }
 
         public string? Description { get; set; }
 
-        public int NumberOfTerms { get; set; }
+        public DateTime StartDateOfPayment { get; set; }
 
-        public DateTime FirstDateOfPayment { get; set; }
-
-        public int Duration { get; set; }
-
-        public double InitialPaymentAmount { get; set; }
+        public int DaysAmountForPayment { get; set; }
 
         public string? Note { get; set; }
+
+        public List<string>? AttachmentUrls { get; set; }
     }
 }
+

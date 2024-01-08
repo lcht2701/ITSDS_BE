@@ -1,7 +1,6 @@
 ﻿using API.Mappings;
 using Domain.Models.Tickets;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs.Requests.Feedbacks;
 

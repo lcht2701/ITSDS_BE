@@ -10,15 +10,15 @@ namespace Domain.Models
 
         public int? UserId { get; set; }
 
-        public string? EntityName { get; set; }
+        public string EntityName { get; set; }
 
-        public int? EntityRowId { get; set; }
+        public int EntityRowId { get; set; }
 
-        public string? Action { get; set; }
+        public string Action { get; set; }
 
         public string? Message { get; set; }
 
-        public DateTime? Timestamp { get; set; }
+        public DateTime Timestamp { get; set; }
 
         public virtual User? User { get; set; }
 

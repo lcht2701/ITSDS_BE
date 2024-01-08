@@ -19,7 +19,7 @@ namespace API.DTOs.Requests.Contracts
 
         public int CompanyId { get; set; }
 
-        public List<string> AttachmentUrls { get; set; }
+        public List<string>? AttachmentUrls { get; set; }
 
         public List<int> ServiceIds { get; set; }
 

@@ -28,11 +28,10 @@ public class DashboardService : IDashboardService
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IRepositoryBase<Contract> _contractRepository;
     private readonly IRepositoryBase<Payment> _paymentRepository;
-    private readonly IRepositoryBase<PaymentTerm> _termRepository;
     private readonly IRepositoryBase<TicketSolution> _solutionRepository;
     private readonly IMapper _mapper;
 
-    public DashboardService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<Category> categoryRepository, IRepositoryBase<Mode> modeRepository, IRepositoryBase<Service> serviceRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Payment> paymentRepository, IRepositoryBase<PaymentTerm> termRepository, IRepositoryBase<TicketSolution> solutionRepository, IMapper mapper)
+    public DashboardService(IRepositoryBase<Ticket> ticketRepository, IRepositoryBase<Assignment> assignmentRepository, IRepositoryBase<Category> categoryRepository, IRepositoryBase<Mode> modeRepository, IRepositoryBase<Service> serviceRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<Contract> contractRepository, IRepositoryBase<Payment> paymentRepository, IRepositoryBase<TicketSolution> solutionRepository, IMapper mapper)
     {
         _ticketRepository = ticketRepository;
         _assignmentRepository = assignmentRepository;
@@ -44,7 +43,6 @@ public class DashboardService : IDashboardService
         _teamMemberRepository = teamMemberRepository;
         _contractRepository = contractRepository;
         _paymentRepository = paymentRepository;
-        _termRepository = termRepository;
         _solutionRepository = solutionRepository;
         _mapper = mapper;
     }
@@ -307,12 +305,12 @@ public class DashboardService : IDashboardService
         var allWeeks = Enumerable.Range(1, 5);
         var resultWithAllWeeks = allWeeks
             .Select(week => ticketTotalsByWeek.FirstOrDefault(r => r.LineName == $"Week {week}") ?? new DashboardTableRow
-                    {
-                        LineName = $"Week {week}",
-                        OnGoingTicketsCount = 0,
-                        ClosedTicketsCount = 0,
-                        CancelledTicketsCount = 0
-                })
+            {
+                LineName = $"Week {week}",
+                OnGoingTicketsCount = 0,
+                ClosedTicketsCount = 0,
+                CancelledTicketsCount = 0
+            })
             .ToList();
 
         return resultWithAllWeeks;
@@ -441,14 +439,11 @@ public class DashboardService : IDashboardService
     {
         var contracts = await _contractRepository.ToListAsync();
         var payments = await _paymentRepository.WhereAsync(x => contracts.Select(x => x.Id).Contains((int)x.ContractId!));
-        var terms = await _termRepository.WhereAsync(x => payments.Select(x => x.Id).Contains((int)x.PaymentId!));
         AccountantDashboard dashboard = new()
         {
             TotalContractCount = contracts.Count,
             ContractPaymentDoneCount = payments.Where(x => x.IsFullyPaid == true).Count(),
             ContractPaymentNotDoneCount = payments.Where(x => x.IsFullyPaid == false).Count(),
-            ContractTermDoneCount = terms.Where(x => x.IsPaid == true).Count(),
-            ContractTermNotDoneCount = terms.Where(x => x.IsPaid == false).Count(),
         };
         return dashboard;
     }
@@ -490,7 +485,12 @@ public class DashboardService : IDashboardService
         data.TotalTicketOfDay = (await _ticketRepository.WhereAsync(x => x.CreatedAt >= today && x.CreatedAt < tomorrow)).Count;
         data.TotalContractOfDay = (await _contractRepository.WhereAsync(x => x.CreatedAt >= today && x.CreatedAt < tomorrow)).Count;
         data.TotalSolutionOfDay = (await _solutionRepository.WhereAsync(x => x.CreatedAt >= today && x.CreatedAt < tomorrow)).Count;
-        data.TotalPaymentOfDay = (await _termRepository.WhereAsync(x => x.IsPaid == true && x.CreatedAt.Value.Date == DateTime.Today)).Sum(x => x.TermAmount);
+        data.TotalPaymentOfDay = (await _paymentRepository
+            .WhereAsync(x => 
+                x.IsFullyPaid == true && 
+                x.CreatedAt!.Value.Date == DateTime.Today, 
+                new string[] { "Contract" }))
+            .Sum(x => x.Contract!.Value);
         return data;
     }
 

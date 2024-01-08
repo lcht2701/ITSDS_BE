@@ -7,6 +7,4 @@ public interface IHangfireJobService
     Task UpdateStatusOfContract();
     Task UpdateStatusOfOverduePaymentContract(double overdueDays);
     Task NotifyNearExpiredContract();
-    Task SendPaymentTermNotification(double daysBeforeNotification);
-
 }

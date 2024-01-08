@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Requests.Companies;
+using API.DTOs.Responses.Companies;
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Models.Contracts;
@@ -10,34 +11,43 @@ namespace API.Services.Implements;
 public class CompanyService : ICompanyService
 {
     private readonly IRepositoryBase<Company> _companyRepository;
+    private readonly IRepositoryBase<CompanyAddress> _companyAddressRepository;
     private readonly ICacheService _cacheService;
     private readonly IMapper _mapper;
 
-    public CompanyService(IRepositoryBase<Company> companyRepository, ICacheService cacheService, IMapper mapper)
+    public CompanyService(IRepositoryBase<Company> companyRepository, IRepositoryBase<CompanyAddress> companyAddressRepository, ICacheService cacheService, IMapper mapper)
     {
         _companyRepository = companyRepository;
+        _companyAddressRepository = companyAddressRepository;
         _cacheService = cacheService;
         _mapper = mapper;
     }
 
-    public async Task<List<Company>> Get()
+    public async Task<List<GetCompanyResponse>> Get()
     {
-        var cacheData = _cacheService.GetData<List<Company>>("companies");
+        var cacheData = _cacheService.GetData<List<GetCompanyResponse>>("companies");
         if (cacheData == null || !cacheData.Any())
         {
-            cacheData = await _companyRepository.ToListAsync();
+            var companyList = await _companyRepository.ToListAsync();
+            cacheData = _mapper.Map(companyList, new List<GetCompanyResponse>());
+            foreach (var data in cacheData)
+            {
+                data.Addresses = (await _companyAddressRepository.WhereAsync(x => x.CompanyId == data.Id)).ToList();
+            }
             var expiryTime = DateTimeOffset.Now.AddSeconds(30);
             _cacheService.SetData("companies", cacheData, expiryTime);
         }
         return cacheData;
     }
 
-    public async Task<Company> GetById(int id)
+    public async Task<GetCompanyResponse> GetById(int id)
     {
-        var cacheData = _cacheService.GetData<Company>($"company-{id}");
+        var cacheData = _cacheService.GetData<GetCompanyResponse>($"company-{id}");
         if (cacheData == null)
         {
-            cacheData = await _companyRepository.FoundOrThrow(x => x.Id.Equals(id), new KeyNotFoundException("Company is not exist"));
+            var company = await _companyRepository.FoundOrThrow(x => x.Id.Equals(id), new KeyNotFoundException("Company is not exist"));
+            cacheData = _mapper.Map(company, new GetCompanyResponse());
+            cacheData.Addresses = (await _companyAddressRepository.WhereAsync(x => x.CompanyId == company.Id)).ToList();
             var expiryTime = DateTimeOffset.Now.AddSeconds(30);
             _cacheService.SetData($"company-{cacheData.Id}", cacheData, expiryTime);
         }
@@ -81,5 +91,5 @@ public class CompanyService : ICompanyService
         var cacheList = await _companyRepository.ToListAsync();
         _cacheService.SetData("companies", cacheList, expiryTime);
         #endregion
-    }   
+    }
 }

@@ -19,9 +19,10 @@ public class AttachmentService : IAttachmentService
         return result.ToList();
     }
 
-    public async Task<List<Attachment>> Add(string table, int rowId, List<string> attachments)
+    public async Task<List<Attachment>> Add(string table, int rowId, List<string>? attachments)
     {
         List<Attachment> newList = new();
+        if (attachments == null) return newList;
         foreach (var attachment in attachments)
         {
             Attachment newAttachment = new Attachment()
@@ -36,7 +37,7 @@ public class AttachmentService : IAttachmentService
         return newList;
     }
 
-    public async Task<List<Attachment>> Update(string table, int rowId, List<string> attachments)
+    public async Task<List<Attachment>> Update(string table, int rowId, List<string>? attachments)
     {
         var target = await _repo.WhereAsync(x => x.Table.Equals(table) && x.RowId == rowId);
         foreach (var entity in target)
@@ -45,6 +46,8 @@ public class AttachmentService : IAttachmentService
         }
 
         List<Attachment> newList = new();
+        if (attachments == null) return newList;
+
         foreach (var attachment in attachments)
         {
             Attachment newAttachment = new Attachment()

@@ -1,12 +1,8 @@
-﻿using API.DTOs.Requests.ServiceContracts;
-using API.Services.Interfaces;
+﻿using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Constants.Enums;
-using Domain.Models;
 using Domain.Models.Contracts;
-using Domain.Models.Tickets;
 using Persistence.Repositories.Interfaces;
-using System.Linq;
 
 namespace API.Services.Implements;
 
@@ -29,7 +25,7 @@ public class ServiceContractService : IServiceContractService
 
     public async Task<List<ServiceContract>> Get(int contractId)
     {
-        return (await _repo.WhereAsync(x => x.ContractId.Equals(contractId), new string[] {  "Service" })).ToList();
+        return (await _repo.WhereAsync(x => x.ContractId.Equals(contractId), new string[] { "Service" })).ToList();
     }
 
     public async Task<List<Service>> GetServicesList(int contractId)
@@ -45,8 +41,8 @@ public class ServiceContractService : IServiceContractService
 
         //Get Active Contracts Of Company
         var contractIds = (await _contractRepo
-            .WhereAsync(x => 
-                x.CompanyId.Equals(companyMember.CompanyId) && 
+            .WhereAsync(x =>
+                x.CompanyId.Equals(companyMember.CompanyId) &&
                 x.Status == ContractStatus.Active))
             .Select(x => x.Id)
             .ToList();
@@ -76,68 +72,54 @@ public class ServiceContractService : IServiceContractService
 
     public async Task<ServiceContract> GetById(int id)
     {
-        var result = await _repo.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] {  "Service" }) ?? throw new KeyNotFoundException("Service is not exist in the contract");
+        var result = await _repo.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Service" }) ?? throw new KeyNotFoundException("Service is not exist in the contract");
         return result;
     }
 
-    public async Task<List<ServiceContract>> Add(int contractId, List<int> serviceIds)
+    public async Task<List<ServiceContract>> AddAndUpdate(int contractId, List<int> serviceIds)
     {
         List<ServiceContract> result = new();
-        foreach (var serviceId in serviceIds)
-        {
-            result.Add(new ServiceContract()
-            {
-                ContractId = contractId,
-                ServiceId = serviceId
-            });
-        }
-        await _repo.CreateAsync(result);
-        return result;
-    }
+        var existingServices = await _repo.WhereAsync(x => x.ContractId.Equals(contractId));
+        var existingServiceIds = existingServices.Select(x => x.ServiceId);
 
-    public async Task<List<ServiceContract>> ModifyServices(ModifyServicesInContract model)
-    {
-        List<ServiceContract> result = new();
-        var relatedServices = await _repo.GetAsync(x => x.ContractId.Equals(model.ContractId));
-        if (relatedServices == null)
+        if (serviceIds.Any())
         {
-            foreach (var serviceId in model.ServiceIds!)
-            {
-                result.Add(new ServiceContract()
-                {
-                    ContractId = model.ContractId,
-                    ServiceId = serviceId
-                });
-            }
-        }
-        else
-        {
-            var existingServiceIds = relatedServices.Select(x => (int)x.ServiceId!);
-            // Remove services that are no longer associated with the contract
-            var servicesToRemove = relatedServices.Where(rs => !model.ServiceIds!.Contains((int)rs.ServiceId!)).ToList();
+            var servicesToRemove = existingServices.Where(rs => !serviceIds.Contains(rs.ServiceId)).ToList();
             foreach (var serviceToRemove in servicesToRemove)
             {
                 await _repo.DeleteAsync(serviceToRemove);
             }
 
-            // Add new services that are not in the existing list
-            var servicesToAdd = model.ServiceIds!.Except(existingServiceIds).ToList();
-            foreach (var serviceId in servicesToAdd)
+            //Add services
+            var serviceIdsToAdd = serviceIds.Except(existingServiceIds).ToList();
+            foreach (var serviceId in serviceIdsToAdd)
             {
                 result.Add(new ServiceContract()
                 {
-                    ContractId = model.ContractId,
+                    ContractId = contractId,
                     ServiceId = serviceId
                 });
             }
+            await _repo.CreateAsync(result);
         }
-        await _repo.CreateAsync(result);
+        else
+        {
+
+            // Remove services that are no longer associated with the contract
+            foreach (var serviceToRemove in existingServices)
+            {
+                await _repo.DeleteAsync(serviceToRemove);
+            }
+        }
         return result;
     }
 
-    public async Task Remove(int id)
+    public async Task Remove(int contractId)
     {
-        var target = await _repo.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Service is not exist in the contract");
-        await _repo.DeleteAsync(target);
+        var target = await _repo.WhereAsync(x => x.ContractId.Equals(contractId)) ?? throw new KeyNotFoundException("Contract is not found");
+        foreach (var entity in target)
+        {
+            await _repo.DeleteAsync(entity);
+        }
     }
 }
