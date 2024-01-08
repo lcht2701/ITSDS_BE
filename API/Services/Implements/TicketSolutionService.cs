@@ -47,8 +47,39 @@ public class TicketSolutionService : ITicketSolutionService
 
         if (user.Role == Role.Customer)
         {
-            result = result.Where(x => x.IsPublic == true && x.IsApproved == true);
+            result = result.Where(x => x.IsApproved == true);
         }
+
+        List<GetTicketSolutionResponse> response = new();
+        foreach (var item in result)
+        {
+            var entity = _mapper.Map<GetTicketSolutionResponse>(item);
+            DataResponse.CleanNullableDateTime(entity);
+            //logic reaction
+            entity.CountLike = (await _reactRepository.WhereAsync(x => x.SolutionId == entity.Id && x.ReactionType == 0)).Count;
+            entity.CountDislike = (await _reactRepository.WhereAsync(x => x.SolutionId == entity.Id && x.ReactionType == 1)).Count;
+            var currentReactionUser = await _reactRepository.FirstOrDefaultAsync(x => x.SolutionId == entity.Id && x.UserId == userId);
+            if (currentReactionUser == null)
+            {
+                entity.CurrentReactionUser = null;
+            }
+            else
+            {
+                entity.CurrentReactionUser = currentReactionUser.ReactionType;
+            }
+            //done logic
+            entity.AttachmentUrls = (await _attachmentService.Get(Tables.TICKETSOLUTION, entity.Id)).Select(x => x.Url).ToList();
+            response.Add(entity);
+        }
+
+        return response;
+    }
+
+    public async Task<List<GetTicketSolutionResponse>> GetUnapprovedSolutions(int userId)
+    {
+        var result = await _solutionRepository
+            .WhereAsync(x => x.IsApproved == false,
+                new string[] { "Category", "Owner", "CreatedBy" });
 
         List<GetTicketSolutionResponse> response = new();
         foreach (var item in result)
@@ -218,15 +249,6 @@ public class TicketSolutionService : ITicketSolutionService
                 await mailClient.DisconnectAsync(true);
             }
         }
-    }
-
-    public async Task ChangePublic(int solutionId, int userId)
-    {
-        var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ??
-                     throw new KeyNotFoundException();
-        await IsTechnicianTheCreator(target, userId);
-        target.IsPublic = !target.IsPublic;
-        await _solutionRepository.UpdateAsync(target);
     }
 
     private async Task IsTechnicianTheCreator(TicketSolution solution, int userId)

@@ -28,8 +28,6 @@ namespace Domain.Models.Tickets
 
         public bool IsApproved { get; set; }
 
-        public bool IsPublic { get; set; }
-
         public virtual User? Owner { get; set; }
 
         public virtual User? CreatedBy { get; set; }

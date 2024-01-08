@@ -28,8 +28,6 @@ public class GetTicketSolutionResponse : IMapFrom<TicketSolution>
 
     public bool? IsApproved { get; set; }
 
-    public bool? IsPublic { get; set; }
-
     public int? CountLike { get; set; }
 
     public int? CountDislike { get; set; }

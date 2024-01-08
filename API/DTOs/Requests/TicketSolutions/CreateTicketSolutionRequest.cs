@@ -21,8 +21,6 @@ namespace API.DTOs.Requests.TicketSolutions
 
         public string? Keyword { get; set; }
 
-        public bool? IsPublic { get; set; }
-
         public List<string>? AttachmentUrls { get; set; }
     }
 }
