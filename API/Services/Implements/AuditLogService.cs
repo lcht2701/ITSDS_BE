@@ -7,7 +7,7 @@ using Persistence.Context;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
 using System.Reflection;
-using static Domain.Customs.CustomAttributes;
+using static Domain.Entities.Customs.CustomAttributes;
 
 namespace API.Services.Implements;
 

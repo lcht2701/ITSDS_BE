@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
 
-namespace Domain.Customs
+namespace Domain.Entities.Customs
 {
     public class ResponseObject<T>
     {
