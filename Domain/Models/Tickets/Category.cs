@@ -19,7 +19,6 @@ namespace Domain.Models.Tickets
 
         [JsonIgnore]
         public virtual ICollection<Team>? Teams { get; set; }
-
         [JsonIgnore]
         public virtual ICollection<Service>? Services { get; set; }
         [JsonIgnore]

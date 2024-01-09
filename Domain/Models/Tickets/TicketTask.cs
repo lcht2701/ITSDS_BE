@@ -24,7 +24,7 @@ public partial class TicketTask : BaseEntity
 
     public DateTime? ActualEndTime { get; set; }
 
-    public int? Progress { get; set; }
+    public int Progress { get; set; }
 
     public TicketTaskStatus? TaskStatus { get; set; }
 

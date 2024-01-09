@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Domain.Models.Tickets;
+﻿namespace Domain.Models.Tickets;
 
 public partial class Assignment : BaseEntity
 {

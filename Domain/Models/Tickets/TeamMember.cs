@@ -2,9 +2,9 @@
 {
     public partial class TeamMember : BaseEntity
     {
-        public int? MemberId { get; set; }
+        public int MemberId { get; set; }
 
-        public int? TeamId { get; set; }
+        public int TeamId { get; set; }
 
         public string? Expertises { get; set; }
 
