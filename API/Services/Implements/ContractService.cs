@@ -70,13 +70,13 @@ public class ContractService : IContractService
     public async Task<Contract> Update(int id, UpdateContractRequest model)
     {
         var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Contract is not exist"));
+        if (target.Status == ContractStatus.Expired)
+        {
+            throw new BadRequestException("This contract cannot be edited when expired");
+        }
         if (target.Status != ContractStatus.Pending)
         {
             throw new BadRequestException("Contract can only be edited in pending stage");
-        }
-        if (target.Status != ContractStatus.Expired)
-        {
-            throw new BadRequestException("This contract cannot be edited when expired");
         }
         Contract entity = _mapper.Map(model, target);
         entity.EndDate = entity.StartDate.AddMonths(model.Duration);

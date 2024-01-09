@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using static Domain.Customs.CustomAttributes;
+using static Domain.Entities.Customs.CustomAttributes;
 
 namespace Domain.Models;
 

@@ -2,7 +2,6 @@
 using API.DTOs.Responses.Auths;
 using API.Services.Interfaces;
 using AutoMapper;
-using Domain.Application.AppConfig;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
@@ -22,6 +21,7 @@ using Domain.Models.Contracts;
 using Hangfire;
 using Domain.Models.Tickets;
 using Persistence.Helpers;
+using Domain.Entities.Mails;
 
 namespace API.Services.Implements;
 

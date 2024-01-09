@@ -1,7 +1,7 @@
 ﻿using Domain.Constants.Enums;
 using Domain.Models.Contracts;
 using System.Text.Json.Serialization;
-using static Domain.Customs.CustomAttributes;
+using static Domain.Entities.Customs.CustomAttributes;
 
 namespace Domain.Models.Tickets;
 

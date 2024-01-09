@@ -1,6 +1,6 @@
 ﻿using API.Services.Interfaces;
-using Domain.Application.AppConfig;
 using Domain.Constants.Enums;
+using Domain.Entities.Mails;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Domain.Models.Tickets;

@@ -2,7 +2,7 @@ using API.Configurations;
 using API.Services.Implements;
 using API.Services.Interfaces;
 using API.Utils;
-using Domain.Application.AppConfig;
+using Domain.Entities.Mails;
 using FirebaseAdmin;
 using FluentValidation.AspNetCore;
 using Google.Apis.Auth.OAuth2;
