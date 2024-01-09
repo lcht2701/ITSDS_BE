@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Application.AppConfig
+namespace Domain.Entities.Mails
 {
     public class MailSettings
     {

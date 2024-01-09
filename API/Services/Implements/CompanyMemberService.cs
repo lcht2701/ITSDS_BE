@@ -1,7 +1,6 @@
 ﻿using API.DTOs.Requests.CompanyMembers;
 using API.Services.Interfaces;
 using AutoMapper;
-using Domain.Application.AppConfig;
 using Domain.Constants.Enums;
 using Domain.Models;
 using Domain.Models.Contracts;

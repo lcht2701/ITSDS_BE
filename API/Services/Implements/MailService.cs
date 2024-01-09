@@ -1,5 +1,4 @@
 ﻿using API.Services.Interfaces;
-using Domain.Application.AppConfig;
 using Domain.Entities.Mails;
 using MailKit.Net.Smtp;
 using MailKit.Security;

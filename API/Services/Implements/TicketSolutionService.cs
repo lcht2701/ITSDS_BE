@@ -2,9 +2,9 @@
 using API.DTOs.Responses.TicketSolutions;
 using API.Services.Interfaces;
 using AutoMapper;
-using Domain.Application.AppConfig;
 using Domain.Constants;
 using Domain.Constants.Enums;
+using Domain.Entities.Mails;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
