@@ -2,6 +2,7 @@
 using API.Services.Interfaces;
 using AutoMapper;
 using Domain.Constants.Enums;
+using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Hangfire;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using static Grpc.Core.Metadata;
 
 namespace API.Services.Implements;
 
@@ -82,6 +84,11 @@ public class CompanyMemberService : ICompanyMemberService
     {
         CompanyMember currentUserMember = await IsCompanyAdmin(currentUserId);
         var userAccount = _mapper.Map(model.User, new User());
+        var checkMailDuplicated = await _userRepository.FirstOrDefaultAsync(x => x.Email == userAccount.Email);
+        if (checkMailDuplicated != null)
+        {
+            throw new BadRequestException("Email is exist. Please use a different email address to create user.");
+        }
 
         //Default when create new account
         userAccount.Role = Role.Customer;

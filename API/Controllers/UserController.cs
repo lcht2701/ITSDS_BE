@@ -2,6 +2,7 @@ using API.DTOs.Requests.Users;
 using API.DTOs.Responses.Users;
 using API.Services.Interfaces;
 using Domain.Constants;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Helpers;
@@ -178,6 +179,10 @@ public class UserController : BaseController
             var user = await _userService.Create(model);
             return Ok("Created Successfully");
         }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
+        }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);
@@ -196,6 +201,10 @@ public class UserController : BaseController
         catch (KeyNotFoundException ex)
         {
             return NotFound(ex.Message);
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {

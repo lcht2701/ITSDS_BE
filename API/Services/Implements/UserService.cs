@@ -13,6 +13,7 @@ using Hangfire;
 using Microsoft.AspNetCore.Identity;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
+using static Grpc.Core.Metadata;
 
 namespace API.Services.Implements;
 
@@ -83,6 +84,11 @@ public class UserService : IUserService
     public async Task<User> Create(CreateUserRequest model)
     {
         User entity = _mapper.Map(model, new User());
+        var checkMailDuplicated = await _userRepository.FirstOrDefaultAsync(x => x.Email == entity.Email);
+        if (checkMailDuplicated != null)
+        {
+            throw new BadRequestException("Email is exist. Please use a different email address to create user.");
+        }
         var passwordHasher = new PasswordHasher<User>();
         var generatedPassword = CommonService.CreateRandomPassword();
         entity.Password = passwordHasher.HashPassword(entity, generatedPassword);
@@ -110,6 +116,11 @@ public class UserService : IUserService
 
     public async Task<User> Update(int id, UpdateUserRequest model)
     {
+        var checkMailDuplicated = await _userRepository.FirstOrDefaultAsync(x => x.Email == model.Email);
+        if (checkMailDuplicated != null)
+        {
+            throw new BadRequestException("Email is exist. Please use a different email address to create user.");
+        }
         var target =
             await _userRepository.FoundOrThrow(c => c.Id.Equals(id),
             new KeyNotFoundException("User is not exist"));
