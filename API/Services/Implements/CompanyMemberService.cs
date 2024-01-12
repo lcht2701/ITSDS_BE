@@ -129,9 +129,9 @@ public class CompanyMemberService : ICompanyMemberService
         CompanyMember currentUserMember = await IsCompanyAdmin(currentUserId);
         var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("Member is not exist");
         var userAccount = await _userRepository.FirstOrDefaultAsync(x => x.Id == currentUserId);
+        await _companyMemberRepository.DeleteAsync(companyMember);
         await _userRepository.DeleteAsync(userAccount);
         await _firebaseService.RemoveFirebaseAccount(userAccount.Id);
-        await _companyMemberRepository.DeleteAsync(companyMember);
     }
 
     private async Task<CompanyMember> IsCompanyAdmin(int currentUserId)

@@ -13,10 +13,6 @@ namespace API.Validations.Users
             RuleFor(u => u.LastName)
                 .NotEmpty().WithMessage("Last Name is required");
 
-            RuleFor(u => u.Email)
-                .NotEmpty().WithMessage("Email Address is required")
-                .EmailAddress().WithMessage("Email Address is invalid.");
-
             RuleFor(x => x.Gender)
                 .IsInEnum().WithMessage("Invalid gender value.");
 
