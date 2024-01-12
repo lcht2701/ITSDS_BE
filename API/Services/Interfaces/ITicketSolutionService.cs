@@ -11,8 +11,8 @@ namespace API.Services.Interfaces
         Task Create(CreateTicketSolutionRequest model, int createdById);
         Task Update(int solutionId, UpdateTicketSolutionRequest model, int userId);
         Task Remove(int solutionId, int userId);
-        Task Approve(int solutionId);
+        Task Approve(int solutionId, ApproveSolutionRequest model);
         Task Reject(int solutionId);
-        Task SubmitForApproval(int solutionId, int userId, int managerId);
+        Task SubmitForApproval(int solutionId, int userId, SubmitApprovalRequest model);
     }
 }

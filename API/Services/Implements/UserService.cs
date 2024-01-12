@@ -117,11 +117,6 @@ public class UserService : IUserService
 
     public async Task<User> Update(int id, UpdateUserRequest model)
     {
-        var checkMailDuplicated = await _userRepository.FirstOrDefaultAsync(x => x.Email == model.Email);
-        if (checkMailDuplicated != null)
-        {
-            throw new BadRequestException("Email is exist. Please use a different email address to create user.");
-        }
         var target =
             await _userRepository.FoundOrThrow(c => c.Id.Equals(id),
             new KeyNotFoundException("User is not exist"));
@@ -153,7 +148,6 @@ public class UserService : IUserService
         var target =
             await _userRepository.FoundOrThrow(c => c.Id.Equals(id),
             new KeyNotFoundException("User is not exist"));
-        await _firebaseService.UpdateFirebaseUser(target.Email, model.Email, null);
         User user = _mapper.Map(model, target);
         var result = await _userRepository.UpdateAsync(user);
         await _firebaseService.UpdateUserDocument(result);

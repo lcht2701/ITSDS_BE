@@ -159,11 +159,11 @@ public class TicketSolutionController : BaseController
 
     [Authorize(Roles = Roles.TECHNICIAN)]
     [HttpPatch("submit-approval")]
-    public async Task<IActionResult> SubmitForApproval(int solutionId, int managerId)
+    public async Task<IActionResult> SubmitForApproval(int solutionId, [FromBody] SubmitApprovalRequest model)
     {
         try
         {
-            await _ticketSolutionService.SubmitForApproval(solutionId, CurrentUserID, managerId);
+            await _ticketSolutionService.SubmitForApproval(solutionId, CurrentUserID, model);
             return Ok("Approval Request Sent Successfully");
         }
         catch (KeyNotFoundException)
@@ -182,11 +182,11 @@ public class TicketSolutionController : BaseController
 
     [Authorize(Roles = Roles.MANAGER)]
     [HttpPatch("approve")]
-    public async Task<IActionResult> ApproveSolution(int solutionId)
+    public async Task<IActionResult> ApproveSolution(int solutionId, [FromBody] ApproveSolutionRequest model)
     {
         try
         {
-            await _ticketSolutionService.Approve(solutionId);
+            await _ticketSolutionService.Approve(solutionId, model);
             return Ok("Update Successfully");
         }
         catch (KeyNotFoundException)
