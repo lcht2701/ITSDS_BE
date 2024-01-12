@@ -89,6 +89,7 @@ public class UserService : IUserService
         {
             throw new BadRequestException("Email is exist. Please use a different email address to create user.");
         }
+
         var passwordHasher = new PasswordHasher<User>();
         var generatedPassword = CommonService.CreateRandomPassword();
         entity.Password = passwordHasher.HashPassword(entity, generatedPassword);
