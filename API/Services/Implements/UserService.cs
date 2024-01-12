@@ -24,11 +24,12 @@ public class UserService : IUserService
     private readonly IRepositoryBase<Company> _companyRepository;
     private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly IRepositoryBase<CompanyMember> _companyMemberRepository;
+    private readonly IRepositoryBase<CompanyAddress> _addressRepository;
     private readonly IFirebaseService _firebaseService;
     private readonly IMailService _mailService;
     private readonly IMapper _mapper;
 
-    public UserService(IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IFirebaseService firebaseService, IMailService mailService, IMapper mapper)
+    public UserService(IRepositoryBase<User> userRepository, IRepositoryBase<Team> teamRepository, IRepositoryBase<Company> companyRepository, IRepositoryBase<TeamMember> teamMemberRepository, IRepositoryBase<CompanyMember> companyMemberRepository, IFirebaseService firebaseService, IMailService mailService, IMapper mapper, IRepositoryBase<CompanyAddress> addressRepository)
     {
         _userRepository = userRepository;
         _teamRepository = teamRepository;
@@ -38,6 +39,7 @@ public class UserService : IUserService
         _firebaseService = firebaseService;
         _mailService = mailService;
         _mapper = mapper;
+        _addressRepository = addressRepository;
     }
 
     public async Task<List<GetUserResponse>> Get()
@@ -186,7 +188,7 @@ public class UserService : IUserService
 
     private async Task GetTeamsOfUser(User user, GetUserProfileResponse entity)
     {
-        var teamMember = await _teamMemberRepository.FirstOrDefaultAsync(x => x.MemberId == user.Id);
+        var teamMember = await _teamMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
 
         if (teamMember != null)
         {
@@ -194,6 +196,7 @@ public class UserService : IUserService
                 new string[] { "Manager" });
             if (team != null)
             {
+                entity.Address = team.Location;
                 entity.Team = _mapper.Map(team, new GetTeamResponse());
             }
         }
@@ -201,15 +204,16 @@ public class UserService : IUserService
 
     private async Task GetCompanyOfUser(User user, GetUserProfileResponse entity)
     {
-        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId == user.Id);
+        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(user.Id));
 
         if (companyMember != null)
         {
+            var companyAddress = await _addressRepository.FirstOrDefaultAsync(x => x.Id.Equals(companyMember.CompanyAddressId));
+            if (companyAddress != null) entity.Address = companyAddress.Address;
+
             var company = await _companyRepository.FirstOrDefaultAsync(x => x.Id == companyMember.CompanyId);
-            if (company != null)
-            {
-                entity.Company = _mapper.Map(company, new GetCompanyResponse());
-            }
+            if (company != null) entity.Company = _mapper.Map(company, new GetCompanyResponse());
+
         }
     }
 
