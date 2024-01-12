@@ -23,7 +23,16 @@ namespace API.Validations.Users
 
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required.")
-                .UniqueEmail(email => (_userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result == null)).WithMessage("Email Address is already in use.")
+                .Must((user, email) =>
+                {
+                    // Check uniqueness only if the email is changed
+                    if (user.Email != email)
+                    {
+                        // Check if the email is already in use
+                        return _userRepository.FirstOrDefaultAsync(x => x.Email.Equals(email)).Result == null;
+                    }
+                    return true; // If email is not changed, validation passes
+                }).WithMessage("Email Address is already in use.")
                 .EmailAddress().WithMessage("Invalid email address format.");
 
             RuleFor(u => u.Role)
@@ -36,7 +45,7 @@ namespace API.Validations.Users
 
             RuleFor(x => x.Gender)
                 .IsInEnum().WithMessage("Invalid gender value.")
-                .Must(gender => gender >= Gender.Male && gender <= Gender.PreferNotToSay)
+                .Must(gender => gender >= Gender.Male && gender <= Gender.Female)
                 .WithMessage("Role must be valid and is required.");
 
             RuleFor(x => x.PhoneNumber)

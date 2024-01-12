@@ -93,18 +93,36 @@ public class TicketService : ITicketService
     public async Task<List<GetTicketResponse>> GetByUser(int userId)
     {
         List<Ticket> result = new();
-        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(userId));
-        if (companyMember.IsCompanyAdmin)
+        var companyMember = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId.Equals(userId), new string[] { "CompanyAddress" });
+        if (companyMember == null)
         {
-            var memberIds = (await _companyMemberRepository.WhereAsync(x => x.CompanyId.Equals(companyMember.CompanyId))).Select(x => x.MemberId);
-            result = (List<Ticket>)await _ticketRepository.WhereAsync(x => memberIds.Contains((int)x.RequesterId!),
-                new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
+            result = (await _ticketRepository
+                .WhereAsync(x => x.RequesterId.Equals(userId)))
+                .ToList();
         }
         else
         {
-            result = (List<Ticket>)await _ticketRepository.WhereAsync(x => x.RequesterId.Equals(userId),
-                new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
+            IEnumerable<int> memberIds;
+            if (companyMember.IsCompanyAdmin)
+            {
+                memberIds = (await _companyMemberRepository
+                    .WhereAsync(x =>
+                        x.CompanyId.Equals(companyMember.CompanyId)))
+                    .Select(x => x.MemberId);
+            }
+            else
+            {
+                memberIds = (await _companyMemberRepository
+                    .WhereAsync(x =>
+                        x.CompanyId.Equals(companyMember.CompanyId) &&
+                        x.CompanyAddressId.Equals(companyMember.CompanyAddressId)))
+                    .Select(x => x.MemberId);
+            }
+
+            result = (List<Ticket>)await _ticketRepository.WhereAsync(x => memberIds.Contains((int)x.RequesterId!),
+                    new string[] { "Requester", "Service", "Category", "Mode", "CreatedBy" });
         }
+
         List<GetTicketResponse> response = await ModifyTicketListResponse(result);
         return response;
     }

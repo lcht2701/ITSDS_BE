@@ -162,12 +162,13 @@ public class TicketSolutionService : ITicketSolutionService
         await _solutionRepository.SoftDeleteAsync(target);
     }
 
-    public async Task Approve(int solutionId)
+    public async Task Approve(int solutionId, ApproveSolutionRequest model)
     {
         var target = await _solutionRepository.FirstOrDefaultAsync(c => c.Id.Equals(solutionId)) ??
                      throw new KeyNotFoundException();
         target.IsApproved = true;
         target.ReviewDate = DateTime.Now;
+        target.ExpiredDate = DateTime.Today.AddMonths(model.Duration);
         await _solutionRepository.UpdateAsync(target);
     }
 
@@ -177,13 +178,14 @@ public class TicketSolutionService : ITicketSolutionService
                      throw new KeyNotFoundException();
         target.IsApproved = false;
         target.ReviewDate = null;
+        target.ExpiredDate = null;
         await _solutionRepository.UpdateAsync(target);
     }
 
-    public async Task SubmitForApproval(int solutionId, int userId, int managerId)
+    public async Task SubmitForApproval(int solutionId, int userId, SubmitApprovalRequest model)
     {
         var target = await _solutionRepository.FirstOrDefaultAsync(x => x.Id == solutionId, new string[] { "CreatedBy" }) ?? throw new KeyNotFoundException();
-        var manager = await _userRepository.FirstOrDefaultAsync(x => x.Id == managerId);
+        var manager = await _userRepository.FirstOrDefaultAsync(x => x.Id == model.ManagerId);
         await IsTechnicianTheCreator(target, userId);
         using (MimeMessage emailMessage = new MimeMessage())
         {

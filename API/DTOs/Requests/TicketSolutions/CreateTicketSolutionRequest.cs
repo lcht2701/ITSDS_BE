@@ -15,9 +15,8 @@ namespace API.DTOs.Requests.TicketSolutions
         [Required]
         public int? CategoryId { get; set; }
 
+        [Required]
         public int? OwnerId { get; set; }
-
-        public DateTime ExpiredDate { get; set; }
 
         public string? Keyword { get; set; }
 

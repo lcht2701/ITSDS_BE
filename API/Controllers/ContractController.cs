@@ -16,14 +16,12 @@ public class ContractController : BaseController
 {
     private readonly IContractService _contractService;
     private readonly IServiceContractService _serviceContractService;
-    private readonly IAttachmentService _attachmentService;
     private readonly IPaymentService _paymentService;
 
-    public ContractController(IContractService contractService, IServiceContractService serviceContractService, IAttachmentService attachmentService, IPaymentService paymentService)
+    public ContractController(IContractService contractService, IServiceContractService serviceContractService, IPaymentService paymentService)
     {
         _contractService = contractService;
         _serviceContractService = serviceContractService;
-        _attachmentService = attachmentService;
         _paymentService = paymentService;
     }
 
@@ -52,7 +50,7 @@ public class ContractController : BaseController
     [Authorize(Roles = Roles.CUSTOMER)]
     [HttpGet("customer")]
     [SwaggerResponse(200, "Get Contract By Company Admin", typeof(List<GetContractResponse>))]
-    public async Task<IActionResult> GetByCustomer()
+    public async Task<IActionResult> GetByCompanyAdmin()
     {
         try
         {
@@ -171,7 +169,7 @@ public class ContractController : BaseController
 
     [Authorize]
     [HttpGet("services/select")]
-    public async Task<IActionResult> GetSeletionList(int contractId)
+    public async Task<IActionResult> GetServicesList(int contractId)
     {
         try
         {
@@ -186,40 +184,5 @@ public class ContractController : BaseController
         {
             return BadRequest(ex.Message);
         }
-    }
-
-    //[Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    //[HttpPost("services")]
-    //public async Task<IActionResult> AddServicesToContract(int contractId, List<int> serviceIds)
-    //{
-    //    try
-    //    {
-    //        var result = await _serviceContractService.Add(contractId, serviceIds);
-    //        return Ok(new { Message = "Services Added To Contract Successfully", Data = result });
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return BadRequest(ex.Message);
-    //    }
-    //}
-
-    //[Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    //[HttpDelete("services/{id}")]
-    //public async Task<IActionResult> RemoveServiceOfContract(int id)
-    //{
-    //    try
-    //    {
-    //        await _serviceContractService.Remove(id);
-    //        return Ok("Services Removed Successfully");
-    //    }
-    //    catch (KeyNotFoundException ex)
-    //    {
-    //        return NotFound(ex.Message);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return BadRequest(ex.Message);
-    //    }
-    //}
-
+    } 
 }

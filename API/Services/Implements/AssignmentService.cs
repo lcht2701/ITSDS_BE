@@ -2,6 +2,7 @@
 using API.DTOs.Responses.Assignments;
 using API.Services.Interfaces;
 using AutoMapper;
+using Domain.Constants.Cases;
 using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;

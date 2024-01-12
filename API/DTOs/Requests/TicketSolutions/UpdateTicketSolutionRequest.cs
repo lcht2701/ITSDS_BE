@@ -13,8 +13,6 @@ namespace API.DTOs.Requests.TicketSolutions
 
         public int? OwnerId { get; set; }
 
-        public DateTime? ExpiredDate { get; set; }
-
         public string? Keyword { get; set; }
 
         public List<string>? AttachmentUrls { get; set; }

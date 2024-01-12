@@ -11,7 +11,8 @@ namespace API.Validations.Auths
                 .NotEmpty().WithMessage("CurrentPassword is required.");
 
             RuleFor(x => x.NewPassword)
-                .NotEmpty().WithMessage("NewPassword is required.");
+                .NotEmpty().WithMessage("NewPassword is required.")
+                .MinimumLength(6).WithMessage("Password must have at least 6 characters");
 
             RuleFor(x => x.ConfirmNewPassword)
                 .NotEmpty().WithMessage("ConfirmNewPassword is required.")

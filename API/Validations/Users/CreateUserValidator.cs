@@ -36,7 +36,7 @@ public class CreateUserValidator : AbstractValidator<CreateUserRequest>
 
         RuleFor(x => x.Gender)
             .IsInEnum().WithMessage("Invalid gender value.")
-            .Must(gender => gender >= Gender.Male && gender <= Gender.PreferNotToSay)
+            .Must(gender => gender >= Gender.Male && gender <= Gender.Female)
             .WithMessage("Role must be valid and is required.");
 
         RuleFor(x => x.PhoneNumber)
