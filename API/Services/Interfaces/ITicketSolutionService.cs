@@ -6,7 +6,6 @@ namespace API.Services.Interfaces
     public interface ITicketSolutionService
     {
         Task<List<GetTicketSolutionResponse>> Get(int userId);
-        Task<List<GetTicketSolutionResponse>> GetUnapprovedSolutions(int userId);
         Task<GetTicketSolutionResponse> GetById(int id, int userId);
         Task Create(CreateTicketSolutionRequest model, int createdById);
         Task Update(int solutionId, UpdateTicketSolutionRequest model, int userId);

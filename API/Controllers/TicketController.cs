@@ -236,6 +236,10 @@ public class TicketController : BaseController
         {
             return NotFound("Ticket is not exist");
         }
+        catch (BadRequestException ex)
+        {
+            return NotFound(ex.Message);
+        }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);
