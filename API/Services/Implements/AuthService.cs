@@ -105,17 +105,21 @@ public class AuthService : IAuthService
     {
         var user = await _userRepository.FoundOrThrow(u => u.Id.Equals(userId), new KeyNotFoundException("User is not found"));
 
+        if (model.NewPassword.Length < 6)
+        {
+            throw new BadRequestException("Password should have at least 6 characters.");
+        }
         var passwordHasher = new PasswordHasher<User>();
         var isMatchPassword = passwordHasher.VerifyHashedPassword(user, user.Password, model.CurrentPassword) == PasswordVerificationResult.Success;
         if (!isMatchPassword)
         {
             throw new BadRequestException("Your current password is incorrect.");
         }
-        if (model.NewPassword!.Equals(model.CurrentPassword))
+        if (model.NewPassword.Equals(model.CurrentPassword))
         {
             throw new BadRequestException("New password should not be the same as old password.");
         }
-        if (!model.NewPassword.Equals(model.ConfirmNewPassword))
+        if (!model.ConfirmNewPassword.Equals(model.NewPassword))
         {
             throw new BadRequestException("Password and Confirm Password does not match.");
         }

@@ -29,7 +29,6 @@ public class GetTicketResponse : IMapFrom<Ticket>
     public DateTime? CompletedTime { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? ModifiedAt { get; set; }
-    public DateTime? DeletedAt { get; set; }
     public GetAssignmentResponse? Assignment { get; set; }
     public virtual User? Requester { get; set; }
     public virtual User? CreatedBy { get; set; }

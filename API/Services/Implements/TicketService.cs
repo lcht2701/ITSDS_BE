@@ -213,6 +213,10 @@ public class TicketService : ITicketService
     {
         var target =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException();
+        if (target.TicketStatus != TicketStatus.Open && target.TicketStatus != TicketStatus.Assigned)
+        {
+            throw new BadRequestException("Ticket cannot be edited");
+        }
         var entity = _mapper.Map(model, target);
         var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
         if (categoryId != null) target.CategoryId = (int)categoryId;
@@ -229,10 +233,6 @@ public class TicketService : ITicketService
         var target =
             await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ??
             throw new KeyNotFoundException("Ticket is not exist");
-        //if (target.TicketStatus != TicketStatus.Open || target.TicketStatus != TicketStatus.Assigned)
-        //{
-        //    throw new BadRequestException("Ticket can not be updated when it is being executed");
-        //}
         var entity = _mapper.Map(model, target);
         var result = await _ticketRepository.UpdateAsync(entity);
         if (model.AttachmentUrls != null)

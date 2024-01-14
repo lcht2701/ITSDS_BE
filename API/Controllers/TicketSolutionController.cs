@@ -4,6 +4,7 @@ using Domain.Constants;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Persistence.Helpers;
 
 namespace API.Controllers;
@@ -33,27 +34,8 @@ public class TicketSolutionController : BaseController
         {
             var result = await _ticketSolutionService.Get(CurrentUserID);
             var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(pagedResponse);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [Authorize(Roles = Roles.MANAGER)]
-    [HttpGet("unapproved")]
-    public async Task<IActionResult> GetUnapprovedSolutions(
-        [FromQuery] string? filter,
-        [FromQuery] string? sort,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 5)
-    {
-        try
-        {
-            var result = await _ticketSolutionService.GetUnapprovedSolutions(CurrentUserID);
-            var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(pagedResponse);
+            int totalPage = (int)Math.Ceiling((double)result.Count / pageSize);
+            return Ok(new { TotalPage = totalPage, Data = pagedResponse });
         }
         catch (Exception ex)
         {
