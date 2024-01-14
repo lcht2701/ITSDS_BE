@@ -269,6 +269,10 @@ public class TicketController : BaseController
             #endregion
             return Ok(new { Message = "Ticket created and assigned successfully", Data = entity });
         }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(ex.Message);
+        }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);

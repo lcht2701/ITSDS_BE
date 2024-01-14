@@ -182,6 +182,11 @@ public class TicketService : ITicketService
             await _attachmentService.Add(Tables.TICKET, result.Id, model.AttachmentUrls);
         }
 
+        if (model.TeamId != null && model.TechnicianId == null)
+        {
+            throw new BadRequestException("Technician cannot be empty when a team is selected.");
+        }
+
         if (model.TechnicianId != null)
         {
             if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
