@@ -286,23 +286,23 @@ public class TicketService : ITicketService
                      throw new KeyNotFoundException("Ticket is not exist");
         var tasks = await _taskRepository.WhereAsync(x => x.TicketId.Equals(ticket.Id));
         var taskIncompletedCount = 0;
-        if (tasks.Count > 0)
-        {
-            taskIncompletedCount = tasks.Count(x =>
-                x.TaskStatus != TicketTaskStatus.Completed &&
-                x.TaskStatus != TicketTaskStatus.Cancelled);
-        }
+        taskIncompletedCount = tasks.Count(x =>
+            x.TaskStatus != TicketTaskStatus.Completed &&
+            x.TaskStatus != TicketTaskStatus.Cancelled);
 
-        string? jobId = null;
+        if (ticket.TicketStatus == TicketStatus.Open)
+        {
+            throw new BadRequestException("Ticket must be assigned before proceeding with further actions");
+        }
 
         if (ticket.TicketStatus == TicketStatus.Closed || ticket.TicketStatus == TicketStatus.Cancelled)
         {
-            throw new BadRequestException("Cannot update ticket status when ticket is Closed or Cancelled");
+            throw new BadRequestException("Cannot update ticket status for a Closed or Cancelled ticket.");
         }
 
         if (newStatus == TicketStatus.Open || newStatus == TicketStatus.Closed || newStatus == TicketStatus.Cancelled)
         {
-            throw new BadRequestException("Cannot update ticket status to Open, Closed or Cancelled");
+            throw new BadRequestException("Cannot set ticket status to Open, Closed, or Cancelled.");
         }
 
         switch (ticket.TicketStatus)
@@ -317,7 +317,7 @@ public class TicketService : ITicketService
                 {
                     ticket.TicketStatus = newStatus;
                     await _ticketRepository.UpdateAsync(ticket);
-                    jobId = AutoCloseBackgroundService(ticket);
+                    AutoCloseBackgroundService(ticket);
                 }
                 else
                 {
@@ -330,13 +330,12 @@ public class TicketService : ITicketService
                 {
                     ticket.TicketStatus = newStatus;
                     await _ticketRepository.UpdateAsync(ticket);
-                    jobId = AutoCloseBackgroundService(ticket);
+                    AutoCloseBackgroundService(ticket);
                 }
                 else
                 {
                     throw new BadRequestException("Cannot resovle ticket if all the tasks are not completed");
                 }
-
                 break;
             case TicketStatus.Resolved:
 
@@ -344,7 +343,7 @@ public class TicketService : ITicketService
                 {
                     ticket.TicketStatus = newStatus;
                     await _ticketRepository.UpdateAsync(ticket);
-                    if (jobId != null) await CancelCloseTicketJob(jobId, ticket.Id);
+                    AutoCloseBackgroundService(ticket);
                 }
 
                 break;
