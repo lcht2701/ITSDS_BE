@@ -36,9 +36,9 @@ namespace API.DTOs.Requests.Tickets
         public DateTime? ScheduledEndTime { get; set; }
 
         [DefaultValue(null)]
-        public int? TechnicianId { get; set; }
+        public int? TeamId { get; set; }
 
         [DefaultValue(null)]
-        public int? TeamId { get; set; }
+        public int? TechnicianId { get; set; }
     }
 }

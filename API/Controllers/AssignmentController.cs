@@ -57,6 +57,25 @@ public class AssignmentController : BaseController
     }
 
     [Authorize]
+    [HttpGet("ticket/{ticketId}")]
+    public async Task<IActionResult> GetAssignmentByTicket(int ticketId)
+    {
+        try
+        {
+            var result = await _assignmentService.GetByTicket(ticketId);
+            return Ok(result);
+        }
+        catch (BadRequestException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
     [HttpGet("technician/{technicianId}")]
     public async Task<IActionResult> GetAssignmentsByTechnician(int technicianId)
     {
@@ -116,17 +135,13 @@ public class AssignmentController : BaseController
             var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id == ticketId);
             await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned",
                     CurrentUserID);
-            if (req.TechnicianId != null)
-            {
                 await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned to you",
-                    (int)req.TechnicianId);
-            }
+                    req.TechnicianId);
             if (ticket.RequesterId != null)
             {
                 await _messagingService.SendNotification("ITSDS", $"Ticket [{ticket.Title}] has been assigned",
                     (int)ticket.RequesterId);
             }
-
             #endregion
             return Ok("Assigned Ticket Successfully");
         }

@@ -123,7 +123,7 @@ public class TicketTaskService : ITicketTaskService
         entity.TaskStatus = TicketTaskStatus.New;
         if (model.ScheduledStartTime == null) entity.ScheduledStartTime = DateTime.Now;
         var tasksCount = await Get((int)model.TicketId!);
-        if (tasksCount.Count == 0 && ticket.TicketStatus == TicketStatus.Assigned)
+        if (ticket.TicketStatus == TicketStatus.Assigned)
         {
             await _ticketService.UpdateTicketStatus((int)model.TicketId, TicketStatus.InProgress);
         }

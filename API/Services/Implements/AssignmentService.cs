@@ -128,6 +128,17 @@ public class AssignmentService : IAssignmentService
         return response;
     }
 
+    public async Task<object> GetByTicket(int ticketId)
+    {
+        var entity = await _assignmentRepository
+            .FirstOrDefaultAsync(x =>
+                x.TicketId.Equals(ticketId),
+                new string[] { "Team", "Technician" })
+            ?? throw new BadRequestException("Ticket not found or not assigned.");
+        var response = _mapper.Map<GetAssignmentResponse>(entity);
+        return response;
+    }
+
     public async Task<object> GetByTechnician(int technicianId)
     {
         var entity = await _assignmentRepository.WhereAsync(x => x.TechnicianId.Equals(technicianId), new string[] { "Team", "Technician" });
@@ -160,68 +171,90 @@ public class AssignmentService : IAssignmentService
         }
         else
         {
-            await CreateNewAssignment(ticketId, model, ticket);
+            await CreateNewAssignment(model, ticket);
         }
     }
 
-    private async Task CreateNewAssignment(int ticketId, AssignTicketManualRequest model, Ticket ticket)
+    private async Task CreateNewAssignment(AssignTicketManualRequest model, Ticket ticket)
     {
-        if (model.TechnicianId != null || model.TeamId != null)
-        {
-            if (model.TechnicianId != null && model.TeamId != null)
-            {
-                if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
-                {
-                    throw new BadRequestException("This technician is not a member of the specified team.");
-                }
-            }
+        //if (model.TechnicianId != null || model.TeamId != null)
+        //{
+        //    if (model.TechnicianId != null && model.TeamId != null)
+        //    {
+        //        if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
+        //        {
+        //            throw new BadRequestException("This technician is not a member of the specified team.");
+        //        }
+        //    }
 
-            var assignment = new Assignment()
-            {
-                TicketId = ticketId,
-                TechnicianId = model.TechnicianId,
-                TeamId = model.TeamId
-            };
-            await _assignmentRepository.CreateAsync(assignment);
-            if (ticket.TicketStatus == TicketStatus.Open)
-                await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
+        //    var assignment = new Assignment()
+        //    {
+        //        TicketId = ticketId,
+        //        TechnicianId = model.TechnicianId,
+        //        TeamId = model.TeamId
+        //    };
+        //    await _assignmentRepository.CreateAsync(assignment);
+        //    if (ticket.TicketStatus == TicketStatus.Open)
+        //        await _ticketService.UpdateTicketStatus(ticketId, TicketStatus.Assigned);
+        //}
+
+
+        if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
+        {
+            throw new BadRequestException("This technician is not a member of the specified team.");
         }
+
+        var assignment = new Assignment()
+        {
+            TicketId = ticket.Id,
+            TechnicianId = model.TechnicianId,
+            TeamId = model.TeamId
+        };
+
+        await _assignmentRepository.CreateAsync(assignment);
+        if (ticket.TicketStatus == TicketStatus.Open)
+            await _ticketService.UpdateTicketStatus(ticket.Id, TicketStatus.Assigned);
     }
 
     private async Task UpdateExistingAssignment(AssignTicketManualRequest model, Assignment existingAssignment)
     {
-        Assignment entity;
+        //switch (GetAssignmentCase(model.TechnicianId, model.TeamId))
+        //{
+        //    case AssignmentCase.NullNull:
+        //        await _assignmentRepository.SoftDeleteAsync(existingAssignment);
+        //        break;
 
-        switch (GetAssignmentCase(model.TechnicianId, model.TeamId))
+        //    case AssignmentCase.NotNullNull:
+        //        entity = _mapper.Map(model, existingAssignment);
+        //        entity.TeamId = null;
+        //        await _assignmentRepository.UpdateAsync(entity);
+        //        break;
+
+        //    case AssignmentCase.NullNotNull:
+        //        entity = _mapper.Map(model, existingAssignment);
+        //        entity.TechnicianId = null;
+        //        await _assignmentRepository.UpdateAsync(entity);
+        //        break;
+
+        //    case AssignmentCase.NotNullNotNull:
+        //        if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
+        //        {
+        //            throw new BadRequestException("This technician is not a member of the specified team.");
+        //        }
+        //        entity = _mapper.Map(model, existingAssignment);
+        //        await _assignmentRepository.UpdateAsync(entity);
+        //        break;
+
+        //    default:
+        //        throw new BadRequestException("Invalid modeluest.");
+        //}
+
+        if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
         {
-            case AssignmentCase.NullNull:
-                await _assignmentRepository.SoftDeleteAsync(existingAssignment);
-                break;
-
-            case AssignmentCase.NotNullNull:
-                entity = _mapper.Map(model, existingAssignment);
-                entity.TeamId = null;
-                await _assignmentRepository.UpdateAsync(entity);
-                break;
-
-            case AssignmentCase.NullNotNull:
-                entity = _mapper.Map(model, existingAssignment);
-                entity.TechnicianId = null;
-                await _assignmentRepository.UpdateAsync(entity);
-                break;
-
-            case AssignmentCase.NotNullNotNull:
-                if (await IsTechnicianMemberOfTeamAsync(model.TechnicianId, model.TeamId) == null)
-                {
-                    throw new BadRequestException("This technician is not a member of the specified team.");
-                }
-                entity = _mapper.Map(model, existingAssignment);
-                await _assignmentRepository.UpdateAsync(entity);
-                break;
-
-            default:
-                throw new BadRequestException("Invalid modeluest.");
+            throw new BadRequestException("This technician is not a member of the specified team.");
         }
+        var entity = _mapper.Map(model, existingAssignment);
+        await _assignmentRepository.UpdateAsync(entity);
     }
 
     public async Task Update(int ticketId, UpdateTicketAssignmentManualRequest model)

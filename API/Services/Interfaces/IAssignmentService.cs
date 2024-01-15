@@ -6,6 +6,7 @@ namespace API.Services.Interfaces
     {
         Task<object> GetListOfTechnician(int? teamId);
         Task<object> Get();
+        Task<object> GetByTicket(int ticketId);
         Task<object> GetByTechnician(int technicianId);
         Task<object> GetByTeam(int teamId);
         Task<object> GetById(int id);
