@@ -44,23 +44,24 @@ public class ContractController : BaseController
     {
         var result = await _contractService.Get();
         var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-        return Ok(pagedResponse);
+        int totalPage = (int)Math.Ceiling((double)result.Count / pageSize);
+        return Ok(new { TotalPage = totalPage, Data = pagedResponse });
     }
 
     [Authorize(Roles = Roles.CUSTOMER)]
-    [HttpGet("customer")]
+    [HttpGet("company")]
     [SwaggerResponse(200, "Get Contract By Company Admin", typeof(List<GetContractResponse>))]
-    public async Task<IActionResult> GetByCompanyAdmin()
+    public async Task<IActionResult> GetByCompanyAdmin(
+    [FromQuery] string? filter,
+    [FromQuery] string? sort,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5)
     {
-        try
-        {
-            var result = await _contractService.GetByCompanyAdmin(CurrentUserID);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        var result = await _contractService.GetByCompanyAdmin(CurrentUserID);
+        var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
+        int totalPage = (int)Math.Ceiling((double)result.Count / pageSize);
+        return Ok(new { TotalPage = totalPage, Data = pagedResponse });
+
     }
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT},{Roles.CUSTOMER}")]
@@ -184,5 +185,5 @@ public class ContractController : BaseController
         {
             return BadRequest(ex.Message);
         }
-    } 
+    }
 }
