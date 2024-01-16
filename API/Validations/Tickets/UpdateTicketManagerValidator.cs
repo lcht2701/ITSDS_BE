@@ -30,9 +30,6 @@ namespace API.Validations.Tickets
             RuleFor(x => x.ImpactDetail)
                 .MaximumLength(100).WithMessage("Impact detail should not exceed 100 characters.");
 
-            RuleFor(x => x.TicketStatus)
-                .IsInEnum();
-
             RuleFor(x => x.Priority)
                 .IsInEnum();
 
