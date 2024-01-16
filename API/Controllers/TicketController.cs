@@ -67,7 +67,8 @@ public class TicketController : BaseController
             response = response.Where(x => x.TicketStatus == ticketStatus).ToList();
         }
         var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-        return Ok(pagedResponse);
+        int totalPage = (int)Math.Ceiling((double)response.Count / pageSize);
+        return Ok(new { TotalPage = totalPage, Data = pagedResponse });
     }
 
     [Authorize]
@@ -88,7 +89,8 @@ public class TicketController : BaseController
                 response = response.Where(x => x.TicketStatus == ticketStatus).ToList();
             }
             var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(pagedResponse);
+            int totalPage = (int)Math.Ceiling((double)response.Count / pageSize);
+            return Ok(new { TotalPage = totalPage, Data = pagedResponse });
         }
         catch (Exception ex)
         {
@@ -113,7 +115,7 @@ public class TicketController : BaseController
     }
 
     [Authorize(Roles = Roles.TECHNICIAN)]
-    [HttpGet("assign/all")]
+    [HttpGet("assign")]
     [SwaggerResponse(200, "Get Available Ticket Of Technician", typeof(List<GetTicketResponse>))]
     public async Task<IActionResult> GetTicketsOfTechnician(
         [FromQuery] string? filter,
@@ -130,7 +132,8 @@ public class TicketController : BaseController
                 response = response.Where(x => x.TicketStatus == ticketStatus).ToList();
             }
             var pagedResponse = response.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(pagedResponse);
+            int totalPage = (int)Math.Ceiling((double)response.Count / pageSize);
+            return Ok(new { TotalPage = totalPage, Data = pagedResponse });
         }
         catch (Exception ex)
         {

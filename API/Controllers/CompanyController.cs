@@ -48,7 +48,8 @@ public class CompanyController : BaseController
         {
             var companies = await _companyService.Get();
             var pagedResponse = companies.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(pagedResponse);
+            int totalPage = (int)Math.Ceiling((double)companies.Count / pageSize);
+            return Ok(new { TotalPage = totalPage, Data = pagedResponse });
         }
         catch (Exception ex)
         {
