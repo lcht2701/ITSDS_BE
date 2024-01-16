@@ -157,7 +157,7 @@ public class TicketService : ITicketService
         entity.RequesterId = createdById;
         entity.CreatedById = createdById;
         entity.TicketStatus = TicketStatus.Open;
-        entity.Address = GetCompanyAddressAddress((int)entity.RequesterId, entity).Result;
+        entity.Address = GetCompanyAddressAddress((int)entity.RequesterId).Result;
         var categoryId = (await _serviceRepository.FirstOrDefaultAsync(x => x.Id.Equals(model.ServiceId))).CategoryId;
         if (categoryId != null) entity.CategoryId = (int)categoryId;
         var result = await _ticketRepository.CreateAsync(entity);
@@ -175,7 +175,8 @@ public class TicketService : ITicketService
     {
         Ticket entity = _mapper.Map(model, new Ticket());
         entity.CreatedById = createdById;
-        entity.Address = GetCompanyAddressAddress((int)entity.RequesterId!, entity).Result;
+        entity.TicketStatus = TicketStatus.Open;
+        entity.Address = GetCompanyAddressAddress((int)entity.RequesterId!).Result;
         var result = await _ticketRepository.CreateAsync(entity);
         if (model.AttachmentUrls != null)
         {
@@ -745,10 +746,17 @@ public class TicketService : ITicketService
         var managerIds = (await _userRepository.WhereAsync(x => x.Role == Role.Manager)).Select(x => x.Id).ToList();
         return managerIds;
     }
-    private async Task<string> GetCompanyAddressAddress(int createdById, Ticket entity)
+    private async Task<string> GetCompanyAddressAddress(int memberId)
     {
-        var member = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId == createdById);
-        var CompanyAddress = await _CompanyAddressRepository.FirstOrDefaultAsync(x => x.CompanyId == member.CompanyId);
-        return CompanyAddress.Address;
+        var member = await _companyMemberRepository.FirstOrDefaultAsync(x => x.MemberId == memberId);
+
+        if (member == null)
+        {
+            return "";
+        }
+
+        var companyAddress = await _CompanyAddressRepository.FirstOrDefaultAsync(x => x.CompanyId == member.CompanyId);
+        return companyAddress?.Address ?? "";
     }
+
 }

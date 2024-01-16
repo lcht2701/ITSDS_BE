@@ -20,8 +20,6 @@ namespace API.DTOs.Requests.Tickets
 
         public string? Type { get; set; }
 
-        public TicketStatus? TicketStatus { get; set; }
-
         public Priority? Priority { get; set; }
 
         public Impact? Impact { get; set; }

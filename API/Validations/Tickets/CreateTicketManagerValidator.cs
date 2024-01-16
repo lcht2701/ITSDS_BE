@@ -26,9 +26,6 @@ namespace API.Validations.Tickets
 
             RuleFor(x => x.CategoryId)
                 .GreaterThan(0).WithMessage("Category ID should be greater than 0.");
-
-            RuleFor(x => x.TicketStatus)
-                .IsInEnum();
             
             RuleFor(x => x.Priority)
                 .IsInEnum();
