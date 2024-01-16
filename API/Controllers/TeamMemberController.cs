@@ -31,7 +31,8 @@ public class TeamMemberController : BaseController
         {
             var members = await _teamMemberService.Get();
             var pagedResponse = members.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(pagedResponse);
+            int totalPage = (int)Math.Ceiling((double)members.Count / pageSize);
+            return Ok(new { TotalPage = totalPage, Data = pagedResponse });
         }
         catch (Exception ex)
         {
