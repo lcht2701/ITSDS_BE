@@ -1,5 +1,7 @@
 ﻿using API.DTOs.Requests.Assignments;
 using API.Services.Interfaces;
+using Domain.Constants;
+using Domain.Constants.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Tickets;
@@ -124,7 +126,7 @@ public class AssignmentController : BaseController
         }
     }
 
-    [Authorize]
+    [Authorize(Roles = Roles.MANAGER)]
     [HttpPost("{ticketId}/assign")]
     public async Task<IActionResult> AssignTicket(int ticketId, [FromBody] AssignTicketManualRequest req)
     {
@@ -202,7 +204,7 @@ public class AssignmentController : BaseController
     //}
 
 
-    [Authorize]
+    [Authorize(Roles = Roles.MANAGER)]
     [HttpDelete("{ticketId}")]
     public async Task<IActionResult> RemoveAssignmentByTicketId(int ticketId)
     {

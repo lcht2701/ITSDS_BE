@@ -132,9 +132,9 @@ public class ContractController : BaseController
         {
             var payment = await _paymentService.GetByContract(id);
             //Remove Payment of Contract
-            await _paymentService.Remove(payment.Id);
+            //await _paymentService.Remove(payment.Id);
             //Remove Services of Contract
-            await _serviceContractService.Remove(id);
+            //await _serviceContractService.Remove(id);
             //Remove Contract
             await _contractService.Remove(id);
             return Ok("Contract Removed Successfully");

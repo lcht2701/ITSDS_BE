@@ -34,29 +34,7 @@ public class PaymentController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
-    [HttpGet]
-    [SwaggerResponse(200, "Get Payment", typeof(List<Domain.Models.Contracts.Payment>))]
-    public async Task<IActionResult> Get(
-    [FromQuery] string? filter,
-    [FromQuery] string? sort,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 5)
-    {
-        try
-        {
-            var teams = await _paymentService.Get();
-            var pagedResponse = teams.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(pagedResponse);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
-
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT},{Roles.CUSTOMER}")]
     [HttpGet("contract/{contractId}")]
     [SwaggerResponse(200, "Get Payment By Contract", typeof(List<Domain.Models.Contracts.Payment>))]
     public async Task<IActionResult> GetByContract(int contractId)
@@ -76,7 +54,7 @@ public class PaymentController : BaseController
         }
     }
 
-    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT}")]
+    [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT},{Roles.CUSTOMER}")]
     [HttpGet("{id}")]
     [SwaggerResponse(200, "Get Payment By Id", typeof(Domain.Models.Contracts.Payment))]
     public async Task<IActionResult> GetById(int id)
