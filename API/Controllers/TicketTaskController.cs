@@ -38,7 +38,8 @@ public class TicketTaskController : BaseController
         {
             var result = await _ticketTaskService.Get(ticketId);
             var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-            return Ok(pagedResponse);
+            int totalPage = (int)Math.Ceiling((double)result.Count / pageSize);
+            return Ok(new { TotalPage = totalPage, Data = pagedResponse });
         }
         catch (Exception ex)
         {

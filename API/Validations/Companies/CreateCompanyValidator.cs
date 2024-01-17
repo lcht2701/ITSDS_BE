@@ -10,6 +10,9 @@ public class CreateCompanyValidator : AbstractValidator<CreateCompanyRequest>
         RuleFor(x => x.CompanyName)
             .NotEmpty().WithMessage("Company name is required.");
 
+        RuleFor(x => x.DefaultAddress)
+            .NotEmpty().WithMessage("First Company Address is required.");
+
         RuleFor(x => x.TaxCode)
             .NotEmpty().WithMessage("Tax code is required.")
             .Length(10, 13).WithMessage("Tax code should be between 10 and 13 characters.");

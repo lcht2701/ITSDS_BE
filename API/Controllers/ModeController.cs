@@ -39,7 +39,8 @@ public class ModeController : BaseController
     {
         var result = await _modeService.Get();
         var pagedResponse = result.AsQueryable().GetPagedData(page, pageSize, filter, sort);
-        return Ok(pagedResponse);
+        int totalPage = (int)Math.Ceiling((double)result.Count / pageSize);
+        return Ok(new { TotalPage = totalPage, Data = pagedResponse });
     }
 
     [Authorize(Roles = Roles.ADMIN)]

@@ -26,7 +26,7 @@ public class TeamService : ITeamService
         if (cacheData == null || !cacheData.Any())
         {
             cacheData = (await _teamRepository
-                .GetAsync(navigationProperties: new string[] { "Manager" }))
+                .GetAsync(navigationProperties: new string[] { "Manager", "Category" }))
                 .ToList();
             var expiryTime = DateTimeOffset.Now.AddSeconds(30);
             _cacheService.SetData("teams", cacheData, expiryTime);
@@ -39,7 +39,7 @@ public class TeamService : ITeamService
         var cacheData = _cacheService.GetData<Team>($"team-{id}");
         if (cacheData == null)
         {
-            cacheData = await _teamRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Manager" }) ?? throw new KeyNotFoundException("Team is not exist");
+            cacheData = await _teamRepository.FirstOrDefaultAsync(x => x.Id.Equals(id), new string[] { "Manager", "Category" }) ?? throw new KeyNotFoundException("Team is not exist");
             var expiryTime = DateTimeOffset.Now.AddSeconds(30);
             _cacheService.SetData($"team-{cacheData.Id}", cacheData, expiryTime);
         }
@@ -48,7 +48,7 @@ public class TeamService : ITeamService
 
     public async Task<List<Team>> GetByManager(int managerId)
     {
-        var result = (await _teamRepository.WhereAsync(x => x.ManagerId.Equals(managerId), new string[] { "Manager" })).ToList();
+        var result = (await _teamRepository.WhereAsync(x => x.ManagerId.Equals(managerId), new string[] { "Manager", "Category" })).ToList();
         return result;
     }
 

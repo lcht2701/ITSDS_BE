@@ -30,10 +30,6 @@ public class CompanyService : ICompanyService
         {
             var companyList = await _companyRepository.ToListAsync();
             cacheData = _mapper.Map(companyList, new List<GetCompanyResponse>());
-            foreach (var data in cacheData)
-            {
-                data.Addresses = (await _companyAddressRepository.WhereAsync(x => x.CompanyId == data.Id)).ToList();
-            }
             var expiryTime = DateTimeOffset.Now.AddSeconds(30);
             _cacheService.SetData("companies", cacheData, expiryTime);
         }
@@ -47,7 +43,6 @@ public class CompanyService : ICompanyService
         {
             var company = await _companyRepository.FoundOrThrow(x => x.Id.Equals(id), new KeyNotFoundException("Company is not exist"));
             cacheData = _mapper.Map(company, new GetCompanyResponse());
-            cacheData.Addresses = (await _companyAddressRepository.WhereAsync(x => x.CompanyId == company.Id)).ToList();
             var expiryTime = DateTimeOffset.Now.AddSeconds(30);
             _cacheService.SetData($"company-{cacheData.Id}", cacheData, expiryTime);
         }
@@ -58,6 +53,12 @@ public class CompanyService : ICompanyService
     {
         var entity = _mapper.Map(model, new Company());
         var result = await _companyRepository.CreateAsync(entity);
+        await _companyAddressRepository.CreateAsync(new CompanyAddress()
+        {
+            Address = model.DefaultAddress,
+            CompanyId = result.Id,
+            PhoneNumber = model.PhoneNumber
+        });
         #region Cache
         var expiryTime = DateTimeOffset.Now.AddSeconds(30);
         _cacheService.SetData($"company-{result.Id}", result, expiryTime);
