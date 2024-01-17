@@ -17,8 +17,6 @@ namespace API.DTOs.Responses.Companies
 
         public string? Email { get; set; }
 
-        public List<CompanyAddress>? Addresses { get; set; }
-
         public string? LogoUrl { get; set; }
 
         public string? FieldOfBusiness { get; set; }

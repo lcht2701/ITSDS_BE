@@ -7,7 +7,6 @@ namespace API.Validations.TeamMembers
     {
         public UpdateMemberToTeamValidator()
         {
-            RuleFor(x => x.TeamId).NotNull();
             RuleFor(x => x.Expertises).NotNull().MaximumLength(100);
         }
     }
