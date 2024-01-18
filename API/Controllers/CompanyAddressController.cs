@@ -39,7 +39,7 @@ public class CompanyAddressController : BaseController
         return Ok(pagedResponse);
     }
 
-    [Authorize(Roles = Roles.ADMIN)]
+    [Authorize]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -58,7 +58,7 @@ public class CompanyAddressController : BaseController
         }
     }
 
-    [Authorize(Roles = Roles.ADMIN)]
+    [Authorize(Roles = Roles.MANAGER)]
     [HttpPost]
     public async Task<IActionResult> Create(int companyId, [FromBody] CreateCompanyAddressRequest model)
     {
@@ -77,7 +77,7 @@ public class CompanyAddressController : BaseController
         }
     }
 
-    [Authorize(Roles = Roles.ADMIN)]
+    [Authorize(Roles = Roles.MANAGER)]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateCompanyAddressRequest model)
     {
@@ -100,7 +100,7 @@ public class CompanyAddressController : BaseController
         }
     }
 
-    [Authorize(Roles = Roles.ADMIN)]
+    [Authorize(Roles = Roles.MANAGER)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Remove(int id)
     {
