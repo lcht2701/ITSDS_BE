@@ -53,7 +53,7 @@ namespace API.Services.Implements
         public async Task Remove(int id)
         {
             var target = await _companyAddressRepository.FirstOrDefaultAsync(x => x.Id.Equals(id)) ?? throw new KeyNotFoundException("CompanyAddress is not found");
-            await _companyAddressRepository.DeleteAsync(target);
+            await _companyAddressRepository.SoftDeleteAsync(target);
         }
 
         public async Task RemoveByCompany(int companyId)
