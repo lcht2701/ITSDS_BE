@@ -38,21 +38,17 @@ public class TeamMemberService : ITeamMemberService
 
     public async Task<List<User>> GetMembersNotInTeam(int teamId)
     {
-        var teamMembers = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId)) ??
-                          throw new KeyNotFoundException();
+        var teamMembers = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId));
         var userIds = teamMembers.Select(tm => tm.MemberId).ToList();
         var users = await _userRepository.WhereAsync(user => !userIds.Contains(user.Id) &&
                                                              !(user.Role == Role.Customer || user.Role == Role.Admin));
         return (List<User>)users;
     }
 
-    public async Task<List<User>> GetMembersInTeam(int teamId)
+    public async Task<List<TeamMember>> GetMembersInTeam(int teamId)
     {
-        var teamMembers = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId)) ??
-                          throw new KeyNotFoundException();
-        var userIds = teamMembers.Select(tm => tm.MemberId).ToList();
-        var users = await _userRepository.WhereAsync(u => userIds.Contains(u.Id));
-        return (List<User>)users;
+        var teamMembers = await _teamMemberRepository.WhereAsync(u => u.TeamId.Equals(teamId), new string[] { "Member", "Team" });
+        return teamMembers.ToList();
     }
 
     public async Task Add(AddMemberToTeamRequest model)

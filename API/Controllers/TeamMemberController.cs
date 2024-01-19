@@ -42,7 +42,7 @@ public class TeamMemberController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.TECHNICIAN}")]
     [HttpGet("{teamId}")]
-    [SwaggerResponse(200, "Get Member In Team", typeof(List<Domain.Models.User>))]
+    [SwaggerResponse(200, "Get Member In Team", typeof(List<Domain.Models.Tickets.TeamMember>))]
     public async Task<IActionResult> GetMembersInTeam(int teamId)
     {
         try

@@ -90,8 +90,8 @@ public class CompanyMemberController : BaseController
 
     [Authorize(Roles = $"{Roles.MANAGER},{Roles.ACCOUNTANT},{Roles.CUSTOMER}")]
     [HttpGet("{id}")]
-    [SwaggerResponse(200, "Get Category by Id", typeof(CompanyMember))]
-    public async Task<IActionResult> GetCategoryById(int id)
+    [SwaggerResponse(200, "Get by Id", typeof(CompanyMember))]
+    public async Task<IActionResult> GetById(int id)
     {
         try
         {
