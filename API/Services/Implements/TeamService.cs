@@ -10,12 +10,14 @@ namespace API.Services.Implements;
 public class TeamService : ITeamService
 {
     private readonly IRepositoryBase<Team> _teamRepository;
+    private readonly IRepositoryBase<TeamMember> _teamMemberRepository;
     private readonly ICacheService _cacheService;
     private readonly IMapper _mapper;
 
-    public TeamService(IRepositoryBase<Team> teamRepository, ICacheService cacheService, IMapper mapper)
+    public TeamService(IRepositoryBase<Team> teamRepository, IRepositoryBase<TeamMember> teamMemberRepository, ICacheService cacheService, IMapper mapper)
     {
         _teamRepository = teamRepository;
+        _teamMemberRepository = teamMemberRepository;
         _cacheService = cacheService;
         _mapper = mapper;
     }
@@ -31,7 +33,7 @@ public class TeamService : ITeamService
             var expiryTime = DateTimeOffset.Now.AddSeconds(30);
             _cacheService.SetData("teams", cacheData, expiryTime);
         }
-        return cacheData; 
+        return cacheData;
     }
 
     public async Task<Team> GetById(int id)
