@@ -106,13 +106,13 @@ public class UserService : IUserService
             {
                 MemberId = result.Id,
                 CompanyId = model.CompanyDetail.CompanyId,
-                IsCompanyAdmin = model.CompanyDetail.IsCompanyAdmin,
+                IsCompanyAdmin = true,
                 CompanyAddressId = model.CompanyDetail.CompanyAddressId,
-                MemberPosition = model.CompanyDetail.IsCompanyAdmin == true ? "Company Admin" : "Nhân viên"
+                MemberPosition = "Company Admin"
             });
         }
         string fullname = $"{model.FirstName} {model.LastName}";
-        string roleName = model.CompanyDetail.IsCompanyAdmin == true ? "Company Admin" : "Customer";
+        string roleName = "Company Admin";
         BackgroundJob.Enqueue(() => _mailService.SendUserCreatedNotification(fullname, model.Username, model.Email, generatedPassword, roleName));
         return result;
     }

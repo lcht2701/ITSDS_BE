@@ -7,8 +7,6 @@ namespace API.Validations.Users
     {
         public AddCompanyDetailRequestValidator()
         {
-            RuleFor(x => x.IsCompanyAdmin)
-                .NotNull();
             RuleFor(x => x.CompanyAddressId)
                 .NotNull();
             RuleFor(x => x.CompanyId)

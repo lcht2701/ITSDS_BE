@@ -6,14 +6,9 @@ using Domain.Exceptions;
 using Domain.Models;
 using Domain.Models.Contracts;
 using Hangfire;
-using MailKit.Net.Smtp;
-using MailKit.Security;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
-using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using static Grpc.Core.Metadata;
 
 namespace API.Services.Implements;
 
@@ -102,13 +97,13 @@ public class CompanyMemberService : ICompanyMemberService
         {
             MemberId = userResult.Id,
             CompanyId = currentUserMember.CompanyId,
-            IsCompanyAdmin = model.IsCompanyAdmin,
+            IsCompanyAdmin = false,
             MemberPosition = model.MemberPosition != null ? model.MemberPosition : "Nhân viên",
             CompanyAddressId = model.CompanyAddressId
         };
         await _companyMemberRepository.CreateAsync(member);
         string fullname = $"{model.User.FirstName} {model.User.LastName}";
-        string roleName = model.IsCompanyAdmin == true ? "Company Admin" : "Customer";
+        string roleName = "Customer";
         BackgroundJob.Enqueue(() => _mailService.SendUserCreatedNotification(fullname, model.User.Username, model.User.Email, generatedPassword, roleName));
         await _firebaseService.CreateFirebaseUser(model.User.Email, generatedPassword);
         await _firebaseService.CreateUserDocument(userResult);

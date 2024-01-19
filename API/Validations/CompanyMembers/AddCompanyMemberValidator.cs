@@ -7,9 +7,6 @@ namespace API.Validations.CompanyMembers
     {
         public AddCompanyMemberValidator()
         {
-            RuleFor(x => x.IsCompanyAdmin)
-                .NotNull().WithMessage("Field must not be null");
-
             RuleFor(x => x.MemberPosition)
                 .MaximumLength(255).WithMessage("MemberPosition should not exceed 255 characters.");
         }

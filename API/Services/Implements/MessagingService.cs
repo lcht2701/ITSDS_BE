@@ -1,4 +1,5 @@
-﻿using API.Services.Interfaces;
+﻿using API.DTOs.Requests.Messagings;
+using API.Services.Interfaces;
 using Domain.Models;
 using FirebaseAdmin.Messaging;
 using Persistence.Repositories.Interfaces;
@@ -9,12 +10,14 @@ public class MessagingService : IMessagingService
 {
     private readonly IRepositoryBase<Messaging> _messagingRepository;
     private readonly IRepositoryBase<DeviceToken> _tokenRepository;
+    private readonly IRepositoryBase<User> _userRepository;
     private readonly ILogger<MessagingService> _logger;
 
-    public MessagingService(IRepositoryBase<Messaging> messagingRepository, IRepositoryBase<DeviceToken> tokenRepository, ILogger<MessagingService> logger)
+    public MessagingService(IRepositoryBase<Messaging> messagingRepository, IRepositoryBase<DeviceToken> tokenRepository, IRepositoryBase<User> userRepository, ILogger<MessagingService> logger)
     {
         _messagingRepository = messagingRepository;
         _tokenRepository = tokenRepository;
+        _userRepository = userRepository;
         _logger = logger;
     }
 
@@ -68,6 +71,40 @@ public class MessagingService : IMessagingService
         notification.IsRead = true;
         await _messagingRepository.UpdateAsync(notification);
         return notification;
+    }
+
+    public async Task SendChatNotification(SendChatNotificationRequest chatModel)
+    {
+        var user = await _userRepository
+            .FirstOrDefaultAsync(x => x.Email == chatModel.Email)
+            ?? throw new KeyNotFoundException("User not found");
+
+        // Retrieve the device token for the user
+        var model = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId == user.Id);
+        if (model == null || string.IsNullOrEmpty(model.Token))
+        {
+            return;
+        }
+        try
+        {
+            var fullName = $"{user.FirstName} {user.LastName}";
+            var notification = new Message()
+            {
+                Notification = new Notification
+                {
+                    Title = fullName,
+                    Body = chatModel.Type == "image" ? "Sent an image" : chatModel.Content,
+                },
+                Token = model.Token
+            };
+
+            var result = await FirebaseMessaging.DefaultInstance.SendAsync(notification);
+        }
+        catch (Exception ex)
+        {
+            _logger.ToString();
+            return;
+        }
     }
 
     public async Task MarkAsReadAll(int userId)

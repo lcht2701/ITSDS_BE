@@ -33,6 +33,4 @@ public class AddCompanyDetailRequest
     public int CompanyId { get; set; }
 
     public int CompanyAddressId { get; set; }
-
-    public bool IsCompanyAdmin { get; set; }
 }
