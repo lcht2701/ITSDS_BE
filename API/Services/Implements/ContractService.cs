@@ -60,8 +60,8 @@ public class ContractService : IContractService
     public async Task<Contract> Create(CreateContractRequest model)
     {
         var entity = _mapper.Map(model, new Contract());
-        CommonService.SetContractStatus(entity);
         entity.EndDate = entity.StartDate.AddMonths(model.Duration);
+        CommonService.SetContractStatus(entity);
         var contract = await _contractRepository.CreateAsync(entity);
         await _attachmentService.Add(Tables.CONTRACT, contract.Id, model.AttachmentUrls);
         return contract;

@@ -16,11 +16,13 @@ namespace Persistence.Helpers
         }
         public static void SetContractStatus(Contract entity)
         {
-            if (DateTime.Today < entity.StartDate.Date)
+            DateTime today = DateTime.Today;
+
+            if (today < entity.StartDate.Date)
             {
                 entity.Status = ContractStatus.Pending;
             }
-            else if (DateTime.Today >= entity.StartDate.Date && DateTime.Today <= entity.EndDate.Date)
+            else if (today >= entity.StartDate.Date && today <= entity.EndDate.Date)
             {
                 entity.Status = ContractStatus.Active;
             }
