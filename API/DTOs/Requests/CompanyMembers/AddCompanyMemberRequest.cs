@@ -6,9 +6,6 @@ namespace API.DTOs.Requests.CompanyMembers
     {
         public AddAccountInformationRequest User { get; set; }
 
-        [DefaultValue(false)]
-        public bool IsCompanyAdmin { get; set; }
-
         public string? MemberPosition { get; set; }
 
         public int CompanyAddressId { get; set; }

@@ -43,15 +43,20 @@ public partial class Ticket : BaseEntity
     public Impact? Impact { get; set; }
     
     public string? ImpactDetail { get; set; }
-    
+
+    [ExcludeFromAuditLog]
     public virtual User? Requester { get; set; }
-    
+
+    [ExcludeFromAuditLog]
     public virtual User? CreatedBy { get; set; }
 
+    [ExcludeFromAuditLog]
     public virtual Service? Service { get; set; }
 
+    [ExcludeFromAuditLog]
     public virtual Category? Category { get; set; }
 
+    [ExcludeFromAuditLog]
     public virtual Mode? Mode { get; set; }
 
     [JsonIgnore]

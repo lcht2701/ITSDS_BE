@@ -1,6 +1,5 @@
 ﻿using API.Mappings;
 using Domain.Models.Tickets;
-using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs.Requests.Teams
 {
@@ -13,5 +12,7 @@ namespace API.DTOs.Requests.Teams
         public string Location { get; set; }
 
         public string Description { get; set; }
+
+        public int? CategoryId { get; set; }
     }
 }

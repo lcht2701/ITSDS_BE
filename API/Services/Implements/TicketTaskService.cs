@@ -140,7 +140,21 @@ public class TicketTaskService : ITicketTaskService
         var target = await _taskRepository.FirstOrDefaultAsync(c => c.Id.Equals(taskId)) ??
                      throw new KeyNotFoundException();
         TicketTask entity = _mapper.Map(model, target);
+        if (entity.TaskStatus == TicketTaskStatus.Completed)
+        {
+            entity.Progress = 100;
+        }
+        if (entity.TaskStatus == TicketTaskStatus.Cancelled)
+        {
+            entity.Progress = 0;
+        }
         var result = await _taskRepository.UpdateAsync(entity);
+        var ticket = await _ticketRepository.FirstOrDefaultAsync(x => x.Id.Equals(result.TicketId)) ??
+                     throw new KeyNotFoundException();
+        if (ticket.TicketStatus == TicketStatus.Assigned)
+        {
+            await _ticketService.UpdateTicketStatus(result.TicketId, TicketStatus.InProgress);
+        }
         if (model.AttachmentUrls != null)
         {
             await _attachmentService.Add(Tables.TICKETTASK, result.Id, model.AttachmentUrls);

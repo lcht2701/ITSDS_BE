@@ -50,6 +50,25 @@ public class MessagingController : BaseController
     }
 
     [Authorize]
+    [HttpPost("send-chat-notification")]
+    public async Task<IActionResult> SendChatNotification([FromBody] SendChatNotificationRequest model)
+    {
+        try
+        {
+            await _messagingService.SendChatNotification(model);
+            return Ok("Send Chat Notification Successfully");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
     [HttpPatch("{id}")]
     public async Task<IActionResult> MarkAsRead(int id)
     {

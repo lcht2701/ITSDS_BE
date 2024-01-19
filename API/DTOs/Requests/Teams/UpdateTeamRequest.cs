@@ -12,6 +12,8 @@ namespace API.DTOs.Requests.Teams
 
         public string? Description { get; set; }
 
+        public int? CategoryId { get; set; }
+
         public bool? IsActive { get; set; }
 
         public int? ManagerId { get; set; }

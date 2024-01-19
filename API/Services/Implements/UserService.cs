@@ -98,21 +98,21 @@ public class UserService : IUserService
         //Default when create new account
         entity.IsActive = true;
         var result = await _userRepository.CreateAsync(entity);
-        await _firebaseService.CreateFirebaseUser(model.Email, generatedPassword);
-        await _firebaseService.CreateUserDocument(result);
+        var uid = await _firebaseService.CreateFirebaseUser(model.Email, generatedPassword);
+        await _firebaseService.CreateUserDocument(result, uid);
         if (entity.Role == Role.Customer)
         {
             await _companyMemberRepository.CreateAsync(new CompanyMember()
             {
                 MemberId = result.Id,
                 CompanyId = model.CompanyDetail.CompanyId,
-                IsCompanyAdmin = model.CompanyDetail.IsCompanyAdmin,
+                IsCompanyAdmin = true,
                 CompanyAddressId = model.CompanyDetail.CompanyAddressId,
-                MemberPosition = model.CompanyDetail.IsCompanyAdmin == true ? "Company Admin" : "Nhân viên"
+                MemberPosition = "Company Admin"
             });
         }
         string fullname = $"{model.FirstName} {model.LastName}";
-        string roleName = model.CompanyDetail.IsCompanyAdmin == true ? "Company Admin" : "Customer";
+        string roleName = "Company Admin";
         BackgroundJob.Enqueue(() => _mailService.SendUserCreatedNotification(fullname, model.Username, model.Email, generatedPassword, roleName));
         return result;
     }

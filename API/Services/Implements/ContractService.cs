@@ -60,8 +60,8 @@ public class ContractService : IContractService
     public async Task<Contract> Create(CreateContractRequest model)
     {
         var entity = _mapper.Map(model, new Contract());
-        CommonService.SetContractStatus(entity);
         entity.EndDate = entity.StartDate.AddMonths(model.Duration);
+        CommonService.SetContractStatus(entity);
         var contract = await _contractRepository.CreateAsync(entity);
         await _attachmentService.Add(Tables.CONTRACT, contract.Id, model.AttachmentUrls);
         return contract;
@@ -74,7 +74,7 @@ public class ContractService : IContractService
         {
             throw new BadRequestException("This contract cannot be edited when expired");
         }
-        if (target.Status != ContractStatus.Pending)
+        else if (target.Status != ContractStatus.Pending)
         {
             throw new BadRequestException("Contract can only be edited in pending stage");
         }
@@ -90,10 +90,10 @@ public class ContractService : IContractService
     public async Task Remove(int id)
     {
         var target = await _contractRepository.FoundOrThrow(c => c.Id.Equals(id), new KeyNotFoundException("Contract is not exist"));
-        if (target.Status != ContractStatus.Pending)
-        {
-            throw new BadRequestException("Contract can only be removed in pending stage");
-        }
+        //if (target.Status != ContractStatus.Pending)
+        //{
+        //    throw new BadRequestException("Contract can only be removed in pending stage");
+        //}
         await _contractRepository.SoftDeleteAsync(target);
         await _attachmentService.Delete(Tables.CONTRACT, target.Id);
         var relatedServices = await _serviceContractRepository.WhereAsync(x => x.ContractId == target.Id);

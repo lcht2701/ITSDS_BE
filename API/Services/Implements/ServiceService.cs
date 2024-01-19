@@ -25,7 +25,9 @@ public class ServiceService : IServiceService
         var cacheData = _cacheService.GetData<List<Service>>("services");
         if (cacheData == null || !cacheData.Any())
         {
-            cacheData = await _serviceRepository.ToListAsync();
+            cacheData = (await _serviceRepository
+                .GetAsync(navigationProperties: new string[] { "Category" }))
+                .ToList();
             var expiryTime = DateTimeOffset.Now.AddSeconds(30);
             _cacheService.SetData("services", cacheData, expiryTime);
         }
@@ -34,7 +36,10 @@ public class ServiceService : IServiceService
 
     public async Task<List<Service>> GetByCategory(int categoryId)
     {
-        var result = (await _serviceRepository.WhereAsync(x => x.CategoryId.Equals(categoryId))).ToList() ?? throw new KeyNotFoundException("Category is not exist");
+        var result = (await _serviceRepository
+            .WhereAsync(x => x.CategoryId.Equals(categoryId), new string[] { "Category" }))
+            .ToList()
+            ?? throw new KeyNotFoundException("Category is not exist");
         return result;
     }
 
@@ -43,7 +48,9 @@ public class ServiceService : IServiceService
         var cacheData = _cacheService.GetData<Service>($"service-{id}");
         if (cacheData == null)
         {
-            cacheData = await _serviceRepository.FirstOrDefaultAsync(u => u.Id.Equals(id)) ?? throw new KeyNotFoundException("Service is not exist");
+            cacheData = await _serviceRepository
+                .FirstOrDefaultAsync(u => u.Id.Equals(id), new string[] { "Category" }) 
+                ?? throw new KeyNotFoundException("Service is not exist");
             var expiryTime = DateTimeOffset.Now.AddSeconds(30);
             _cacheService.SetData($"service-{cacheData.Id}", cacheData, expiryTime);
         }
