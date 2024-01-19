@@ -23,5 +23,5 @@ public class CreateCompanyRequest : IMapTo<Company>
     [DefaultValue(true)]
     public bool? IsActive { get; set; }
 
-    public string DefaultAddress { get; set; }
+    public string CompanyAddress { get; set; }
 }

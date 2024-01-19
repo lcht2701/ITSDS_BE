@@ -55,7 +55,7 @@ public class CompanyService : ICompanyService
         var result = await _companyRepository.CreateAsync(entity);
         await _companyAddressRepository.CreateAsync(new CompanyAddress()
         {
-            Address = model.DefaultAddress,
+            Address = model.CompanyAddress,
             CompanyId = result.Id,
             PhoneNumber = model.PhoneNumber
         });

@@ -106,6 +106,7 @@ public class TicketController : BaseController
         try
         {
             var response = await _ticketService.GetByUser(CurrentUserID);
+            response = response.OrderByDescending(x => x.CreatedAt).ToList();
             return Ok(response);
         }
         catch (Exception ex)
@@ -149,6 +150,7 @@ public class TicketController : BaseController
         try
         {
             var response = await _ticketService.GetTicketsOfTechnician(CurrentUserID);
+            response = response.OrderByDescending(x => x.CreatedAt).ToList();
             return Ok(response);
         }
         catch (Exception ex)
