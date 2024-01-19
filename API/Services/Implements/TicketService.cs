@@ -17,7 +17,6 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using Persistence.Helpers;
 using Persistence.Repositories.Interfaces;
-using System.Linq;
 using DateTime = System.DateTime;
 
 namespace API.Services.Implements;

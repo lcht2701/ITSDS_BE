@@ -98,8 +98,8 @@ public class UserService : IUserService
         //Default when create new account
         entity.IsActive = true;
         var result = await _userRepository.CreateAsync(entity);
-        await _firebaseService.CreateFirebaseUser(model.Email, generatedPassword);
-        await _firebaseService.CreateUserDocument(result);
+        var uid = await _firebaseService.CreateFirebaseUser(model.Email, generatedPassword);
+        await _firebaseService.CreateUserDocument(result, uid);
         if (entity.Role == Role.Customer)
         {
             await _companyMemberRepository.CreateAsync(new CompanyMember()

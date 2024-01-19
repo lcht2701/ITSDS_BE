@@ -50,7 +50,7 @@ public class FirebaseService : IFirebaseService
         return link;
     }
 
-    public async Task<bool> CreateFirebaseUser(string email, string password)
+    public async Task<string> CreateFirebaseUser(string email, string password)
     {
         UserRecordArgs args = new UserRecordArgs()
         {
@@ -61,7 +61,7 @@ public class FirebaseService : IFirebaseService
         };
 
         UserRecord userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(args);
-        return userRecord is not null;
+        return userRecord.Uid;
     }
 
     public async Task<bool> UpdateFirebaseUser(string oldMail, string newMail, string? newPassword)
@@ -101,7 +101,7 @@ public class FirebaseService : IFirebaseService
         return check;
     }
 
-    public async Task CreateUserDocument(User user)
+    public async Task CreateUserDocument(User user, string uid)
     {
         string createdAtTime = new DateTimeOffset((DateTime)user.CreatedAt!).ToUnixTimeMilliseconds().ToString();
         string lastActiveTime = new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds().ToString();
@@ -113,7 +113,7 @@ public class FirebaseService : IFirebaseService
         // Create a data object for the document
         Dictionary<string, object> data = new()
         {
-            { "id", user.Id.ToString() ?? "" },
+            { "id", uid },
             { "name", fullname ?? "" },
             { "email", user.Email! ?? "" },
             { "image", user.AvatarUrl! ?? "" },
