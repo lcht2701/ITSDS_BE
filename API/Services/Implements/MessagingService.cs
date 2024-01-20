@@ -92,7 +92,7 @@ public class MessagingService : IMessagingService
             {
                 Notification = new Notification
                 {
-                    Title = fullName,
+                    Title = $"Message from [{fullName}]",
                     Body = chatModel.Type == "image" ? "Sent an image" : chatModel.Content,
                 },
                 Token = model.Token
