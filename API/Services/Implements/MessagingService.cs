@@ -122,27 +122,33 @@ public class MessagingService : IMessagingService
 
     public async Task GetToken(int userId, string token)
     {
-        var existToken = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId.Equals(userId));
-        if (existToken == null)
+        var existTokens = await _tokenRepository.WhereAsync(x => x.UserId.Equals(token));
+
+        if (existTokens.Any())
         {
-            var newToken = new DeviceToken()
+            foreach (var item in existTokens)
             {
-                Token = token,
-                UserId = userId,
-            };
-            await _tokenRepository.CreateAsync(newToken);
+                await _tokenRepository.DeleteAsync(item);
+            }
         }
         else
         {
-            if (existToken.Token != token)
+            var existUserToken = await _tokenRepository.FirstOrDefaultAsync(x => x.UserId.Equals(userId));
+
+            if (existUserToken == null)
             {
-                existToken.UserId = userId;
-                existToken.Token = token;
-                await _tokenRepository.UpdateAsync(existToken);
+                var newToken = new DeviceToken
+                {
+                    Token = token,
+                    UserId = userId,
+                };
+
+                await _tokenRepository.CreateAsync(newToken);
             }
-            else
+            else if (existUserToken.Token != token)
             {
-                return;
+                existUserToken.Token = token;
+                await _tokenRepository.UpdateAsync(existUserToken);
             }
         }
     }
