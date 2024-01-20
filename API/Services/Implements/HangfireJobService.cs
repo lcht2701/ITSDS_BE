@@ -155,7 +155,7 @@ public class HangfireJobService : IHangfireJobService
                 var combinedList = companyAdminIds.Concat(users).ToList();
                 foreach (var id in combinedList)
                 {
-                    await _messagingService.SendNotification("Contract Update", $"Contract {contract.Description} has been updated to Active stage.", id);
+                    await _messagingService.SendNotification("Contract Update", $"Contract {contract.Description} has been inactive. Please update payment in order to continue using services in contract.", id);
                 }
                 #endregion
             }
@@ -253,4 +253,24 @@ public class HangfireJobService : IHangfireJobService
         }
     }
 
+    public async Task NotifyNearEndPayment(double daysCount)
+    {
+        var payments = await _paymentRepository.ToListAsync();
+        foreach (var payment in payments)
+        {
+            if (payment.EndDateOfPayment == DateTime.Today.AddDays(-daysCount))
+            {
+                #region Notify to CompanyAdmins & Managers & Accountants
+                var contract = await _contractRepository.FirstOrDefaultAsync(x => x.Id == payment.ContractId);
+                var companyAdminIds = (await _companyMemberRepository.WhereAsync(x => x.CompanyId == contract.CompanyId)).Select(x => x.MemberId);
+                var users = (await _userRepository.WhereAsync(x => x.Role == Role.Manager || x.Role == Role.Accountant)).Select(x => x.Id);
+                var combinedList = companyAdminIds.Concat(users).ToList();
+                foreach (var id in combinedList)
+                {
+                    await _messagingService.SendNotification("Contract Update", $"Contract {contract.Description} has unpaid payment that last 3 days left. Please update payment in order to use services in contract.", id);
+                }
+                #endregion
+            }
+        }
+    }
 }
