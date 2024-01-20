@@ -61,7 +61,8 @@ public class ContractService : IContractService
     {
         var entity = _mapper.Map(model, new Contract());
         entity.EndDate = entity.StartDate.AddMonths(model.Duration);
-        CommonService.SetContractStatus(entity);
+        //CommonService.SetContractStatus(entity);
+        entity.Status = ContractStatus.Pending;
         var contract = await _contractRepository.CreateAsync(entity);
         await _attachmentService.Add(Tables.CONTRACT, contract.Id, model.AttachmentUrls);
         return contract;

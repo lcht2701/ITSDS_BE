@@ -12,12 +12,14 @@ namespace API.Services.Implements;
 public class PaymentService : IPaymentService
 {
     private readonly IRepositoryBase<Payment> _paymentRepository;
+    private readonly IRepositoryBase<Contract> _contractRepository;
     private readonly IAttachmentService _attachmentService;
     private readonly IMapper _mapper;
 
-    public PaymentService(IRepositoryBase<Payment> paymentRepository, IAttachmentService attachmentService, IMapper mapper)
+    public PaymentService(IRepositoryBase<Payment> paymentRepository, IRepositoryBase<Contract> contractRepository, IAttachmentService attachmentService, IMapper mapper)
     {
         _paymentRepository = paymentRepository;
+        _contractRepository = contractRepository;
         _attachmentService = attachmentService;
         _mapper = mapper;
     }
@@ -70,6 +72,9 @@ public class PaymentService : IPaymentService
         entity.EndDateOfPayment = entity.StartDateOfPayment.AddDays(model.DaysAmountForPayment);
         entity.IsFullyPaid = false;
         var result = await _paymentRepository.CreateAsync(entity);
+        var contract = await _contractRepository.FirstOrDefaultAsync(x => x.Id == model.ContractId);
+        contract.Status = Domain.Constants.Enums.ContractStatus.Active;
+        await _contractRepository.UpdateAsync(contract);
         await _attachmentService.Add(Tables.PAYMENT, result.Id, model.AttachmentUrls);
         return result;
     }
@@ -90,6 +95,9 @@ public class PaymentService : IPaymentService
         var target = await _paymentRepository.FirstOrDefaultAsync(x => x.Id == id) ??
                      throw new KeyNotFoundException("Payment is not exist");
         await _paymentRepository.DeleteAsync(target);
+        var contract = await _contractRepository.FirstOrDefaultAsync(x => x.Id == target.ContractId);
+        contract.Status = Domain.Constants.Enums.ContractStatus.Pending;
+        await _contractRepository.UpdateAsync(contract);
     }
 
 }

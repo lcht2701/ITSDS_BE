@@ -487,7 +487,7 @@ public class TicketService : ITicketService
                 .Select(team => team.Id);
 
         var memberIds = (await _teamMemberRepository
-            .WhereAsync(teamMember => teamIds.Contains((int)teamMember.TeamId!)))
+            .WhereAsync(teamMember => teamIds.Contains(teamMember.TeamId!)))
             .Select(teamMember => teamMember.MemberId);
 
         if (!memberIds.Any())
@@ -521,10 +521,13 @@ public class TicketService : ITicketService
 
         if (selectedTechnician != -1)
         {
+            var getTeamIds = (await _teamMemberRepository.WhereAsync(x => x.MemberId == selectedTechnician)).Select(x => x.TeamId);
+            var getTeam = await _teamRepository.FirstOrDefaultAsync(x => teamIds.Contains(x.Id) && x.CategoryId == ticket.CategoryId);
             var assignment = new Assignment()
             {
                 TicketId = ticket.Id,
-                TechnicianId = selectedTechnician
+                TechnicianId = selectedTechnician,
+                TeamId = getTeam.Id
             };
 
             await _assignmentRepository.CreateAsync(assignment);

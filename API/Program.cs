@@ -171,8 +171,10 @@ app.MapHangfireDashboard();
 //Running Background Services
 RecurringJob.AddOrUpdate<IHangfireJobService>("remove-old-device-token", x => x.RemoveOldToken(30),
     Cron.Daily());
-RecurringJob.AddOrUpdate<IHangfireJobService>("lock-overdue-payment-of-contract", x => x.UpdateStatusOfOverduePaymentContract(5),
-    Cron.Daily());
+RecurringJob.AddOrUpdate<IHangfireJobService>("lock-overdue-payment-of-contract", x => x.UpdateStatusOfOverduePaymentContract(0),
+   Cron.Daily());
+RecurringJob.AddOrUpdate<IHangfireJobService>("notify-near-end-payment", x => x.NotifyNearEndPayment(3),
+   Cron.Daily());
 RecurringJob.AddOrUpdate<IHangfireJobService>("ticket-summary", x => x.TicketSummaryNotificationJob(),
     Cron.Daily(8, 0));
 RecurringJob.AddOrUpdate<IHangfireJobService>("update-contract-status", x => x.UpdateStatusOfContract(), "*/5 * * * *");
