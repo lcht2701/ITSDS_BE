@@ -108,7 +108,7 @@ public class FirebaseService : IFirebaseService
         string about = $"I am {DataResponse.GetEnumDescription(user.Role)}";
         string fullname = $"{user.FirstName} {user.LastName}";
         FirestoreDb db = FirestoreDb.Create("itsds-v1");
-        DocumentReference docRef = db.Collection("users").Document(user.Id.ToString());
+        DocumentReference docRef = db.Collection("users").Document(uid);
 
         // Create a data object for the document
         Dictionary<string, object> data = new()
