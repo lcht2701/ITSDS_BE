@@ -90,13 +90,13 @@ public class FirebaseService : IFirebaseService
         var user = await _userRepository.FirstOrDefaultAsync(x => x.Id.Equals(userId));
 
         UserRecord userRecord = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(user.Email);
-        #region Remove Firebase Auth Account
-        await FirebaseAuth.DefaultInstance.DeleteUserAsync(userRecord.Uid);
-        #endregion
         #region Remove User Document
         FirestoreDb db = FirestoreDb.Create("itsds-v1");
-        DocumentReference docRef = db.Collection("users").Document(user.Id.ToString());
+        DocumentReference docRef = db.Collection("users").Document(userRecord.Uid);
         await docRef.DeleteAsync(); 
+        #endregion
+        #region Remove Firebase Auth Account
+        await FirebaseAuth.DefaultInstance.DeleteUserAsync(userRecord.Uid);
         #endregion
         return check;
     }
