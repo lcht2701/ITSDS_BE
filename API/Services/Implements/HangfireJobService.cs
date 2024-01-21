@@ -96,25 +96,24 @@ public class HangfireJobService : IHangfireJobService
         {
             switch (contract.Status)
             {
-                case ContractStatus.Pending:
-                    {
-                        if (DateTime.Today.Date >= contract.StartDate.Date && DateTime.Today.Date <= contract.EndDate.Date)
-                        {
-                            contract.Status = ContractStatus.Active;
-                            await _contractRepository.UpdateAsync(contract);
-                            #region Notify to CompanyAdmins & Managers & Accountants
-
-                            var companyAdminIds = (await _companyMemberRepository.WhereAsync(x => x.CompanyId == contract.CompanyId)).Select(x => x.MemberId);
-                            var users = (await _userRepository.WhereAsync(x => x.Role == Role.Manager || x.Role == Role.Accountant)).Select(x => x.Id);
-                            var combinedList = companyAdminIds.Concat(users).ToList();
-                            foreach (var id in combinedList)
-                            {
-                                await _messagingService.SendNotification("Contract Update", $"Contract {contract.Description} has been updated to Active stage.", id);
-                            }
-                            #endregion
-                        }
-                        break;
-                    }
+                //case ContractStatus.Pending:
+                //    {
+                //        if (DateTime.Today.Date >= contract.StartDate.Date && DateTime.Today.Date <= contract.EndDate.Date)
+                //        {
+                //            contract.Status = ContractStatus.Active;
+                //            await _contractRepository.UpdateAsync(contract);
+                //            #region Notify to CompanyAdmins & Managers & Accountants
+                //            var companyAdminIds = (await _companyMemberRepository.WhereAsync(x => x.CompanyId == contract.CompanyId)).Select(x => x.MemberId);
+                //            var users = (await _userRepository.WhereAsync(x => x.Role == Role.Manager || x.Role == Role.Accountant)).Select(x => x.Id);
+                //            var combinedList = companyAdminIds.Concat(users).ToList();
+                //            foreach (var id in combinedList)
+                //            {
+                //                await _messagingService.SendNotification("Contract Update", $"Contract {contract.Description} has been updated to Active stage.", id);
+                //            }
+                //            #endregion
+                //        }
+                //        break;
+                //    }
                 case ContractStatus.Active:
                 case ContractStatus.Inactive:
                     {
