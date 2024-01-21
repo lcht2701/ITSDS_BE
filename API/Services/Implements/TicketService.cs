@@ -521,13 +521,12 @@ public class TicketService : ITicketService
 
         if (selectedTechnician != -1)
         {
-            var getTeamIds = (await _teamMemberRepository.WhereAsync(x => x.MemberId == selectedTechnician)).Select(x => x.TeamId);
-            var getTeam = await _teamRepository.FirstOrDefaultAsync(x => teamIds.Contains(x.Id) && x.CategoryId == ticket.CategoryId);
+            var teamId = teamIds.First();
             var assignment = new Assignment()
             {
                 TicketId = ticket.Id,
                 TechnicianId = selectedTechnician,
-                TeamId = getTeam.Id
+                TeamId = teamId,
             };
 
             await _assignmentRepository.CreateAsync(assignment);
